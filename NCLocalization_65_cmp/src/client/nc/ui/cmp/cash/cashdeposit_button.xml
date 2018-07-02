@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+	<!-- 分隔 -->
+	<bean id="seperatorAction" class="nc.funcnode.ui.action.SeparatorAction" />
+
+	<!-- Actions ########################################################### -->
+	<!-- 新增 -->
+	<bean id="addAction" class="nc.ui.cmp.base.actions.CmpBaseAddAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="interceptor">
+			<bean
+				class="nc.ui.pubapp.uif2app.actions.interceptor.CompositeActionInterceptor">
+				<property name="interceptors">
+					<list>
+						<bean
+							class="nc.ui.pubapp.uif2app.actions.interceptor.ShowUpComponentInterceptor">
+							<property name="showUpComponent" ref="cardEditor" />
+						</bean>
+					</list>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+	<!-- 修改 -->
+	<bean id="editAction" class="nc.ui.cmp.base.actions.CmpBaseEditAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="powercheck" value="true" />
+		<property name="billType" value="36S1" />
+		<property name="resourceCode" value="36S1" />
+		<property name="operateCode" value="edit" />
+		<property name="billCodeName" value="billno" />
+		<property name="interceptor">
+			<bean
+				class="nc.ui.pubapp.uif2app.actions.interceptor.ShowUpComponentInterceptor">
+				<property name="showUpComponent" ref="cardEditor" />
+			</bean>
+		</property>
+	</bean>
+
+	<!-- 删除 -->
+	<bean id="deleteAction" class="nc.ui.cmp.base.actions.CmpBaseDeleteAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="powercheck" value="true" />
+		<property name="actionName" value="DELETE" />
+		<property name="billType" value="36S1" />
+		<property name="billCodeName" value="billno" />
+	</bean>
+	
+		<!--影像-->
+	<bean id="imageFuncActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="imageFunc" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng_0"></property>
+				<property name="defaultValue" value="影像"></property>
+				<property name="resId" value="03607mng-0446"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="imageShowAction" />
+				<ref bean="imageScanAction" />
+			</list>
+		</property>
+	</bean>
+	<!-- 影像查看 --> 
+	<bean id="imageShowAction" class="nc.ui.cmp.bill.actions.CmpBillImageShowAction"> 
+		<property name="model" ref="manageAppModel" /> 
+		<property name="pk_billtype" value="1001Z610000000000IIV" /> 
+	</bean> 
+	<!-- 影像扫描 --> 
+	<bean id="imageScanAction" class="nc.ui.cmp.bill.actions.CmpBillImageScanAction"> 
+		<property name="model" ref="manageAppModel" /> 
+		<property name="pk_billtype" value="1001Z610000000000IIV" /> 
+		<property name="checkscanway" value="nc.imag.scan.service.CheckScanWay" /> 
+	</bean>
+
+	<!-- 复制 -->
+	<bean id="copyAction" class="nc.ui.cmp.base.actions.CmpBaseCopyAction">
+		<property name="copyActionProcessor">
+			<bean class="nc.ui.cmp.base.actions.CmpBaseCopyActionProcessor">
+				<property name="editor" ref="cardEditor" />
+			</bean>
+		</property>
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="interceptor">
+			<bean
+				class="nc.ui.pubapp.uif2app.actions.interceptor.ShowUpComponentInterceptor">
+				<property name="showUpComponent" ref="cardEditor" />
+			</bean>
+		</property>
+	</bean>
+
+	<!-- 保存 -->
+	<bean id="saveAction" class="nc.ui.cmp.base.actions.CmpBaseSaveAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="actionName" value="SAVEBASE" />
+		<property name="billType" value="36S1" />
+		<property name="billVOName" value="nc.vo.cmp.cash.AggCashDepositVO" />
+		<property name="headVOName" value="nc.vo.cmp.cash.CashDepositVO" />
+		<property name="checkedDate" value="inputdate" />
+		<property name="validationService" ref="validateService" />
+	</bean>
+
+	<!-- 保存提交 , 编辑态增加此按钮 -->
+	<bean id="saveSendApproveAction" class="nc.ui.cmp.base.actions.CmpCashSaveAndCommitAction">
+		<property name="saveAction" ref="saveAction" />
+		<property name="commitAction" ref="commitAction" />
+	</bean>
+
+	<!-- 保存组合校验 -->
+	<bean id="validateService" class="nc.ui.pubapp.uif2app.validation.CompositeValidation">
+		<property name="validators">
+			<list>
+				<bean class="nc.ui.pubapp.uif2app.validation.TemplateNotNullValidation">
+					<property name="billForm" ref="cardEditor" />
+				</bean>
+				<bean class="nc.ui.pubapp.pub.power.PowerSaveValidateService">
+					<property name="insertActionCode" value="save" />
+					<property name="editActionCode" value="edit" />
+					<property name="billCodeFiledName" value="billno" />
+					<property name="permissionCode" value="36S1" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+	<!-- 保存新增 -->
+	<bean id="saveAddAction" class="nc.ui.cmp.base.actions.CmpBaseSaveAddAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="addAction" ref="addAction" />
+		<property name="saveAction" ref="saveAction" />
+	</bean>
+
+	<!-- 暂存 -->
+	<bean id="saveTempAction" class="nc.ui.cmp.base.actions.CmpBaseSaveTempAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+	</bean>
+
+	<!-- 取消 -->
+	<bean id="cancelAction" class="nc.ui.cmp.base.actions.CmpBaseCancelAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+	</bean>
+
+	<!-- 查询 -->
+	<bean id="queryAction" class="nc.ui.tmpub.action.query.DefaultQueryAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="dataManager" ref="modelDataManager" />
+		<property name="interceptor">
+			<bean
+				class="nc.ui.pubapp.uif2app.actions.interceptor.ShowUpComponentInterceptor">
+				<property name="showUpComponent" ref="listView" />
+			</bean>
+		</property>
+		<property name="qryCondDLGInitializer" ref="salequoQryCondDLGInitializer"></property>
+		<property name="templateContainer" ref="queryTemplateContainer"></property>
+	</bean>
+
+	<!-- 添加查询模板加载bean -->
+	<bean id="queryTemplateContainer" class="nc.ui.uif2.editor.QueryTemplateContainer">
+		<property name="context" ref="context"></property>
+	</bean>
+	<bean name="salequoQryCondDLGInitializer" class="nc.ui.cmp.cash.query.CashDepositQryCondInitializer">
+		<property name="model" ref="manageAppModel" />
+	</bean>
+
+	<!-- 快速查询 -->
+	<bean id="queryArea" class="nc.ui.uif2.actions.QueryAreaShell"
+		init-method="initUI">
+		<property name="queryArea">
+			<bean factory-bean="queryAction" factory-method="createQueryArea" />
+		</property>
+	</bean>
+
+	<!-- 刷新 -->
+	<bean id="refreshAction" class="nc.ui.cmp.base.actions.CmpBaseRefreshMutiAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="dataManager" ref="modelDataManager"></property>
+	</bean>
+	<bean id="cardRefreshAction" class="nc.ui.pubapp.uif2app.actions.RefreshSingleAction">
+		<property name="model" ref="manageAppModel" />
+	</bean>
+	<!-- 提交按钮组 -->
+	<bean id="commitMenuAction" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="commitMenuAction" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="common"></property>
+				<property name="defaultValue" value="提交"></property>
+				<property name="resId" value="UC001-0000029"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="commitAction" />
+				<ref bean="unCommitAction" />
+			</list>
+		</property>
+	</bean>
+	<!-- 提交 -->
+	<bean id="commitAction" class="nc.ui.cmp.base.actions.CmpBaseCommitAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="billType" value="36S1" />
+		<property name="actionName" value="SAVE" />
+		<property name="filledUpInFlow" value="true" />
+		<property name="validationService">
+			<bean class="nc.ui.pubapp.pub.power.PowerValidateService">
+				<property name="actionCode" value="commit" />
+				<property name="billCodeFiledName" value="billno" />
+				<property name="permissionCode" value="36S1" />
+			</bean>
+		</property>
+	</bean>
+	<!-- 收回 -->
+	<bean id="unCommitAction" class="nc.ui.cmp.base.actions.CmpBaseUnCommitAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="billType" value="36S1" />
+		<property name="actionName" value="UNSAVEBILL" />
+		<property name="filledUpInFlow" value="true" />
+		<property name="validationService">
+			<bean class="nc.ui.pubapp.pub.power.PowerValidateService">
+				<property name="actionCode" value="uncommit" />
+				<property name="billCodeFiledName" value="billno" />
+				<property name="permissionCode" value="36S1" />
+			</bean>
+		</property>
+	</bean>
+	<!-- 审批/取消审批 -->
+	<bean id="approveActionGroup" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="Approve" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607cash_0"></property>
+				<property name="defaultValue" value="审批"></property>
+				<property name="resId" value="03607cash-0071"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="approveAction" />
+				<ref bean="unApproveAction" />
+				<ref bean="queryAuditFlowAction" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="approveAction" class="nc.ui.cmp.base.actions.CmpBaseApproveAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="approveService" ref="approveService" />
+		<property name="validaotrList">
+			<list>
+				<bean class="nc.ui.cmp.cash.validator.CashDepositApproveValidator">
+					<property name="actionCode" value="approve" />
+					<property name="billCodeFiledName" value="billno" />
+					<property name="permissionCode" value="36S1" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<bean id="unApproveAction" class="nc.ui.cmp.base.actions.CmpBaseUnApproveAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="unApproveService" ref="approveService" />
+		<property name="validaotrList">
+			<list>
+				<bean class="nc.ui.cmp.cash.validator.CashDepositUnApproveValidator">
+					<property name="actionCode" value="unapprove" />
+					<property name="billCodeFiledName" value="billno" />
+					<property name="permissionCode" value="36S1" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<!--审批服务 -->
+	<bean id="approveService" class="nc.ui.tm.approve.model.DefaultApproveServie">
+		<property name="billtype">
+			<value>36S1</value>
+		</property>
+	</bean>
+	<!-- 提交资金组织/取消提交 -->
+	<bean id="submitActionGroup" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="Submit" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607cash_0"></property>
+				<property name="defaultValue" value="委托办理"></property>
+				<property name="resId" value="03607cash-0025"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="submitAction" />
+				<ref bean="unSubmitAction" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="submitAction" class="nc.ui.cmp.base.actions.CmpBaseSubmitAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="submitService" ref="submitService"></property>
+		<property name="validaotrList">
+			<list>
+				<bean class="nc.ui.cmp.cash.validator.CashDepositSubmitValidator" />
+			</list>
+		</property>
+	</bean>
+	<bean id="unSubmitAction" class="nc.ui.cmp.base.actions.CmpBaseUnSubmitAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="unSubmitService" ref="submitService"></property>
+		<property name="validaotrList">
+			<list>
+				<bean class="nc.ui.cmp.cash.validator.CashDepositUnSubmitValidator" />
+			</list>
+		</property>
+	</bean>
+	<!--提交服务 -->
+	<bean id="submitService" class="nc.ui.cmp.base.modelservice.CmpAppModelService">
+		<property name="billtype">
+			<value>36S1</value>
+		</property>
+	</bean>
+
+	<!-- 结算/取消结算 -->
+	<bean id="settleActionGroup" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="Settle" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607cash_0"></property>
+				<property name="defaultValue" value="结算"></property>
+				<property name="resId" value="03607cash-0022"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="settleAction" />
+				<ref bean="unSettleAction" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="settleAction" class="nc.ui.cmp.base.actions.CmpBaseSettleAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="settleService" ref="settleService"></property>
+		<property name="validaotrList">
+			<list>
+				<bean class="nc.ui.cmp.cash.validator.CashDepositSettleValidator" />
+			</list>
+		</property>
+	</bean>
+	<bean id="unSettleAction" class="nc.ui.cmp.base.actions.CmpBaseUnSettleAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="unSettleService" ref="settleService"></property>
+		<property name="validaotrList">
+			<list>
+				<bean class="nc.ui.cmp.cash.validator.CashDepositUnSettleValidator" />
+			</list>
+		</property>
+	</bean>
+	<!--结算服务 -->
+	<bean id="settleService" class="nc.ui.cmp.base.modelservice.CmpAppModelService">
+		<property name="billtype">
+			<value>36S1</value>
+		</property>
+	</bean>
+
+	<!-- 制单 -->
+	<bean id="makeBillAction" class="nc.ui.cmp.base.actions.CmpBaseMakeBillAction"
+		autowire="byName">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="listView" ref="listView" />
+		<property name="loginContext" ref="context" />
+		<property name="makeBillService" ref="makeBillService"></property>
+	</bean>
+	<!--制单服务 -->
+	<bean id="makeBillService" class="nc.ui.cmp.base.modelservice.CmpAppModelService">
+		<property name="billtype">
+			<value>36S1</value>
+		</property>
+	</bean>
+
+	<!-- 辅助功能 -->
+	<bean id="auxiliaryActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="Auxiliary" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="common"></property>
+				<property name="defaultValue" value="辅助功能"></property>
+				<property name="resId" value="UC001-0000137"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="fileAction" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 附件管理 -->
+	<bean id="fileAction" class="nc.ui.cmp.base.actions.CmpBaseFileDocManageAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="exceptionHandler" ref="exceptionHandler" />
+	</bean>
+	<bean id="exceptionHandler" class="nc.ui.uif2.DefaultExceptionHanler">
+		<property name="context" ref="context" />
+	</bean>
+
+	<!-- 联查 -->
+	<bean id="linkActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="linkQuery" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="common"></property>
+				<property name="defaultValue" value="联查"></property>
+				<property name="resId" value="UC001-0000146"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<!-- <ref bean="linkApproveAction" /> -->
+				<ref bean="linkVoucherAction" />
+				<ref bean="cashAccountBalanceAction" />
+				<ref bean="prevVoucherAction"/>
+				<ref bean="linkQueryAction" />
+			</list>
+		</property>
+	</bean>
+	<!-- 联查单据 -->
+	<bean id="linkQueryAction" class="nc.ui.pubapp.uif2app.actions.LinkQueryAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billType" value="36S1" />
+	</bean>
+	<!-- 查看审批流 -->
+	<bean id="queryAuditFlowAction" class="nc.ui.uif2.actions.pf.PFApproveInfoAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607set1_0"></property>
+				<property name="defaultValue" value="查看审批意见"></property>
+				<property name="resId" value="03607set1-0066"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 联查凭证 -->
+	<bean id="linkVoucherAction" class="nc.ui.cmp.base.actions.CmpBaseVoucherQueryAction"
+		autowire="byName">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+		<property name="listView" ref="listView" />
+		<property name="loginContext" ref="context" />
+	</bean>
+	<!-- 现金账户余额 -->
+	<bean id="cashAccountBalanceAction" class="nc.ui.cmp.base.actions.CmpBaseCashAccBalanceAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+	</bean>
+	
+	<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 start -->
+	<!-- 保存态预览凭证 -->
+	<bean id="prevVoucherAction" class="nc.ui.cmp.bill.actions.PreviewVoucherAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="cardEditor" />
+	</bean>
+	<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 start -->
+	
+	<!-- 导入/导出 -->
+	<bean id="importExportActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="ImportExport" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607cash_0"></property>
+				<property name="defaultValue" value="导入导出"></property>
+				<property name="resId" value="03607cash-0072"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="excelImportAction" />
+				<ref bean="seperatorAction" />
+				<ref bean="excelTemplateExportAction" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 导入 -->
+	<bean id="excelImportAction" class="nc.ui.uif2.excelimport.ImportAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="importableEditor" ref="supplierPriceImportableEditor" />
+	</bean>
+	<!-- 导出 -->
+	<bean id="excelTemplateExportAction" class="nc.ui.uif2.excelimport.ExportExcelTemplateAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="importableEditor" ref="supplierPriceImportableEditor" />
+	</bean>
+
+	<bean id="supplierPriceImportableEditor" class="nc.ui.cmp.cash.importable.CashDepositImportableEditor">
+		<property name="appModel" ref="manageAppModel" />
+		<property name="billcardPanelEditor" ref="cardEditor" />
+		<property name="addAction" ref="addAction" />
+		<property name="saveAction" ref="saveAction" />
+		<property name="cancelAction" ref="cancelAction" />
+		<property name="many2ManyDispatcher" ref="many2ManyDispatcher" />
+	</bean>
+
+	<!-- 打印 -->
+	<bean id="printActionGroup" class="nc.funcnode.ui.action.GroupAction">
+		<property name="actions">
+			<list>
+				<ref bean="printAction" />
+				<ref bean="printPreviewAction" />
+				<ref bean="outputAction" />
+			</list>
+		</property>
+	</bean>
+	<!-- 打印 -->
+	<bean id="printAction" class="nc.ui.pubapp.uif2app.actions.MetaDataBasedPrintAction">
+		<property name="preview" value="false" />
+		<property name="model" ref="manageAppModel" />
+		<property name="beforePrintDataProcess" ref="printProcessor" />
+	</bean>
+	<!-- 预览 -->
+	<bean id="printPreviewAction" class="nc.ui.pubapp.uif2app.actions.MetaDataBasedPrintAction">
+		<property name="preview" value="true" />
+		<property name="model" ref="manageAppModel" />
+		<property name="beforePrintDataProcess" ref="printProcessor" />
+	</bean>
+	<!-- 输出 -->
+	<bean id="outputAction" class="nc.ui.pubapp.uif2app.actions.OutputAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="parent" ref="cardEditor" />
+		<property name="beforePrintDataProcess" ref="printProcessor" />
+	</bean>
+	<!-- 打印处理类，精度等 -->
+	<bean id="printProcessor" class="nc.ui.cmp.cash.actions.CashDepositPrintProcessor">
+		<property name="model" ref="manageAppModel" />
+		<property name="srcDestItemCollection" ref="cardSrcDestCollection"></property>
+	</bean>
+
+	<!-- 按钮声明 -->
+	<bean id="toftpanelActionContributors" class="nc.ui.uif2.actions.ActionContributors">
+		<property name="contributors">
+			<list>
+				<ref bean="listViewActions" />
+				<ref bean="cardEditorActions" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="listViewActions" class="nc.ui.uif2.actions.StandAloneToftPanelActionContainer">
+		<constructor-arg>
+			<ref bean="listView" />
+		</constructor-arg>
+		<property name="actions">
+			<list>
+				<ref bean="addAction" />
+				<ref bean="editAction" />
+				<ref bean="deleteAction" />
+				<ref bean="copyAction" />
+				<ref bean="seperatorAction" />
+
+				<ref bean="queryAction" />
+				<ref bean="refreshAction" />
+				<ref bean="seperatorAction" />
+
+				<ref bean="commitMenuAction" />
+				<ref bean="approveActionGroup" />
+				<ref bean="seperatorAction" />
+				
+								<!-- 影像 -->
+				<ref bean="imageFuncActionGroup" />
+				<ref bean="seperatorAction" />
+				<!-- 影像 -->
+				
+
+				<ref bean="submitActionGroup" />
+				<ref bean="settleActionGroup" />
+				<ref bean="makeBillAction" />
+				<ref bean="auxiliaryActionGroup" />
+				<ref bean="seperatorAction" />
+
+				<ref bean="linkActionGroup" />
+				<ref bean="seperatorAction" />
+				
+				<ref bean="importExportActionGroup" />
+				<ref bean="printActionGroup" />
+			</list>
+		</property>
+	</bean>
+	<bean id="cardEditorActions" class="nc.ui.uif2.actions.StandAloneToftPanelActionContainer">
+		<constructor-arg>
+			<ref bean="cardEditor" />
+		</constructor-arg>
+		<property name="actions">
+			<list>
+				<ref bean="addAction" />
+				<ref bean="editAction" />
+				<ref bean="deleteAction" />
+				<ref bean="copyAction" />
+				<ref bean="seperatorAction" />
+
+				<ref bean="queryAction" />
+				<ref bean="cardRefreshAction" />
+				<ref bean="seperatorAction" />
+
+				<ref bean="commitMenuAction" />
+				<ref bean="approveActionGroup" />
+				<ref bean="seperatorAction" />
+				
+				<!-- 影像 -->
+				<ref bean="imageFuncActionGroup" />
+				<ref bean="seperatorAction" />
+				<!-- 影像 -->
+
+				<ref bean="submitActionGroup" />
+				<ref bean="settleActionGroup" />
+				<ref bean="makeBillAction" />
+				<ref bean="auxiliaryActionGroup" />
+				<ref bean="seperatorAction" />
+
+				<ref bean="linkActionGroup" />
+				<ref bean="seperatorAction" />
+				
+				<ref bean="importExportActionGroup" />
+				<ref bean="printActionGroup" />
+			</list>
+		</property>
+		<property name="editActions">
+			<list>
+				<ref bean="saveAction" />
+				<ref bean="saveAddAction" />
+				<ref bean="saveSendApproveAction" />
+				<ref bean="saveTempAction" />
+				<ref bean="seperatorAction" />
+
+				<ref bean="cancelAction" />
+			</list>
+		</property>
+		<property name="model" ref="manageAppModel" />
+	</bean>
+</beans>

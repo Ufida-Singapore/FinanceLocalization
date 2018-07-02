@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+    <title>审批工作台</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="UAP Message Center">
+    <meta name="keywords" content="UAP Message">
+
+	
+    <!-- build:css css/index.css -->
+    <link rel="stylesheet" href="/mp/css/style.css" />
+    <link rel="stylesheet" href="/mp/css/responsive.css" />
+    <!-- endbuild -->
+    <link href="/mp/css/query.css" rel="stylesheet">
+		<link href="formwizard/approval.css" rel="stylesheet">
+		<link href="formwizard/fi.css" rel="stylesheet">
+		<link href="formwizard/paybillform.css" rel="stylesheet">
+		<link href="formwizard/reject.css" rel="stylesheet">
+	
+		<link href="formwizard/uui/css/u.base.min.css" rel="stylesheet">
+		<link href="formwizard/uui/css/u.ext.min.css" rel="stylesheet">
+		<link href="formwizard/common.css" rel="stylesheet">
+    <!-- build:css css/base.css -->
+    <link rel="stylesheet" href="/mp/bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/mp/css/blue.css" />
+    <link rel="stylesheet" href="/mp/css/sco.css" />
+    
+    <!-- 附件预览自定义css -->
+    <link rel="stylesheet" href="/mp/css/preview.css" />
+    
+    <!-- endbuild -->
+
+    <!-- build:css css/widget.css -->
+    <link rel="stylesheet" href="/mp/bower_components/bootstrap-table/src/bootstrap-table.css">
+    <link rel="stylesheet" href="/mp/bower_components/fancybox/source/jquery.fancybox.css" />
+    <link rel="stylesheet" href="/mp/css/jquery.jqzoom.css" />
+    <link rel="stylesheet" href="/mp/bower_components/bootstrap-multiselect/css/bootstrap-multiselect.css"/>
+    <link rel="stylesheet" href="/mp/css/ladda-themeless.css">
+    <link rel="stylesheet" href="/mp/css/bootstrap-datetimepicker.css">
+    <link rel="stylesheet" href="/mp/css/scrollbar.css">
+    <!-- endbuild -->
+	
+	<link href="/mp/css/sco1.css" rel="stylesheet">
+	<link rel="stylesheet" href="/mp/css/content.css" />
+	
+    <!-- build:js js/base.js -->
+     <script src="/mp/js/respond.src.js"></script>
+    <script src="/mp/bower_components/jquery/jquery-1.11.1.js"></script>
+    <script src="/mp/bower_components/jquery/jquery-migrate-1.2.1.js"></script>
+    <script src="/mp/bower_components/jquery.cookie/jquery.cookie.js"></script>
+    <script src="/mp/bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="/mp/js/lib/jquery.placeholder.js"></script>
+    <script src="/mp/js/lib/sco.message.js"></script>
+    <script src="/mp/js/lib/bootbox.js"></script>
+    <script src="/mp/js/mp-plugin/NCSCAN.js"></script>
+    <!-- endbuild -->
+
+
+    <!-- build:js js/widget.js -->
+    <script src="/mp/js/common.js"></script>
+    <script src="/mp/js/todealenent.js"></script>
+    <script src="/mp/js/dimencodeparse.js"></script>
+    <script src="/mp/bower_components/underscore/underscore.js"></script>
+    <script src="/mp/bower_components/backbone/backbone.js"></script>
+    <script src="/mp/bower_components/backbone.paginator/lib/backbone.paginator.js"></script>
+    <script src="/mp/bower_components/backbone.paginator/examples/js/backgrid.js"></script>
+    <script src="/mp/js/lib/backgrid-paginator.js"></script>
+    <script src="/mp/bower_components/bootstrap-table/src/bootstrap-table.js"></script>
+    <!-- <script src="/mp/bower_components/fancybox/source/jquery.fancybox.pack.js"></script> -->
+    <script src="/mp/bower_components/fancybox/source/jquery.fancybox.js"></script>
+    <script src="/mp/js/lib/jquery.jqzoom-core.js"></script>
+    <script src="/mp/bower_components/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
+    <script src="/mp/js/lib/spin.js"></script>
+	<script src="/mp/js/lib/ladda.js"></script>
+    <script src="/mp/js/lib/bootstrap-datetimepicker.js"></script>
+    <script src="/mp/js/mp.zh-CN.js"></script>
+    <script src="/mp/js/lib/iscroll.js"></script>
+    
+    <!--审批工作台多语-->
+    <script src="/mp/js/lang/baselang.js"></script>
+    <script type="text/javascript">
+		var lang = getCookieForLang();		
+		if(lang == 'en')
+			document.write("<script src='/mp/js/lang/workstation_english.js'><\/script>");
+		else
+			document.write("<script src='/mp/js/lang/workstation_simpchn.js'><\/script>");
+	</script>
+    
+	<script src="/mp/js/sco.message.js"></script>
+    <!-- endbuild -->
+	<script src="/mp/js/ajaxfileupload.js"></script>
+    <script type="text/template" id="msg_area_template">
+        <li>
+            <h4><a href=""></a></h4>
+            <span><a class="trigger" href="#">Admin</a> 发布了文章</span>
+        </li>
+    </script>
+    
+    <script type="text/template" id="msg_item_template">
+	<div class="context" billtype=<%-msg.extendattrobj.workflowInfo.billtype%>>
+		<div class="status<%=msg.msgstatus=='dealed'?' status_did':''%>">
+            <span class="mp_msgtype <%=msgType(msg)%>" title=""></span>
+        </div>
+        <div class="p-summary">
+            <!--a class="author open-msg"  href="#" ><span class="preview"></span></a-->
+
+            <h2><a href="#"  ncurl=<%=msg.url%>  class="open-msg content_more" ifdealed=<%=msg.msgstatus%> billtype=<%-msg.extendattrobj.workflowInfo.billtype%> title="<%-msg.subject%>"  pk=<%= msg.pk_sourcemsg %> actioncode="getBill"><%-msg.subject%></a></h2>
+        </div>
+		<div class="meta">
+				<span class="contact"><%=trans("workstation_sponsor_person")%><%- msg.extendattrobj.workflowInfo.commter %>&nbsp;&nbsp;&nbsp;</span>
+				<span class="sub-tab-hr"></span>
+                <span class="datetime">&nbsp;&nbsp;&nbsp;<%= dateTimeFromNow(msg)%>&nbsp;&nbsp;&nbsp;</span>
+				<span class="sub-tab-hr"></span>
+				 <ul class="meta-tags">
+                    <li style="vertical-align: top;">&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+                    <li  style="min-width:130px;"> <div  class="attch"><%=trans("workstation_annex")%><div class="greennum_circle" style="display:	<%=_.size(msg.attrurllist)==0?'none;':'block;'%>"><%=_.size(msg.attrurllist)%></div><%=_.size(msg.attrurllist)==0?trans("workstation_none"):''%>&nbsp;&nbsp;</div></li>
+                </ul>
+	
+        </div>
+
+	</div>
+ 	<div class="p-excerpt1 excerpt-bg1 " style="width: 95%;">
+		<%
+			if(!msg.content){
+				msg.content='';
+			} 
+		%>
+        <div class="preStyle"><%-msg.content %></div>
+
+     </div>
+ 	<div class="context1">
+			<%if(msg.extendattrobj.workflowInfo.lastApproveActivity){%>
+				 <p>
+              		<%=trans("workstation_last_approver")%><%-msg.extendattrobj.workflowInfo.lastApprover%>/<%-msg.extendattrobj.workflowInfo.lastApproveActivity%><%=trans("workstation_approval_comments")%><%-msg.extendattrobj.workflowInfo.lastApproveNote%><%=trans("workstation_processing_time")%><%= msg.extendattrobj.workflowInfo.lastApproveTime <=0?"":timeStamp2String(msg.extendattrobj.workflowInfo.lastApproveTime) %>
+            	</p>
+			<%}else{%>
+				<!--<div style="width:100%;height:30px;"></div>-->
+			<%}%>
+           
+			<%if(msg.extendattrobj.workflowInfo.addApproveStatus==1){%>
+				<div class="ellipse_jq" style="display:block;">加签中</div>
+			<%}else if(msg.extendattrobj.workflowInfo.addApproveStatus==2){%>
+				<div class="ellipse_yjq" style="display:block;">已加签</div>
+			<%}%>
+			
+    </div>
+	<hr class="content_hr"/>
+	
+	<div class="sub-tabcontent">
+		<input type="text" class="form-control input-txt noneinput" placeholder='<%=trans("workstation_enter_approv")%>' oninput="textInputControl(this)"/>
+
+			<% _.each(msg.actionlist,function(action,index){ %>
+					<a href="javascript:changeClass('<%= msg.pk_sourcemsg %>','<%=action.actioncode%>');" ifdealed=<%=msg.msgstatus%> billtype=<%-msg.extendattrobj.workflowInfo.billtype%> ifdealed=<%=msg.msgstatus%>  data="7" class="<%-action.actioncode=='unApprove'?'btn-unApprove':'actionBtn'%>" pk=<%= msg.pk_sourcemsg %> actioncode=<%=action.actioncode%>><%-action.actioncode=="agree"?trans("workstation_approval"):(action.actioncode=="disAgree"?trans("workstation_do_not_approval"):(action.actioncode=="showFlowImg"?trans("workstation_Process"):trans("workstation_cancel_approval")))%></a>
+            
+			<%})%>
+			<a href="#" id="moreoperation" ncurl=<%=msg.url%>  ifdealed=<%=msg.msgstatus%> billtype=<%-msg.extendattrobj.workflowInfo.billtype%> data="30" class="content_more" pk=<%= msg.pk_sourcemsg %> actioncode="getBill"><%=trans("workstation_more_operations")%></a>			
+	 </div>
+	
+    </script>
+    <!--消息系统-->
+    <script type="text/template" id="msg_system_template">
+ 		<% _.each(msgsystem,function(element, index, list) { %>
+        <a href="#/filter/<%=element.code%>" data-type=<%=element.code%>  class="sourcesystem"><%-element.label%></a>
+        <% }) %>
+    </script>
+
+    <!--消息类型-->
+    <script type="text/template" id="msg_type_template">
+
+        <% _.each(msgtype,function(element, index, list) { %>
+        <% if (index<3){ %>
+        <li data-type=<%=element.code%>
+
+        <% if (index==0) { %>
+             <%= "class=current" %>
+             <% }%>
+        >
+        <a href="#/msg/msgs/<%=element.code%>"><%-element.name%></a>
+        </li>
+        <% } }) %>
+
+        <% if (_.size(msgtype)>3){ %>
+        <li class="menu__item dropdown">
+            <a data-toggle="dropdown" href="#" class="more">
+                <span>更多</span>
+            </a>
+            <ul class="dropdown-menu more">
+                <% _.each(msgtype,function(element, index, list) { %>
+                <% if (index>=3) %>
+                <li   data-type=<%=element.code%> ><a href="#/msg/msgs/<%=element.code%>"><%-element.name%></a></li>
+                <% }) %>
+            </ul>
+        </li>
+        <% } %>
+    </script>
+       
+    <!--用户选择 -->
+    <script type="text/template" id="msg_assignuser_template">
+
+			<div class="middletop">
+							 <% _.each(nodeAssignUser,function(element, index, list){%>
+								<%if(list.length==1){%>
+				<div class="people-tab">
+					<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>
+				</div>
+ 			<% }else if(list.length>1){ %>   
+          		<%if(index%2==0){%>
+					<div class="people-tab">
+					<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>				
+          		<% }else{ %>
+             			<span class="sub-tab-hr"></span>
+             			<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>
+						</div>	
+           		<%}%>
+				<%if(index==list.length-1 && list.length%2 != 0){%>
+					</div>
+				<%}%>
+			<% } %>
+							<%})%>
+						    <!-- 分割线  -->
+        <div class="horizontalline"></div>
+						</div>
+
+        		<% _.each(nodeAssignUser,function(element, index, list){%>
+				
+       					<div class="middlecontent" forkey="<%=element.activityDefId%>" keyname="<%=element.activityDesc%>" mustassign="<%=element.mustAssign%>">
+							<div class="contentleft">
+								<% _.each(element.allUsers,function(user,index){%>
+									<%if(index%2==0){%>
+										<div class="leftcontent" forkey="<%=element.activityDefId%>">
+											<div class="checkboxFive">
+								  				<input type="checkbox" value="<%=user.code%>" forkey="<%=element.activityDefId%>" id="<%=element.activityDefId%><%=index%>" name="" />
+									  			<label for="<%=element.activityDefId%><%=index%>"></label>
+								  			</div>
+								  			<div class="tocheckname" title="<%-user.name%>"><%-user.name%></div>
+								  			<!-- 
+											<span class="sub-tab-hr" style="display:none;"></span>
+								  			<div class="checkedname" style="display:none;">已指派</div>
+											-->
+										</div>
+									<%}%>
+								
+								<%})%>
+							</div>
+							<div class="contentright">
+								<% _.each(element.allUsers,function(user,index){%>
+									<%if(index%2!=0){%>
+								<div class="rightcontent"  forkey="<%=element.activityDefId%>">
+
+									<div class="checkboxFive">
+								  		<input type="checkbox" value="<%=user.code%>" forkey="<%=element.activityDefId%>" id="<%=element.activityDefId%><%=index%>" name="" />
+									  	<label for="<%=element.activityDefId%><%=index%>"></label>
+								  	</div>
+									<div class="tocheckname" title="<%-user.name%>"><%-user.name%></div>
+									
+								 </div>
+								<%}%>
+							<%})%>
+							</div>
+						</div>
+        <%})%>
+
+    </script>
+
+    <!--点击更多 用户选择  -->
+    <script type="text/template" id="assignusermore_template">
+
+	<div class="moremiddletop">
+		<% _.each(morenodeAssignUser,function(element, index, list){%>
+                
+			<%if(list.length==1){%>
+				<div class="people-tab">
+					<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>
+				</div>
+ 			<% }else if(list.length>1){ %>   
+          		<%if(index%2==0){%>
+					<div class="people-tab">
+					<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>				
+          		<% }else{ %>
+             			<span class="sub-tab-hr"></span>
+             			<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>
+						</div>	
+           		<%}%>
+				<%if(index==list.length-1 && list.length%2 != 0){%>
+					</div>
+				<%}%>
+			<% } %>
+			<%})%>
+        <!-- 分割线  -->
+        <div class="horizontalline"></div>
+	</div>
+
+	<% _.each(morenodeAssignUser,function(element, index, list){%>
+  	<div class="moremiddlecontent" forkey="<%=element.activityDefId%>" keyname="<%=element.activityDesc%>" mustassign="<%=element.mustAssign%>">
+		<div class="morecontentleft">
+			  <% _.each(element.allUsers,function(user,index){%>
+				<%if(index%2==0){%>
+					<div class="moreleftcontent" forkey="<%=element.activityDefId%>">
+						<div class="checkboxFive">
+			  				<input type="checkbox" value="<%=user.code%>" forkey="<%=element.activityDefId%>" id="<%=element.activityDefId%><%=index%>" name="" >
+				  			<label for="<%=element.activityDefId%><%=index%>"></label>
+			  			</div>
+			  			<div class="tocheckname" title="<%-user.name%>" ><%-user.name%></div>
+			  			
+					</div>
+					<%}%>
+				<%})%>
+		</div>
+		<div class="morecontentright" forkey="<%=element.activityDefId%>" keyname="<%=element.activityDesc%>">
+			<% _.each(element.allUsers,function(user,index){%>
+				<%if(index%2!=0){%>
+			<div class="morerightcontent" forkey="<%=element.activityDefId%>">
+
+				<div class="checkboxFive">
+			  		<input type="checkbox" value="<%=user.code%>" forkey="<%=element.activityDefId%>" id="<%=element.activityDefId%><%=index%>" name="" >
+				  	<label for="<%=element.activityDefId%><%=index%>"></label>
+			  	</div>
+				<div class="tocheckname" title="<%-user.name%>" ><%-user.name%></div>
+				
+			 </div>
+				<%}%>
+			<%})%>
+		
+		</div>
+	</div>
+	<%})%>	
+    </script>
+
+	<!--审批动作页签显示-->
+    <script type="text/template" id="msg_todoaction_template">
+	<% _.each(workflowsphis.todo_action_info.actions,function(element, index, list) {%>
+
+	<% if (element.action_code=="reject"){ %>
+		<a href="#page3">驳回</a>
+	<% } %>
+	<% if (element.action_code=="reassign"){ %>
+		<a href="#page4">改派</a>
+	<% } %>
+	<% if (element.action_code=="addApprove"){ %>
+		<a href="#page5">加签</a>
+	<% } %>	
+		
+    <%})%>
+
+    </script>
+    
+    
+    
+    <!--流程审批记录-->
+    <script type="text/template" id="msg_workflowdealhis_template">
+	<% _.each(workflowsphis.history_task,function(element, index, list) {%>
+
+                        <% if (index==0){ %>
+							<div class="row approve-pass"  ifshow="approveopen" onclick="showorhide()">
+						 <% }else{ %>
+ 						<% if (index>0 && index<workflowsphis.history_task.length-3){%>
+							<div class="row approve-pass" style="display: none;">
+						 <% } %>
+						 <% if (index>=workflowsphis.history_task.length-3 && index<=workflowsphis.history_task.length-1){%>
+							<div class="row approve-pass" style="display: block;">
+						 <% } %>
+                       <% } %>
+							<div class="approve-left">
+								<div class="out_circle">
+								<% if (index==0 && workflowsphis.history_task.length>4){ %>
+									<div class="approve-bage" style='background:url(/mp/img/approve-bage-whitecircle.png) no-repeat;'></div>
+								 <% }else{%>
+									<div class="approve-bage"><%=index+1%></div>
+								 <%} %>
+								</div>
+								<div class="approve-vertical-line"></div>
+							</div>
+							<div class="approve-right">
+								
+									<span class="approve-person">
+						<% if (index==0){ %>
+							<p class=""><%-element.noteVO.activityName%>&nbsp;&nbsp;<%-element.noteVO.checkman%>&nbsp;&nbsp;<%-element.noteVO.dealDate<=0?"":timeStamp2String(element.noteVO.dealDate)%></p>
+							<p class=""><%-element.noteVO.actionname%>&nbsp;&nbsp;&nbsp;&nbsp;<%-element.noteVO.checknote%></p>
+							<%if(workflowsphis.todo_action_info.pk_workflownote==element.noteVO.pk_workflownote){%>
+							<p>
+								<a href="#" id="dealedfj">附件上传</a>
+								<button type="button" id="dealedqs" class="btn btn-success btn-xs actionBtn" pk="" actioncode="unApprovenew">取消审批</button>
+							</p> 
+							<%}%>
+
+						<% }else{%>
+							<div class="titwork">
+								<p class="titp"><%-element.noteVO.activityName%>&nbsp;&nbsp;<%-element.noteVO.checkman%>&nbsp;&nbsp;<%-element.noteVO.dealDate<=0?"":timeStamp2String(element.noteVO.dealDate)%></p>
+									
+
+									<div class="post" style="<%-_.size(element.flowAttVOs)==0?'display:none;':'display:block;'%>">
+										<div class="meta">
+											 <ul class="meta-tags">
+											    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+											    <li> <div class="attch" data-original-title="" title="">附件 :&nbsp;</div><span class="greennum_circle1"><%-_.size(element.flowAttVOs)%></span></li>
+											</ul>
+
+											<div class="top_cusp">
+												<ul>
+												<% _.each(element.flowAttVOs,function(filee, index, list) {%>
+												  <li>
+													<div class="filecontainer">
+													<span class="fileimgtit"><img src="<%-filee.imgstr%>" <%-filee.styleflag=='1'?'style=background:black;':''%> ></span>
+													<span class="filehref"><a target="_blank" title="<%-filee.attrname%>" href="<%-'msg/download/'+filee.attraddress+'?sourceSystemCode='+filee.sourceSystemCode+'&pk_sourcemsg='+filee.pk_sourcemsg+'&msgtype='+filee.msgtype+'&fileType=flowAtt'+'&fileName='+filee.fileName%>"><%-filee.attrname%></a></span>
+													<span class="fileperson" style="float:right;"><%-filee.uploader%></span>
+													</div>
+												  </li>
+
+												<%})%>
+
+												 </ul>
+
+												 <span class="cusp01">
+													<span class="cusp02"></span>
+												 </span> 
+											 </div>
+
+										</div>
+									</div>
+							</div>
+
+							<div><p class="notecontent"><%-element.noteVO.actionname%>&nbsp;&nbsp;&nbsp;&nbsp;<%-element.noteVO.checknote%></p></div>
+							
+							<%if(workflowsphis.todo_action_info.pk_workflownote==element.noteVO.pk_workflownote){%>
+							<p>
+								<button type="button" id="dealedqs" class="btn btn-success btn-xs actionBtn" pk="" actioncode="unApprovenew">取消审批</button>
+							</p> 
+							<%}%>
+
+						<%} %>
+									
+									</span>	
+								<%if(element.noteVO.addApproveStatus==1){%>
+									<div class="jqstatus">
+										<div class="ellipse_jq" style="display:block;">加签中</div>
+									</div>
+								<%}else if(element.noteVO.addApproveStatus==2){%>
+									<div class="jqstatus">
+										<div class="ellipse_yjq" style="display:block;">已加签</div>
+									</div>
+									
+								<%}%>
+		
+							</div>
+
+
+							
+						</div>
+         <%})%>
+
+    </script>
+    <!--环节选择 -->
+    <script type="text/template" id="msg_node_template">
+		<div class="form-group">
+            <div class="input-group" >
+                <span class="input-group-addon">驳回环节：</span>
+                <select   class="refUserMulti form-control">
+                    <% _.each(nodeAssign,function(node){%>
+                    <option value=<%=node.id%>><%-node.name%></option>
+                    <%})%>
+                 </select>
+            </div>
+        </div>
+    </script>
+	
+	<!--环节选择  new-->
+    <script type="text/template" id="msg_activityitem_template">
+		<div class="moremiddlecontent" forkey="" keyname="" mustassign="">
+				<div class="morecontentleft">
+					<% _.each(workitem,function(element, index) { %>
+						<%if(index%2==0){%>
+						<div class="moreleftcontent" forkey="">
+							<div class="checkboxFive">
+				  				<input type="checkbox" value="<%-element.id%>" forkey="" id="<%-element.id%><%-index%>" name="" >
+					  			<label for="<%-element.id%><%-index%>"></label>
+				  			</div>
+				  			<div class="tocheckname" title="<%-element.name%>" ><%-element.name%></div>
+				  			
+						</div>
+						<%}%>
+					<%})%>
+				</div>
+			
+				<div class="morecontentright" forkey="" keyname="">
+					<% _.each(workitem,function(element, index) { %>
+						<%if(index%2!=0){%>
+					<div class="morerightcontent" forkey="">
+		
+						<div class="checkboxFive">
+					  		<input type="checkbox" value="<%-element.id%>" forkey="" id="<%-element.id%><%-index%>" name="" >
+					  			<label for="<%-element.id%><%-index%>"></label>
+					  	</div>
+						<div class="tocheckname" title="<%-element.name%>"><%-element.name%></div>
+						
+					 </div>
+						<%}%>
+					<%})%>
+				</div>
+			</div>
+		
+	 </script>
+	
+	
+	<script type="text/template" id="notice_alert_template">
+<% _.each(msg,function(element, index, list) { %>
+	<%if(index==list.length-1){%>
+	<div class="msg_info">
+	<%}else{%>
+	<div class="msg_info_line">
+	<%}%>
+		<%if(element.msgtype=='notice'){%>
+		 <%if(element.msgstatus=='waitdeal'){%>
+		 <div id="noticeWaitdealImg<%-index%>" class="notice_waitdeal_img" pk=<%= element.pk_sourcemsg %> sourcesystem="<%-element.sourcesystem%>"></div>
+         <%}else{%>
+         <div class="notice_dealed_img"></div>
+        <%}%>
+	<%}else{%>
+		 <%if(element.msgstatus=='waitdeal'){%>
+         <div id="alertWaitdealImg<%-index%>" class="alert_waitdeal_img" pk=<%= element.pk_sourcemsg %> sourcesystem="<%-element.sourcesystem%>"></div>
+         <%}else{%>
+         <div class="alert_dealed_img"></div>
+        <%}%>
+	<%}%>		
+		<div class="msg_center">
+			<div class="msg_title" id="noticeTitile<%-index%>">
+				<a title="<%-element.subject%>" class="msg_info_href" href="javascript:void(0)" pk="<%-element.pk_sourcemsg%>" msgtype="<%-element.msgtype%>" id="<%-element.sourcesystem%>">
+					<% if(element.subject.length>11){%>
+						<%-element.subject.substring(0,11)%>...
+					<%}else{%>
+						<%-element.subject%>
+					<%}%>
+				</a>
+			</div>
+			<div class="msg_content" data-code="<%-element.sourcesystem%>" datapk="<%-element.pk_sourcemsg%>">
+				<%if(element.content!=null){%>
+					<%if(element.content.length>22){%>
+					<%-element.content.substring(0,22)%>...
+					<%}else{%>
+					<%-element.content%>
+					<%}%>
+				<%}%>
+			</div>
+		</div>
+	</div>
+<% }) %>
+	</script>
+	
+<script type="text/template" id="notice_detail_template">
+<div style="width: 743px;float: left;padding-bottom: 402px;">    
+    <div class="msg_info_detail_line">
+		<div class="notice_dealed_detail_img"></div>
+		<div class="msg_center">
+			<div>
+				<div class="msg_detail_title" title="<%-msg.msgVo.subject%>">
+						<div style="float:left;"><%-msg.msgVo.subject%></div>
+						<div class="msg_detail_sender_time" style="margin-right: 20px;">时间：<%-timeStamp2String(msg.msgVo.sendtime)%></div>
+						<div class="msg_detail_sender">发件人：<%-msg.msgVo.sendername%></div>
+				</div>
+			</div>
+			<div class="msg_detail_content"><%-msg.msgVo.content%></div>
+		</div>
+	</div>
+	<div class="msg_tag_info">
+		<div class="i-tag"></div>
+		<span>
+			附件：	
+			<%if(msg.msgVo.attrurllist!=null&&msg.msgVo.attrurllist.length>0){%>
+             <%if(msg.msgVo.attrurllist.length>2){%>
+				<span class="tag_more_button">
+                   <a actioncode="moreChangeClass">更多>></a>
+                </span>
+              <%}%>
+			<%}else{%>
+				无
+			<%}%>
+			&nbsp;&nbsp;
+		</span>
+		<% _.each(msg.msgVo.attrurllist,function(element, index, list) { %>
+			<%if(index<2){%>
+               <div class="i_tag_info">
+               <% var type = element.attrname.substring(element.attrname.lastIndexOf(".")+1)%>
+                <%if(type =="xls"){%>
+                  <div class="excel_img"></div>
+                <%}else if(type =="doc"){%>
+                  <div class="word_img"></div>
+                <%}else if(type =="ppt"){%>
+                  <div class="ppt_img"></div>
+                <%}else{%>
+                  <div class="word_img"></div>
+               <%}%>
+               <a target="_blank" href=<%-element.downloadurl%>>&nbsp;&nbsp;<%-element.attrname%></a>
+              </div>
+             <%}%>
+		<%})%>
+	</div>
+<div class="tag_more" style="padding-left: 138px;">
+  <% _.each(msg.msgVo.attrurllist,function(element, index, list) { %>
+      <%if(index>1){%>
+              <div class="i_tag_info">
+                  <% var type = element.attrname.substring(element.attrname.lastIndexOf(".")+1)%>
+                  <%if(type =="xls"){%>
+                  <div class="excel_img"></div>
+                  <%}else if(type =="doc"){%>
+                  <div class="word_img"></div>
+                   <%}else if(type =="ppt"){%>
+                  <div class="ppt_img"></div>
+                   <%}else if(1<index<3){%>
+                  <div class="word_img"></div>
+                  <%}%>
+                  <a target="_blank" href=<%-element.downloadurl%>>&nbsp;&nbsp;<%-element.attrname%></a>
+             </div>
+     <%}%>
+  <%})%>
+</div>
+<%if(msg.msgVo.showBill){%>
+	<div class="msg_tag_info" style="padding-left: 38px;"> 
+		<div><%=msg.htmlBill%></div>
+	</div>
+<%}%>
+</div>
+	</script>
+	<script type="text/template" id="alert_detail_template">
+<div style="width: 743px;float: left;padding-bottom: 402px;">
+    <div class="msg_info_detail_line">
+        <div class="alert_detail_dealed_img"></div>
+		<div class="msg_center">
+			<div>
+				<div class="msg_detail_title" title="<%-msg.msgVo.subject%>">
+						<div style="float:left;"><%-msg.msgVo.subject%></div>
+						<div class="msg_detail_sender_time" style="margin-right: 20px;">时间：<%-timeStamp2String(msg.msgVo.sendtime)%></div>
+						<div class="msg_detail_sender">发件人：<%-msg.msgVo.sendername%></div>
+				</div>
+			</div>
+			<div class="msg_detail_content"><%-msg.msgVo.content%></div>
+		</div>
+    <div class="alert_msg_tag_info">
+        <div class="i-tag"></div>
+		<span>
+			附件：	
+			<%if(msg.msgVo.attrurllist!=null&&msg.msgVo.attrurllist.length>0){%>	
+			<%}else{%>
+				无
+			<%}%>
+			&nbsp;&nbsp;
+		</span>
+		<% _.each(msg.msgVo.attrurllist,function(element, index, list) { %>
+           <%if(index<5){%>
+            <div class="i_tag_info">
+               <% var type = element.attrname.substring(element.attrname.lastIndexOf(".")+1)%>
+                <%if(type =="xls"){%>
+                  <div class="excel_img"></div>
+                <%}else if(type =="doc"){%>
+                  <div class="word_img"></div>
+                <%}else if(type =="ppt"){%>
+                  <div class="ppt_img"></div>
+                <%}else{%>
+                  <div class="word_img"></div>
+               <%}%>
+               <a target="_blank" href=<%-element.downloadurl%>>&nbsp;&nbsp;<%-element.attrname%></a>
+          </div>
+             <%}else{%>
+                 <span class="tag_more_button">
+                   <a>更多>></a>
+                </span>
+                <div class="tag_more">
+                   <a target="_blank" href=<%-element.downloadurl%>>&nbsp;&nbsp;<%-element.attrname%></a>
+                </div>
+			<%}%>
+		<%})%>
+	 </div>
+   </div>
+<%if(msg.msgVo.showBill){%>
+	<div class="msg_tag_info" style="padding-left: 38px;"> 
+		<div><%=msg.htmlBill%></div>
+	</div>
+<%}%>
+</div>
+	</script>
+<script type="text/template" id="notice_msg_more_template">
+<% _.each(msg,function(element, index, list) { %>
+<div class="msg_more_backcol">
+  <div class="msg_each_content">
+    <div class="msg_more_line_2">
+		<%if(element.msgstatus=='waitdeal'){%>
+		 <div class="notice_waitdeal_img"></div>
+         <%}else{%>
+         <div class="notice_dealed_img"></div>
+        <%}%>	
+		<div class="msg_center">
+            <div class="msg_title">
+			<div style="float:left;font-weight: bold;font-size: 13px;"><%-element.subject%></div>
+			<div class="msg_detail_sender_time">时间：<%-element.sendtime%></div>
+            <div class="msg_detail_sender">发件人：<%-element.sendername%></div>
+			</div>
+			<div class="msg_content" style="height:100%;"><%-element.content%></div>
+		</div>        
+	</div>
+   <div class="msg_more_tag">
+       <div class="i-more-tag"></div>
+       <span>
+			附件:
+			&nbsp;&nbsp;
+      </span>
+    </div>
+  </div>
+</div>
+<% }) %>
+	</script>
+	<script type="text/template" id="alert_msg_more_template">
+<% _.each(msg,function(element, index, list) { %>
+<div class="msg_more_backcol">
+  <div class="msg_each_content">
+    <div class="msg_more_line_2">
+		<%if(element.msgstatus=='waitdeal'){%>
+		 <div class="alert_waitdeal_img"></div>
+         <%}else{%>
+         <div class="alert_dealed_img"></div>
+        <%}%>	
+		<div class="msg_center">
+            <div class="msg_title">
+			<div style="float:left;font-weight: bold;font-size: 13px;"><%-element.subject%></div>
+			<div class="msg_detail_sender_time">时间：<%-element.sendtime%></div>
+            <div class="msg_detail_sender">发件人：<%-element.sendername%></div>
+			</div>
+			<div class="msg_content" style="height:100%;"><%-element.content%></div>
+		</div>
+	</div>
+    <div class="msg_more_tag">
+       <div class="i-more-tag"></div>
+       <span>
+			附件:
+			&nbsp;&nbsp;
+      </span>
+    </div>
+  </div>
+</div>
+<% }) %>
+</script>
+<script type="text/template" id="task_tab_template">
+       <div class="wait_approve_div_01" style="padding-left:28px;" id="task_tab"><span>任务&nbsp;&nbsp;</span><span id="task_tab_item"><%-msg%></span></div>
+        <%if(msg!=0){%>
+		 <div class="red_circle" id="task_tab_red_circle"></div>
+        <%}%>
+</script>
+<script type="text/template" id="notice_tab_template">
+        <div class="wait_approve_div_01" style="padding-left:28px;" id="task_tab"><span>通知&nbsp;&nbsp;</span><span id="notice_tab_item"><%-msg%></span></div>
+        <%if(msg!=0){%>
+		 <div class="red_circle" id="notice_tab_red_circle"></div>
+        <%}%>
+</script>
+<script type="text/template" id="alert_tab_template">
+        <div class="wait_approve_div_01" style="padding-left:28px;" id="task_tab"><span>预警&nbsp;&nbsp;</span><span id="alert_tab_item"><%-msg%></span></div>
+        <%if(msg!=0){%>
+		 <div class="red_circle" id="alert_tab_red_circle"></div>
+        <%}%>
+</script>
+    <!-- build:remove:dist -->
+    <script src="/mp/js/mp-plugin/SEA.js"></script>
+    <script src="/mp/js/mp-plugin/UAP65.js"></script>
+    <script src="/mp/js/mp-plugin/NC57MP.js"></script>
+	<!--
+    <script src="js/mock/mock.js"></script>
+    <script src="js/mock/mockapp.js"></script>
+    <script src='http://127.0.0.1:8088/rap.plugin.js?projectId=1&mode=1'></script>
+    -->
+      <!-- /build -->
+
+
+    <!-- build:js js/app.js -->
+    <script src="/mp/js/lib/jquery.hoverIntent.js"></script>
+    <script src="/mp/js/lib/ajax-pushlet-client.js"></script>
+    <script src="/mp/msg/model/msg.js"></script>
+    <script src="/mp/msg/collection/msgs.js"></script>
+    <script src="/mp/msg/view/msgview.js"></script>
+    <script src="/mp/msg/view/appview.js"></script>
+    <script src="/mp/msg/view/rightview.js"></script>
+    <script src="/mp/msg/router/router.js"></script>
+    <script src="/mp/msg/msgapp.js"></script>
+    <!-- 任务附件预览自定义 preview.js-->
+    <script src="/mp/js/preview.js"></script>
+    
+    <!-- endbuild -->
+	<script src="/mp/js/querytpl.js"></script>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+     <!-- build:js js/iesupport.js -->
+    <script src="/mp/bower_components/html5shiv/dist/html5shiv.min.js"></script>
+    <script src="/mp/bower_components/respond/dest/respond.min.js"></script>
+    <script src="/mp/js/lib/ie.js"></script>
+    <!-- endbuild -->
+    <![endif]-->
+
+    <link href="/mp/img/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <style>[touch-action="none"]{ -ms-touch-action: none; touch-action: none; }[touch-action="pan-x"]{ -ms-touch-action: pan-x; touch-action: pan-x; }[touch-action="pan-y"]{ -ms-touch-action: pan-y; touch-action: pan-y; }[touch-action="scroll"],[touch-action="pan-x pan-y"],[touch-action="pan-y pan-x"]{ -ms-touch-action: pan-x pan-y; touch-action: pan-x pan-y; }
+    h2, .h2 {
+        font-size: 20px
+    }
+    h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6{
+        font-weight:700;
+    }
+
+    .btn-sm, .btn-group-sm > .btn {
+        padding: 1px 5px;
+        font-size: 13px;
+        line-height: 1.5;
+        border-radius: 2px
+    }
+    .dropdown-menu {
+        min-width: 0px !important;
+    }
+    .head-nav  .more li a{
+        border-bottom: 0px;
+        height:32px
+    }
+
+    #scroller {
+        position:relative;
+        /*	-webkit-touch-callout:none;*/
+        -webkit-tap-highlight-color:rgba(0,0,0,0);
+        float:left;
+        width:100%;
+        padding:0;
+    }
+/*    5cb85c */
+   .bootstrap-tablediv > .pagination > .active > a, .pagination > .active > span, .pagination > .active > a:hover, .pagination > .active > span:hover, .pagination > .active > a:focus, .pagination > .active > span:focus {
+	  z-index: 2;
+	  color: #fff;
+	  cursor: default;
+	  background-color: #428bca;
+	  border-color: #428bca;
+	}
+		@media (max-width: 767px) {
+    .hidden-xs {
+        display: none !important
+    }
+    .body-transform {
+       height: 100%;
+       position: absolute;
+       -webkit-transform: scale(0.8);
+       -webkit-transform-origin: top;
+    }
+    .contain-transform{
+       -webkit-transform: scale(0.95);
+       -webkit-transform-origin: top;
+       padding: 0px;
+    }
+    .sec-transform{
+  width: 25%;
+  float: right;
+  margin-top: -129px;
+  padding: 0;
+    }
+    .main-transform{
+       width: 75%;
+       min-width: 530px;
+    }
+}
+@media (min-width: 768px) and (max-width: 991px) {
+    .hidden-sm {
+        display: none !important
+    }
+    .body-transform {
+       width: 100%;
+       height: 100%;
+       position: absolute;
+       -webkit-transform: scale(0.8);
+       -webkit-transform-origin: top;
+    }
+    .contain-transform{
+       -webkit-transform: scale(0.95);
+       -webkit-transform-origin: top;
+       padding: 0px;
+    }
+    .sec-transform{
+  width: 25%;
+  float: right;
+  margin-top: -129px;
+  padding: 0;
+    }
+    .main-transform{
+       width: 75%;
+       min-width: 530px;
+    }
+}
+	.box-shadow-none{
+       box-shadow:none;
+    }
+    </style>
+
+</head>
+<body id="body" onload="onloadLangSource()">
+<div class="allcontent" id="allcontent">
+<header class="site-header   navbar-fixed-top " style="height: 30px; background: #b3b3b3;">
+    <!--[if lt IE 8]>
+    <div class="error chromeframe ">Oops:您的浏览器<strong>老土啦</strong>，请升级您的浏览器 <a target="_blank" href="http://browsehappy.com">立即升级</a></div>
+    <![endif]-->
+    <div class="container inner clearfix">
+        <div class="head-logout" style="margin-top: 0px;">
+            <div style="display: inline-block;margin-right: 20px;">
+	            <a id="refreshBtn" class="refresh-message">刷新消息</a>
+	            <div class="refresh_red_circle" style="float: right" id="red_circle"></div>
+	            <input id="usernamehidd" name="usernamehidd" type="hidden"/>
+            </div>
+        </div>      
+    </div>
+    
+</header><!-- end .site-header -->
+<div class="container contain-transform">
+<!--弹出层时背景层DIV-->
+	<div id="fade" class="black_overlay">
+	<input type="hidden" id="isdealed" value="waitdeal"/>
+	</div>
+    <!-- 弹出界面，左侧是附件预览，右侧是审批流程  -->
+	<div id="MyDiv" class="white_content">
+		<div class="MyDiv_left">
+		   <!-- 左侧导航 -->
+		    <div class="preview_left">
+		    <!-- 单据正文一行 
+		    <div class="pleft-bill click-preview"><a href="javascript:void(0)" onclick="preview('F:\\MP\\software\\apache-tomcat7.0\\webapps\\src-doc\\C0005.ppt','ppt',this)">单据正文</a></div>
+		    -->
+		    <!-- 附件一行
+		    <div><span style="color:white;">-------</span><div class="pleft-attach"><span style="color: white;margin-left: 14px;font-size:11px;">附件-------</span></div></div>	
+		      -->
+		      <!--<div class="pleft-content">		      
+		          <div class="pleft-ppt click-preview"><a href="javascript:void(0)" onclick="preview('F:\\MP\\software\\apache-tomcat7.0\\webapps\\src-doc\\C0005.ppt','ppt',this)" title="销售报销单据.ppt">销售报销单据.ppt</a></div>
+		          <div class="pleft-ppt click-preview"><a href="javascript:void(0)"  onclick="preview('F:\\MP\\software\\apache-tomcat7.0\\webapps\\src-doc\\C00051.pptx','pptx',this)" title="销售报销单据.ppt">销售报销单据.pptx</a></div>
+		          <div class="pleft-other click-preview"><a href="javascript:void(0)" onclick="preview('F:\\MP\\software\\apache-tomcat7.0\\webapps\\src-doc\\test.txt','txt',this)" title="销售报销单据.ppt">销售报销单据.txt</a></div>
+		          <div class="pleft-excel click-preview"><a href="javascript:void(0)"  onclick="preview('F:\\MP\\software\\apache-tomcat7.0\\webapps\\src-doc\\uap-studio-V6.xls','xls',this)" title="销售报销单据.ppt">销售报销单据.xls</a></div>
+		          <div class="pleft-excel click-preview"><a href="javascript:void(0)"  onclick="preview('F:\\MP\\software\\apache-tomcat7.0\\webapps\\src-doc\\uap-studio-V61.xlsx','xlsx',this)" title="销售报销单据.ppt">销售报销单据.xlsx</a></div>
+		          <div class="pleft-pdf click-preview"><a href="javascript:void(0)"  onclick="preview('F:\\MP\\software\\apache-tomcat7.0\\webapps\\src-doc\\UAPStudioV6.3.1.4.pdf','pdf',this)" title="销售报销单据.ppt">销售报销单据.pdf</a></div>
+		          <div class="pleft-word click-preview"><a href="javascript:void(0)"  onclick="preview('F:\\MP\\software\\apache-tomcat7.0\\webapps\\src-doc\\user.doc','doc',this)" title="销售报销单据.ppt">销售报销单据.doc</a></div>
+		          <div class="pleft-word click-preview"><a href="javascript:void(0)"  onclick="preview('F:\\MP\\software\\apache-tomcat7.0\\webapps\\src-doc\\user1.docx','docx',this)" title="销售报销单据.ppt">销售报销单据.docx</a></div>		          
+		          
+		          
+		          <div style="color: beige;cursor:pointer;" onclick="goPrevious()">上一页</div>
+		          <div style="color: beige;cursor:pointer;" onclick="goNext()">下一页</div>
+		         
+		      </div>
+		       -->
+		    </div>
+		    <!-- 右侧正文 -->
+			<div class="preview_right" >		 
+                <!--  <div class="preview_bill_content"></div>-->
+                <div class="preview_download"></div>
+                <div class="preview_content">            
+			     <!--  <canvas id="test" class="canvas_test" style="max-width:555px;max-height:790px;"></canvas>-->
+			    </div>		     
+			    <!-- 控制区域
+			    <div class="preview-controls">
+			      <div class="preview-previous" id="pre"  onclick="goPrevious()">上一页</div>
+			      <div class="preview-next" id ="next" onclick="goNext()">下一页</div>
+			    </div>
+			     -->
+			    <div class="preview-loading">loading</div>
+			</div>			
+		</div>
+		<!--中间 
+			<div class="MyDiv_middle" style="display:none;width:20%;">
+			<div class="left_icon">
+				<div><img src="../mp/img/move_icon.svg"/></div>
+				<div><img src="../mp/img/yuanshi_icon.svg"/></div>
+				<div><img src="../mp/img/bigger_icon.svg"/></div>
+				<div><img src="../mp/img/smailer_icon.svg"/></div>
+			  </div>
+		     </div>
+			-->	
+		<div class="MyDiv_right">
+			<div class="MyDiv_close" onclick="CloseDiv('MyDiv','fade')">
+				<img src="../mp/img/close.svg"/>
+			</div>
+		<div class="r_title">
+			<span id="work_history"  class="actionBtn" style="cursor:default;"  actioncode="showFlow" pk="">审批历史</span>
+			<span class="r_span"></span>
+			<span id="flow_img">流程图<img src="../mp/img/work_icon.svg"/></span>
+			<span class="r_span"></span>
+            <span id="img_show">影像查看</span>
+			<ul class="meta-tags">
+               <li>
+               	<div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;">
+               	<div class="arrow"></div>
+               	<h4 class="popover-title" style="display: none;"></h4>
+               	<div class="popover-content">
+               		sdgsfsdfsdf
+               	</div>
+               	</div>
+               </li>
+           </ul>
+		</div>
+		
+		<div class="grid-body with-scroll">
+				<div class="row" style="height: 100%;width:100%;"> 
+					<div id="approvalinfos" class="form-wizard-steps approve approve-ver ">
+						<div id="workflowiera">
+						
+						</div>
+						<div class="row approve-pending approve-todo-action" >
+							<div class="approve-left"> 
+								<div class="out_circletodo">
+									<div class="approve-bage">
+									</div>
+									<div class="approve-content">
+									</div>
+								</div>
+							</div>
+							<div class="approve-right" id="lastright">
+								
+											<div class="tabs">
+												
+											    <div class="tabcontent">
+												    <div class="tabhost">
+												    	<a href="#page1"  class="selected" id="selfirst">批准</a>
+												        <a href="#page2">不批准</a>
+												        <a href="#page3" style="display:none;">驳回</a>
+												        <a href="#page4" style="display:none;">改派</a>
+												        <a href="#page5" style="display:none;">加签</a>
+														
+												    </div>
+											    	<div id="page1" class="page">
+											    	
+											    		<div class="pagetext">
+											    			<textarea placeholder="请输入审批意见(默认为 ：批准)..." class="form-control  form-group" rows="2" id="agreemsg"></textarea>
+											    		</div>
+														<div class="peoplecontent">
+														<div class="psonslttitle selections" id="">
+													        	<p>请指派审批人：</p>
+													    </div>
+														<div class="people-tablediv">
+															
+															
+												        </div>
+												        </div>
+														 <div class="psonslfoolter">
+														        	<div class="post">
+																		<div class="meta" style="margin-right: 0px;">
+																			 <ul class="meta-tags">
+															                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+															                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><input type="file" name="fileToUpload" class="file" onchange="ajaxFileUpload(this)"/><a class="upload" href="" onclick="return false;">上传附件</a></div></li>
+															                </ul>
+																        </div>
+																	</div>
+														        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="">取消</button></div>
+														        	<div class="lasttwo"><button type="button" class="btn btn-success btn-xs actionBtn okbtn" pk="" actioncode="agree">确定</button></div>
+														        	
+														 </div>
+													</div>
+											        <div id="page2"  class="page">
+												        <div class="pagetext">
+												        	<textarea placeholder="请输入审批意见..." class="form-control  form-group" rows="2" id="disagreemsg"></textarea>
+														</div>
+														<div class="peoplecontent">
+														<div class="psonslttitle selections" id="">
+													        	<p>请指派审批人：</p>
+													    </div>
+														 <div class="people-tablediv2">
+															
+															  	
+												        </div>
+												        </div>
+														 <div class="psonslfoolter">
+														        	<div class="post">
+																		<div class="meta" style="margin-right: 0px;">
+																			 <ul class="meta-tags">
+															                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+															                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><input type="file" name="fileToUpload" class="file"  onchange="ajaxFileUpload(this)"/><a class="upload" href="" onclick="return false;">上传附件</a></div></li>
+															                </ul>
+																        </div>
+																	</div>
+														        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="">取消</button></div>
+														        	<div class="lasttwo"><button type="button" class="btn btn-success btn-xs actionBtn okbtn" pk="" actioncode="disAgree">确定</button></div>
+														        	
+														 </div>
+											        </div>
+											        <div id="page3"  class="page">
+											        		<div class="pagetext">
+													        	<textarea placeholder="请输入审批意见..." class="form-control  form-group" rows="2" id="rejectmsg"></textarea>
+													        </div>
+													        <div class="psonslttitle selections" id="">
+													        	<p>选择驳回环节：</p>
+													        </div>
+											        
+											        		<div class="bootstrap-tablediv" style="overflow: hidden;min-width: 260px;">
+											                   			
+												            </div>
+														   	<div class="psonslfoolter">
+													        	<div class="post">
+																	<div class="meta" style="margin-right: 0px;">
+																		 <ul class="meta-tags">
+														                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+														                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><input type="file" name="fileToUpload" class="file"  onchange="ajaxFileUpload(this)"/><a class="upload" href="" onclick="return false;">上传附件</a></div></li>
+														                </ul>
+															        </div>
+																</div>
+													        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="">取消</button></div>
+													        	<div class="lasttwo"><button type="button" class="btn btn-success btn-xs actionBtn okbtn" pk="" actioncode="reject">确定</button></div>
+													 		</div>
+											        </div>
+											        <div id="page4"  class="page">
+													        <div class="pagetext">
+													        	<textarea placeholder="请输入审批意见..." class="form-control  form-group" rows="2" id="reassigntmsg"></textarea>
+													        </div>
+													        <div class="psonslttitle selections" id="gpperson">
+													        	<p>选择改派处理人员：</p>
+													        </div>
+											        
+											        		<div class="bootstrap-tablediv">
+											                    <table id="userRefTablegp"
+											                    data-show-refresh="false" data-search="true"
+											                    data-side-pagination="server"
+											                    data-pagination="true"
+											                    data-page-list="[3, 6, 12, 24, 48]">
+											                        <thead>
+											                            <tr>
+											                                <th data-field="state" data-radio="true"></th>
+											                                <th data-field="code" data-sortable="true">编码</th>
+											                                <th data-field="name" data-align="center" data-sortable="true">名称</th>
+											                                <th data-field="dept" data-align="center" data-sortable="true">部门</th>
+											                            </tr>
+											                        </thead>
+											                    </table>
+												            </div>
+															   	<div class="psonslfoolter">
+														        	<div class="post">
+																		<div class="meta" style="margin-right: 0px;">
+																			 <ul class="meta-tags">
+															                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+															                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><input type="file" name="fileToUpload" class="file"  onchange="ajaxFileUpload(this)"/><a class="upload" href="" onclick="return false;">上传附件</a></div></li>
+															                </ul>
+																        </div>
+																	</div>
+														        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="">取消</button></div>
+														        	<div class="lasttwo"><button type="button" class="btn btn-success btn-xs actionBtn okbtn" pk="" actioncode="reassign">确定</button></div>
+														        	
+														 </div>
+											        </div>
+											        <div id="page5"  class="page">
+													        <div class="pagetext">
+													        	<textarea placeholder="请输入审批意见(默认为：加签)..." class="form-control  form-group" rows="2" id="addApproventmsg"></textarea>
+													        </div>
+													        <div class="psonslttitle selections" id="joinperson">
+													        	<p>选择加签处理人员：</p>
+													        </div>
+											        
+											        		<div class="bootstrap-tablediv" id="jqtable">
+<!-- 											                    <table id="userRefTablenew" -->
+<!-- 											                    data-show-refresh="false" data-search="true" -->
+<!-- 											                    data-side-pagination="server" -->
+<!-- 											                    data-pagination="true" -->
+<!-- 											                    data-page-list="[3, 6, 12, 24, 48]"> -->
+<!-- 											                        <thead> -->
+<!-- 											                            <tr> -->
+<!-- 											                                <th data-field="state" data-checkbox="true"></th> -->
+<!-- 											                                <th data-field="code" data-sortable="true">编码</th> -->
+<!-- 											                                <th data-field="name" data-align="center" data-sortable="true">名称</th> -->
+<!-- 											                                <th data-field="dept" data-align="center" data-sortable="true">部门</th> -->
+<!-- 											                            </tr> -->
+<!-- 											                        </thead> -->
+<!-- 											                    </table> -->
+												            </div>
+															   	<div class="psonslfoolter">
+														        	<div class="post">
+																		<div class="meta" style="margin-right: 0px;">
+																			 <ul class="meta-tags">
+															                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+															                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><input type="file" name="fileToUpload" class="file"  onchange="ajaxFileUpload(this)"/><a class="upload" href="" onclick="return false;">上传附件</a></div></li>
+															                </ul>
+																        </div>
+																	</div>
+														        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="disagree">取消</button></div>
+														        	<div class="lasttwo"><button type="button" id="onok" class="btn btn-success btn-xs actionBtn okbtn" pk="" actioncode="addApprove">确定</button></div>
+														        	
+														 </div>
+											        </div>
+											    </div>
+											</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			 </div>
+			 </div>
+			  <!-- 内容区结束 -->
+	</div>
+
+<div class="row edge" style="margin-top: 70px">
+<div id="main" class="col-md-9 main-transform" style="float:left">
+
+
+<div id="content">
+<div class="" id="tab-nav">
+		
+		<div class="titlebar" style="width:100%;">
+			<div class="titlebarhead" id="title_bar"></div>
+				<table border="0" cellpadding="0" cellspacing="0" width="100%" class="titletable" style="display:none;">
+					<tbody>
+						<tr>
+							<td id="expense_makebill_link" width="" class="preborder"
+								style="cursor: pointer;">
+								<div id="wytd_div" isselected="1" class="makebill_approve_div"
+									style="background: url(../mp/img/task_icon.svg) no-repeat #f6921e;">
+									<!-- <div class="wait_approve_div_01"><p>任务&nbsp;&nbsp;6</p></div> -->
+									<!-- <div class="wait_approve_div_01" id="task_tab"><p>任务&nbsp;&nbsp;</p><p id="task_tab_item"></p></div> -->
+									<!-- <div class="wait_approve_div_01" style="padding-left:20px;" id="task_tab"><span>任务&nbsp;&nbsp;</span></div> -->
+									<!-- <div class="red_circle" id="task_tab_red_circle"></div> -->
+								</div>
+								
+							</td>
+							
+							<td width="5%"></td>
+							
+							<td id="expense_wait_link" align="center" width="" class="preborder"
+								style="cursor: pointer;">
+								<div id="wwc_div" isselected="0" class="makebill_approve_div"
+									style="background: url(../mp/img/notice_icon.svg) no-repeat #3fa8f4;">
+									<!-- <div class="wait_approve_div_01" id="notice_tab"></div> -->
+									<!-- <div class="wait_approve_div_01" id="notice_tab"><p>通知&nbsp;&nbsp;</p><p id="notice_tab_item"></p></div> -->
+									<!-- <div class="wait_approve_div_01" id="notice_tab" style="padding-left:20px;"><span>通知&nbsp;&nbsp;</span></div>
+									<div class="red_circle" id="notice_tab_red_circle"></div> -->
+								</div>
+							</td>
+							
+							<td width="5%"></td>
+							
+							<td id="expense_have_link" align="right" width="" class="preborder"
+								style="cursor: pointer;">
+								<div id="ywc_div"  class="makebill_approve_div"
+									style="background: url(../mp/img/alert_icon-.svg) no-repeat #3bbb37;">
+									<!-- <div class="wait_approve_div_01" id="alert_tab"></div> -->
+									<!-- <div class="wait_approve_div_01" id="alert_tab"><p>预警&nbsp;&nbsp;</p><p id="alert_tab_item"></p></div> -->
+									<!-- <div class="wait_approve_div_01" id="alert_tab" style="padding-left:20px;"><span>预警&nbsp;&nbsp;</span></div>
+									<div class="red_circle" id="alert_tab_red_circle"></div> -->
+								</div>
+							</td>
+							
+						</tr>
+					</tbody>
+				</table>
+			<div id="headbur" class="headbur">
+				<div class="burtop">
+					<div class="taskicon"></div>
+					<div class="burtitle">
+						<span id="index_task" style="padding-left: 8px;">任务</span><span id="task_tab_item" style="padding-left: 5px;"></span>
+<!-- 						<div class="sub-tab"> -->
+<!-- 							<a href="javascript:changeSlt(1);" class="checked">按类型</a> -->
+<!-- 							<span class="sub-tab-hr"></span> -->
+<!-- 							<a href="javascript:changeSlt(2);">按时间</a> -->
+<!-- 					    </div> -->
+					</div>
+					<div class="head-search" style="margin-right: 55px; position: absolute; right: 55px;">
+			                <input id="tasksearch" type="text" class="form-control task-input-search" spellcheck="false" autocomplete="off" placeholder="输入搜索任务" style="z-index: 10;  margin-top: 9px;  border-radius: 2px;  box-shadow: none;">
+			                <input id="tasksearchhidd" type="text" style="display: none;">
+			                <button class="btn-search" id="btn-search" type="submit">搜索</button>
+			        </div>
+					
+					<div class="sub-tab"  style="margin-top:0;" id="tab_more">
+						<a href="#" url="/mp/indexmore.html" id="morecontent">更多</a>
+					</div>
+					
+				</div>
+				
+				<div class="burfoolter">
+				
+					<div class="burcontent">
+						<div class="burleft">
+							<span id="documenttype">单据类型：</span>
+						</div>
+						
+						<div class="burright billtype">
+							
+							
+							
+							<div class="buritemborder another" style="display:none">
+										<span class="buritem" data-code="" another="another" ifwaittype="0">其他</span>
+										<div class="billtype-tablediv">
+						                    <table id="allbilltypetable"
+						                   data-show-refresh="false" data-search="true"
+						                    data-side-pagination="server"
+						                    data-pagination="true"
+						                    data-page-list="[3, 6, 12, 24, 48]">
+						                        <thead>
+						                            <tr>
+						                                <th data-field="state" data-radio="true"></th>
+						                                <th data-field="code" ata-align="center" data-sortable="true">编码</th>
+						                                <th data-field="name" data-align="center" data-sortable="true">单据名称</th>
+						                            </tr>
+						                        </thead>
+						                    </table>
+							            </div>
+								 </div>
+							</div>
+					</div>
+
+					<div class="burcontent time">
+						<div class="burleft">
+							<span id="timelimit">时间范围：</span>
+						</div>
+						
+						<div class="burright">
+							<div class="buritemborder">
+								<span id="spanall" class="buritem selected" data='' all="all">全部</span>
+							</div>
+							<div class="buritemborder">
+								<span id="lastthreedays" class="buritem" data='3'>最近三天</span>
+							</div>
+							<div class="buritemborder">
+								<span id="lastaweek" class="buritem" data='7'>最近一周</span>
+							</div>
+							<div class="buritemborder">
+								<span id="lastamouth" class="buritem" data='30'>最近一月</span>
+							</div>
+							<div class="buritemborder">
+								<span id="earlier" class="buritem" >更早</span>
+							</div>
+						</div>
+					
+					</div>
+					
+					<div class="burcontent dealstatus">
+						<div class="burleft">
+							<span id="processing_status">处理状态：</span>
+						</div>
+						<div class="burright">
+							<div class="buritemborder">
+								<span id="allinfo" class="buritem" data='all' all="all">全部</span>
+							</div>
+							<div class="buritemborder">
+								<span id="waitdealtask" class="buritem selected" data='waitdeal'>未处理</span>
+							</div>
+							<div class="buritemborder">
+								<span id="alreadydealtask" class="buritem" data='dealed'>已处理</span>
+							</div>
+						</div>
+					
+					</div>
+				</div>
+
+		</div>
+	</div>
+
+		</div>
+    <div id="scroller">
+        <div id="pullDown" class="hide">
+            <span class="pullDownIcon"></span><span class="pullDownLabel">更多...</span>
+        </div>
+        <div id="container" style="border: 1px solid #b3b3b3;border-top:none;"></div><!-- end #container -->
+       <div class="toselectmore">
+			<a href="#">点击加载更多...</a>
+	   </div>
+        </div>
+</div><!-- end #content -->
+
+</div><!-- end #main -->
+
+
+<div id="secondary" class="sec-transform col-md-3" style="margin-top:-10px;float:right;">
+<div class="panel panel-default" style="box-shadow: none;border-left: 1px solid #b3b3b3;border-right: 1px solid #b3b3b3;border-bottom: 1px solid #b3b3b3;border-top: 1px solid #b3b3b3;">
+<div class="burtop" style="border-left:none;border-right:none;border-top: none;">
+   <div class="noticeicon"></div>
+   <div class="burtitle">
+      		<div class="msg_title_left"><span id="index_notice" style="padding-left: 8px;">通知</span><span id="notice_tab_item" style="padding-left: 5px;"></span></div>
+   </div>
+         	<div class="msg_title_right"><a msgtype="notice" class="panel_notice_more" style="float: right;padding:0px 4px 0px 4px;" href="#" url="/mp/msgmore.html" id="noticemsgselectmore">更多</a></div>
+</div>
+   <div class="panel-body" style="padding:0px;" id="notice_info"></div>
+</div>
+
+<div class="panel panel-default" style="box-shadow: none;border-left: 1px solid #b3b3b3;border-right: 1px solid #b3b3b3;border-bottom: 1px solid #b3b3b3;border-top: 1px solid #b3b3b3;">
+<div class="burtop" style="border-left:none;border-right:none;border-top: none;">
+<div class="alerticon"></div>
+   <div class="burtitle">
+      		<div class="msg_title_left"><span id="early_warning" style="padding-left: 8px;">预警</span><span id="alert_tab_item" style="padding-left: 5px;"></span></div>
+   </div>
+         	<div class="msg_title_right"><a msgtype="alert" class="panel_alert_more" style="float: right;padding:0px 4px 0px 4px;" href="#" url="/mp/alertmsgmore.html" id="alertmsgselectmore">更多</a></div>
+</div>
+   <div class="panel-body" style="padding:0px;" id="alert_info"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="index_foolter">
+		<div class="foolter_content"><!-- <embed src="../mp/img/logo_foolter.svg">  --><img alt="" src="../mp/img/logo_foolter.svg"> <span>版权所有：用友网络科技股份有限公司</span></div>
+</div>
+
+<script>
+var intervalLoginId=1;
+    $(document).ready(function () {
+    	//防止重复登录
+    intervalLoginId=	setInterval("ensureLoginSecurity()",1000);
+    	//portal详情页面跳转
+     	var href = window.location.href;
+    	//href= "http://localhost:8080/mp/indexforportal.html&pk_sourcemsg=0001T210000000002P7G&msgtype=notice";
+    	if(href.indexOf("pk")>=0){
+	     	var i=href.indexOf("msgtype");
+	    	var j=href.indexOf("=");
+	    	var pk_sourcemsg = href.substring(j+1,i-1);
+	    	if(href.indexOf("notice")>=0){
+	        	setTimeout(function(){
+	        		app.msgs.trigger('showMsgForPortal',"notice",pk_sourcemsg,"UAP65");
+	        		},1000);
+	    	}else if(href.indexOf("alert")>=0){
+	    		setTimeout(function(){
+	    			app.msgs.trigger('showMsgForPortal',"alert",pk_sourcemsg,"UAP65");
+	        		},1000);
+	    	}else{
+	        	setTimeout(function(){
+	        		
+	        		$('.num_circle').hide();
+	        		$('[data="waitdeal"]').attr('class','buritem');
+	        		$('[data="all"]').attr('class','buritem selected');
+	        		
+	        		if($('article .content_more').length > 0){
+	        			$('article .content_more').eq(0).trigger('click')
+	        		}
+	        		
+	        	},1000);
+	    	}
+    	}
+
+       	//附件详情页面增加div滚动监听 add by lihn
+    	$("#MyDiv").scroll(function() {
+    	  //附件预览左侧随着滚动而浮动，保持永远在浏览器顶端
+    		var previewLeftWidth=$('.preview_left').width();   		
+    		if(document.getElementById('MyDiv').scrollTop>0){
+    		$('.preview_left').css("position","fixed");
+    		$('.preview_left').css("width",previewLeftWidth); 
+    		$('.preview_right').css("float","right");
+    		}else{
+    			$('.preview_left').css("position","relative");
+    			$('.preview_left').css("width","10%"); 
+    			$('.preview_right').css("float","left");
+    		}
+    	  });
+       
+        //二维码条件检索
+         $(document).keypress(function(e) {
+	         if(e.target.id=="tasksearch"){
+	             if (e.which == '13') {
+	 			    //获取二维码
+	 				var dimensioncode=$(e.target).val();
+	 				//调用js文件处理二维码
+	 				var parseafter = $(this).dimensionCodeParse(e);
+	 				if(parseafter==""){
+	 					$('#btn-search').click();
+	 					return false;
+	 				}
+	 				//parseafter为json类型，billno、billtype、billid调用filter查询
+	 				//检索
+	 				$('#tasksearchhidd').val(JSON.stringify(parseafter));
+	 				app.msgs.trigger('filter');
+	 				return false;
+	             }
+	         }
+        });
+    	//刷新按钮定时获取数据
+    	setInterval("getNewMessages()",1000*60*3);
+    	
+    	//任务详情页面审批意见字数限制
+    	$('.page textarea').bind('input', function(e) {
+    	    if(this.value.length>450) this.value=this.value.substr(0,450);
+	   });
+	
+    	$('input, textarea').placeholder();
+/*     	 $('.sub-tab a').click(function(){
+	         $(".checked").removeClass('checked');
+	         $(this).toggleClass('checked');
+	         return true;
+   		  }); */
+    	
+    	 var box=document.getElementById("tab-nav");
+    	 var secondary=document.getElementById("secondary");
+//     	 window.onscroll=function(){
+//     	 	 var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+//     	 	 box.style.top=(scrollTop)+'px';
+//     	 	 secondary.style.top=(scrollTop)+'px';
+//     	 }
+    	 $(".toselectmore").click(function(e){
+    		 app.msgs.trigger('pullpushnew',true); 
+    	 });
+    	 
+    	 var mvb = null;
+//     	 $('.preborder').click(function(){
+    		 
+//     		 $(this).attr("class","preborder clickborder"); 
+//     		 if(mvb!=null && mvb!=$(this)){
+//      			mvb.removeClass("clickborder");
+//      		}
+//     		 mvb = $(this);
+//     	 })
+    	 $('.makebill_approve_div').click(function(){
+    	 var clazz = $(this).attr("class"); 
+    		$(this).attr("class",clazz+" makebill_approve_border"); 
+    		$(this).find('.wait_approve_div_01').css('height','100%');
+    		if(mvb!=null && mvb!=$(this)){
+    			mvb.removeClass("makebill_approve_border");
+    			mvb.find('.wait_approve_div_01').css('height','100%');
+    		}
+    		mvb = $(this);
+    	 });
+        if(!$.isIE()){
+
+        	//初始化绑定iScroll控件
+//             loaded();
+        	 
+            window.addEventListener('DOMContentLoaded', function() {
+                var page = document.getElementById('body'),
+                        nav = window.navigator,
+                        ua = nav.userAgent,
+                        isFullScreen = nav.standalone;
+
+                if (ua.indexOf('Android') !== -1) {
+                    // 56对应的是Android Browser导航栏的高度
+                    page.style.height = window.innerHeight + 56 + 'px';
+                } else if (/iPhone|iPod|iPad/.test(ua)) {
+                    // 60对应的是Safari导航栏的高度
+                    page.style.height = window.innerHeight + (isFullScreen ? 0 : 60) + 'px'
+                }
+            }, false);
+        }
+
+        $(".fancy-view A").live('click',function(e) {
+        	var e = e || window.event; 
+        	if (e.preventDefault) { 
+        		e.preventDefault(); 
+        	} else { 
+        		e.returnValue = false; 
+        	}
+            var fileUrl = $(this).attr("href");
+            var index = fileUrl.indexOf("?");
+            var form;
+            var action = fileUrl.substring(0,index);
+            var target ="_self";
+            if(~window.navigator.appVersion.indexOf('MSIE 8.0')) { 
+            	target = '_blank';
+            }
+            
+            if(!$('#id_download_form')[0]){
+            	form = $('<form>',{
+          			action:action,
+          			target:target,
+          			method:'get',
+          			id:'id_download_form'
+          		}).appendTo(document.body);
+            }else{
+            	form = $('#id_download_form');
+            	form.empty();
+            	form.attr('action',action);
+            }
+      		  
+      		var queryStr = fileUrl.substring(index+1);
+            var queryarr = queryStr.split("&");
+            for(var j=0;j<queryarr.length;j++){
+              	 var item = queryarr[j].split("=");
+              	 $('<input>',{
+              		 type:'hidden',
+              		 name:item[0],
+              		 value:item[1]||''
+              	}).appendTo(form);
+             }
+            form.submit();
+            
+            return false;
+        });
+
+        $('.has-dropdown > a').click(function () {
+            var $item = $(this).parent();
+            $(".has-dropdown").not($item).removeClass('active');
+            $item.toggleClass('active');
+            return false;
+        });
+        $('html').click(function (e) {
+            $(".has-dropdown").removeClass('active');
+             
+        });
+        $('.head-nav li').click(function () {
+            $(".current").removeClass('current');
+            $(this).toggleClass('current');
+            return true;
+        });
+
+/*         $('.sub-tab a').click(function(){
+            $(".checked").removeClass('checked');
+            $(this).toggleClass('checked');
+            return true;
+        }); */
+
+        
+          //pushlet_js_client
+          if(false&&PL&&PL.sessionId == null){
+              var username=$.cookie('mp_name');
+              PL.userId = username||'visitor';
+              PL._init();
+              PL.joinListen('/mp/msg/newmsg');
+              window.onData=function(event){
+                    //console.log("sessionID==" + PL.sessionId + "====" + event.get('msg_'+PL.userId));
+              } 
+          }
+
+    });
+    function centerModal() {
+       $(this).css('display', 'block');
+    }
+    $('.modal').on('show.bs.modal', centerModal);
+    $(window).on("resize", function () {
+        $('.modal:visible').each(centerModal);
+    });
+    $("#morecontent").live('click',function(e) {
+    	$.fancybox.open({
+    		//任务
+			title:trans("workstation_task"),
+			href :$(e.target).attr('url'),
+			padding:0,
+			margin:0,
+			titleShow:true,
+			autoSize:false,
+			height:$(window).height(),
+			//width:1000,
+	 		width: ($(window).width()*0.8),
+			helpers: {
+	           title : {
+		                type : 'inside',
+	                     position : 'top'					
+	                   }
+	        },
+			type:'iframe',
+			iframe:{
+				preload:false
+			},
+	        beforeClose: function() {app.msgs.trigger('refrashIndexTask');},
+	        closeClick: true,
+	        openMethod: 'staticIn'
+		});
+    });
+    $("#noticemsgselectmore").live('click',function(e) {
+    	$.fancybox.open({
+    		//通知
+			title:trans("workstation_notice"),
+			titleShow:true,
+			href :$(e.target).attr('url'),
+			helpers: {
+	           title : {
+		                type : 'inside',
+	                     position : 'top'					
+	                   }
+	        },
+	        padding:0,
+	        margin:0,
+	        fitToView: true,
+	        //width: 1000,
+	        width: ($(window).width()*0.8),
+	        height:$(window).height(),
+	        //height:1000,
+	        autoSize: false,
+			type:'iframe',
+	        beforeClose: function() {app.rightView.renderMsg("notice");},
+	        closeClick: true,
+	        openMethod: 'staticIn'
+		});
+    });
+    $("#alertmsgselectmore").live('click',function(e) {
+    	$.fancybox.open({
+    		//预警
+			title:trans("workstation_early_warning"),
+			titleShow:true,
+			href :$(e.target).attr('url'),
+			helpers: {
+	           title : {
+		                type : 'inside',
+	                     position : 'top'					
+	                   }
+	        },
+			padding:0,
+			 margin:0,
+			 height:$(window).height(),
+	        fitToView: true,
+	        //width: 1000,
+	        width: ($(window).width()*0.8),
+	        //height:1000,
+	        autoSize: false,
+			type:'iframe',
+			beforeClose: function() {app.rightView.renderMsg("alert");},
+	        closeClick: true,
+	        openMethod: 'staticIn'
+		});
+    });
+	//首页修改密码窗口
+	$("#alterPass").fancybox({
+			title:"修改密码",
+			padding:0,
+			margin:0,
+			titleShow:true,
+			autoSize:false,
+			height:300,
+			width:500,
+			scrolling:'no',
+			showCloseButton:false,
+			helpers: {
+	           title : {
+		                type : 'inside',
+	                     position : 'top'					
+	                   },
+	           overlay : {
+	    		        closeClick :false,
+	    		        css: {}
+	                   }
+	        },
+			type:'iframe',
+		});
+	//关闭弹出层
+	function CloseDiv(show_div,bg_div){
+		//关闭的时候移除click事件
+		var parentbody="";
+		if($('#isdealed').val()=='dealed'){
+    		parentbody = $('body',window.parent.document);
+    	}else{
+    		parentbody = $('body');
+    	}   	
+    	parentbody.find('.lasttwo').unbind('click');
+		$('#body').css('overflow-y','auto');
+// 		document.getElementById(show_div).style.display='none';
+// 		document.getElementById(bg_div).style.display='none';
+		$('#'+show_div).hide();
+		$('#'+bg_div).hide();
+        $('#joinperson > span').remove();
+        $('#gpperson > span').remove();
+        $('#workflowiera').children().remove();
+        $('.people-tablediv').children().remove();
+        $('.people-tablediv2').children().remove();
+        $('.tabhost').children().attr('class','')
+        $('#selfirst').attr('class','selected');
+        $('.tabcontent>.page').hide();
+        $('#page1').show();
+        
+        if($('.fancybox-overlay')){
+        	$('.fancybox-overlay').show();
+        }
+        //改变右侧流程审批记录最后一条的class
+        $('.out_circletodo-dealed .approve-bage-dealed').attr('class','approve-bage');
+      	$('.out_circletodo-dealed').attr('class','out_circletodo');
+      	$('#lastright').show();
+      	$('.out_circletodo .approve-bage').html('');
+      	$('.out_circletodo .approve-content').html('');
+      	
+	};
+	
+	//刷新按钮定时获取数据
+	function getNewMessages()
+	{
+		app.msgs.trigger('getNewMessages',"intervalsearch");
+	};
+	$(function() {
+		var tabhosts = $(".tabhost a");
+		
+		tabhosts.each(function() {
+			$($(this).attr("href")).hide();
+			
+			if ($(this).hasClass("selected")) {
+				$($(this).attr("href")).show();
+			}
+			
+			$(this).click(function(event) {
+				event.preventDefault();
+				
+				if (!$(this).hasClass("selected")) {
+					tabhosts.each(function() {
+						$(this).removeClass("selected");
+						$($(this).attr("href")).hide();
+					});
+					
+					$(this).addClass("selected ");
+					$($(this).attr("href")).show();
+				}
+			});
+		});
+	});
+	//附件下载
+	$(".i_tag_info").live('click',function(e) {
+		var e = e || window.event; 
+		if (e.preventDefault) { 
+			e.preventDefault(); 
+		} else { 
+			e.returnValue = false; 
+		}
+	    //var fileUrl = $(this).attr("href");
+	    var fileUrl=$("a",this).attr("href");
+	    var index = fileUrl.indexOf("?");
+	    var form;
+	    var action = fileUrl.substring(0,index);
+	    var target ="_self";
+	    if(~window.navigator.appVersion.indexOf('MSIE 8.0')) { 
+	    	target = '_blank';
+	    }
+	    
+	    if(!$('#id_download_form')[0]){
+	    	form = $('<form>',{
+	  			action:action,
+	  			target:target,
+	  			method:'get',
+	  			id:'id_download_form'
+	  		}).appendTo(document.body);
+	    }else{
+	    	form = $('#id_download_form');
+	    	form.empty();
+	    	form.attr('action',action);
+	    }
+			  
+			var queryStr = fileUrl.substring(index+1);
+	    var queryarr = queryStr.split("&");
+	    for(var j=0;j<queryarr.length;j++){
+	      	 var item = queryarr[j].split("=");
+	      	 $('<input>',{
+	      		 type:'hidden',
+	      		 name:item[0],
+	      		 value:item[1]||''
+	      	}).appendTo(form);
+	     }
+	    form.submit();
+	    
+	    return false;
+	});
+	//老版本tab刷新
+/* 	$("#wytd_div").click(function(e){
+		app.msgs.trigger('refrash');
+	});
+	$("#wwc_div").click(function(e){
+		app.msgs.trigger('refrash');  
+	});
+	$("#ywc_div").click(function(e){
+		app.msgs.trigger('refrash'); 
+	}); */
+	
+	$(".refresh-message").click(function(e){
+		//$("#red_circle").css("visibility", "hidden");
+		app.msgs.trigger('refrash'); 
+	});
+	$("#img_show").click(function(e){
+		var pk = $("#img_show").attr('pk');
+		var pluginType = $("#img_show").attr('pluginType');
+		var sscode = app.msgs.baseParam.sourceSystemCode;
+		$(this).imgshow(pk,sscode,pluginType); 
+	});
+    function ajaxFileUpload(msg) {
+        var sourcesystem=$(msg).attr("sourcesystem");
+        var pk=$(msg).attr("pk");
+        //设置input的id属性
+        var id="fileToUpload"+pk;
+        $(msg).attr("id",id);
+        //var id=$(msg).attr("targetid");
+        $.ajaxFileUpload({  
+            url : '/mp/uploadControl/uploadFile',   //submit to UploadFileServlet
+            type:'POST',
+            secureuri : false,
+            fileElementId : 'fileToUpload'+pk,
+            dataType :'JSON', //or json xml whatever you like~
+            //data:{pluginCode:sourcesystem,pk_message: pk},
+            pluginCode:sourcesystem,
+            pk_message: pk,
+            //data:"pluginCode="+sourcesystem+"&pk_message="+pk,
+		    //dataType:"html",
+            success : function(data, status) {
+                //$("#result").append(data);
+                if(typeof data =="string"){
+                	data=JSON.parse(data)
+                }
+                if(data.forbidden){
+                	$.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+                }else{
+                    $.scojs_message('文件上传成功', $.scojs_message.TYPE_OK);
+                    //局部刷新附件
+                    app.msgs.trigger('refrashTaskItem',sourcesystem,pk);
+                }
+            },  
+            error : function(data, status, e) {
+                //$("#result").append(data);
+                $.scojs_message('文件上传失败', $.scojs_message.TYPE_ERROR);
+            }  
+        });
+        return false;  
+    };
+    
+    //首页审批意见字数限制
+    function textInputControl(e) {
+    	if(e.value.length>450) e.value=e.value.substr(0,450);
+    };
+    
+$(function(){
+	isInPortal();
+	/*IE注册事件*/ 
+	if(document.attachEvent){ 
+		document.attachEvent('onmousewheel',stopScroll); 
+	}
+	var arr = CheckBrowser();
+	if(arr && arr[0]=='IE'){
+		var $img = $('img');
+		$('img').each(function(){
+			if($(this).attr('src')!=undefined && $(this).attr('src')!=''&& $(this).attr('src').indexOf('svg')!=-1){
+				$(this).attr('src',$(this).attr('src').substring(0,$(this).attr('src').lastIndexOf('.'))+'.png');
+			}
+		})
+		
+		
+		setTimeout(function(){
+		if(!placeholderSupport()){   // 判断浏览器是否支持 placeholder
+			    $('[placeholder]').focus(function() {
+			        var input = $(this);
+			        if (input.val() == input.attr('placeholder')) {
+			            input.val('');
+			            input.removeClass('placeholder');
+			        }
+			    }).blur(function() {
+			        var input = $(this);
+			        if (input.val() == '' || input.val() == input.attr('placeholder')) {
+			            input.addClass('placeholder');
+			            input.val(input.attr('placeholder'));
+			        }
+			    }).blur();
+			};
+		},500)
+	}
+});
+
+	function placeholderSupport() {
+	    return 'placeholder' in document.createElement('input');
+	}
+	function stopScroll(){
+		if($('#fade').css('display') == 'block'){
+			window.event.cancelBubble = true;//停止冒泡  
+			window.event.returnValue = false;//阻止事件的默认行为
+		}
+	}
+	//判断是否加载到portal中去了
+	function isInPortal(){
+		$('.container').css('width','100%');
+		$('#main').css('padding-right','0px');
+	}
+	//前端校验是否登录状态
+	function checkLogin(XMLHttpRequest){
+		//var currentUserName = $("a.userinfo").children().get(0).innerHTML||$("a.userinfo",parent.document).children().get(0).innerHTML;
+		/* var currentUserName = $("#usernamehidd").val();
+		if($.cookie('mp_name') && currentUserName){
+			if($.cookie('mp_name')!=currentUserName){
+				var div = document.createElement("div");
+				$(div).attr('id','page_message');
+				$(div).attr('class','page_mess_error');
+				$(div).css('cursor','pointer');
+				$(div).css('display','block');
+				div.innerHTML = '<a href="/mp/logoutForPush" class="tips_login">您已被踢下线,请重新登录</a><a></a>';
+				document.body.appendChild(div);
+				XMLHttpRequest.abort();//停止ajax请求
+			}
+		} */
+		var currentUserName = $("#usernamehidd").val();
+		//新用户登录，踢掉前一个用户
+		if($.cookie('mp_name') && currentUserName){
+			if($.cookie('mp_name')!=currentUserName){
+				//window.location.replace("/mp/login.html");
+				XMLHttpRequest.abort();//停止ajax请求
+				alerterrormsg("有新的用户登录审批工作平台，您已被踢下线，为防止数据加载错误，请重新登录。");
+			}
+		}
+	}
+	//前端校验是否登录状态
+	function ensureLoginSecurity(){	
+		var currentUserName = $("#usernamehidd").val();
+		//退出登录页面
+		if($.cookie('mp_name')==null){			
+			//window.location.replace("/mp/login.html");
+			window.clearInterval(intervalLoginId);
+			alerterrormsg("有新的用户登录审批工作平台，您已被踢下线，为防止数据加载错误，请重新登录。");
+			
+		}
+		//新用户登录，踢掉前一个用户
+		if($.cookie('mp_name') && currentUserName){
+			if($.cookie('mp_name')!=currentUserName){
+				//window.location.replace("/mp/login.html");
+				window.clearInterval(intervalLoginId);
+				alerterrormsg("有新的用户登录审批工作平台，您已被踢下线，为防止数据加载错误，请重新登录。");				
+			}
+		}
+	}
+	
+</script>
+</div>
+</body>
+
+</html>
+

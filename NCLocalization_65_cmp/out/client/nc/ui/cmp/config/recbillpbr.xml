@@ -1,0 +1,1214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+	<import resource="classpath:nc/ui/cmp/config/cmp_base.xml" />
+	<import resource="classpath:nc/ui/cmp/config/cmprecbill_digit_config.xml" />
+
+	<!-- 环境变量 -->
+	<bean id="context" class="nc.vo.uif2.LoginContext">
+		<property name="nodeType">
+			<value>ORG_NODE</value>
+		</property>
+	</bean>
+
+	<!-- 模型部分配置########################################################### -->
+
+	<!-- 对象转换器工厂，由此获取操作对象的特征信息 -->
+	<bean id="boadatorfactory" class="nc.ui.cmp.bill.model.RecBillVOObjectAdapterFactory" />
+
+	<!-- 管理应用模型 -->
+	<bean id="ManageAppModel" class="nc.ui.pubapp.uif2app.model.BillManageModel">
+		<property name="service" ref="ManageModelService"></property>
+		<property name="businessObjectAdapterFactory" ref="boadatorfactory"></property>
+		<property name="context" ref="context"></property>
+	</bean>
+
+	<!-- 数据模型管理器，主要负责各种方式的模型初始化 -->
+	<bean id="modelDataManager" class="nc.ui.cmp.bill.model.CmpRecBillDataManager">
+		<property name="model" ref="ManageAppModel"></property>
+		<property name="paginationDelegate" ref="paginationDelegator" />
+		<property name="listInfoPnl" ref="listInfoPnl" />
+	</bean>
+
+	<bean id="D4NodekeyImpl" class="nc.ui.cmp.bill.impl.D4NodekeyImpl">
+	</bean>
+	<!--节点变化事件监听器 -->
+	<bean id="CmpBillNodeKeyChangeListener" class="nc.ui.cmp.bill.impl.CmpBillNodeKeyChangeListener">
+		<property name="card" ref="billFormEditor" />
+		<property name="model" ref="ManageAppModel" />
+	</bean>
+	<!-- 联查监听器 -->
+	<bean id="InitDataListener" class="nc.ui.cmp.bill.CmpRecRelationQueryDataListener">
+		<property name="billFormEditor" ref="billFormEditor"></property>
+		<property name="listview" ref="listView"></property>
+		<property name="queryAction" ref="queryAction"></property>
+	</bean>
+	<!-- 界面元素 ########################################################### -->
+	<!-- 组织面板 -->
+	<bean id="orgPanel" class="nc.ui.pubapp.uif2app.view.BillOrgPanel"
+		init-method="initUI">
+		<property name="model" ref="ManageAppModel" />
+		<!-- 是否只能选择叶子(末级)节点 -->
+		<property name="onlyLeafCanSelected" value="false" />
+	</bean>
+
+	<!-- 列表视图 -->
+	<bean id="listView" class="nc.ui.cmp.bill.views.CmpBillList"
+		init-method="initUI">
+		<property name="model" ref="ManageAppModel"></property>
+		<property name="nodekey" ref="nodeKeyFactoryBean"/>
+		<!-- <property name="multiSelectionEnable" value="false"/> -->
+		<property name="paginationDelegate" ref="paginationDelegator" />
+		<!-- 列表自定义属性配置 -->
+		<property name="userdefitemListPreparator" ref="userdefitemListPreparator" />
+		<property name="templateContainer" ref="templateContainer" />
+		<property name="showTotalLine" value="true" />
+		<property name="showTotalLineTabcodes">
+			<list>
+				<value>items</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- 分页查询 -->
+	<bean id="paginationDelegator"
+		class="nc.ui.pubapp.uif2app.actions.pagination.BillModelPaginationDelegator">
+		<constructor-arg ref="ManageAppModel" />
+		<property name="paginationQuery" ref="paginationQueryService" />
+	</bean>
+
+	<!-- 分页查询服务 -->
+	<bean id="paginationQueryService" class="nc.ui.cmp.bill.model.CmpRecBillQuery" />
+
+	<!--新增单据设置默认值 -->
+	<bean id="billDefVauleItf" class="nc.ui.cmp.bill.views.CmpRecBillDefValue">
+		<property name="editor" ref="billFormEditor" />
+		<property name="cmpBillNodeKeyChangeListener" ref="CmpBillNodeKeyChangeListener" />
+	</bean>
+	<!--表头表体联动 -->
+	<bean id="RelationEditHandler" class="nc.ui.cmp.viewhandler.HBRelationAfterEditHandler">
+		<property name="htob" ref="CmpH2B" />
+	</bean>
+	<bean id="CmpH2B" class="nc.ui.cmp.bill.viewhandler.CmpH2BMapping" />
+
+	<!--业务页签 -->
+	<bean id="billFormEditor" class="nc.ui.cmp.bill.views.CmpRecBillCard"
+		init-method="initUI">
+		<property name="oppui" ref="oppui" />
+		<property name="container" ref="container" />
+		<property name="model" ref="ManageAppModel"></property>
+		<property name="nodekeyQry" ref="D4NodekeyImpl" />
+		<property name="nodekey" ref="nodeKeyFactoryBean" />
+		<!-- 给业务页签关闭时添加一个关闭监听器 -->
+		<property name="closingListener" ref="ClosingListener" />
+		<property name="billDataManager" ref="modelDataManager" />
+		<property name="componentValueManager" ref="componentValueManager"></property>
+		<property name="autoAddLine" value="false" />
+		<!-- 列表自定义属性配置 -->
+		<property name="userdefitemPreparator" ref="userdefitemPreparator" />
+		<property name="defValueItf" ref="billDefVauleItf" />
+
+		<property name="templateContainer" ref="templateContainer" />
+
+		<property name="bodyLineActions">
+			<list>
+				<ref bean="CmpRecBillBodyAddLineAction" />
+				<bean class="nc.ui.cmp.bill.actions.CmpRecBillBodyInsertLineAction">
+					<property name="hbrealtion" ref="RelationEditHandler" />
+					<property name="editor" ref="billFormEditor" />
+				</bean>
+				<bean class="nc.ui.pubapp.uif2app.actions.BodyDelLineAction" />
+				<bean class="nc.ui.pubapp.uif2app.actions.BodyCopyLineAction" />
+				<bean class="nc.ui.pubapp.uif2app.actions.BodyPasteLineAction">
+					<property name="clearItems">
+						<list>
+							<value>pk_recbill_detail</value>
+							<value>bankrelated_code</value>
+							<value>ts</value>
+						</list>
+					</property>
+				</bean>
+			</list>
+		</property>
+		<!-- filter加入属性 -->
+		<property name="defaultRefWherePartHandler" ref="defaultRefWherePartHandler" />
+	</bean>
+
+
+	<bean id="CmpRecBillBodyAddLineAction" class="nc.ui.cmp.bill.actions.CmpRecBillBodyAddLineAction">
+		<property name="hbrealtion" ref="RelationEditHandler" />
+		<property name="editor" ref="billFormEditor" />
+	</bean>
+	<!-- filter注册 -->
+	<bean id="defaultRefWherePartHandler" class="nc.ui.tmpub.filter.DefaultRefWherePartHandler">
+		<property name="uiAccessor">
+			<bean class="nc.ui.cmp.settlement.filter.SettleUIAccessor">
+				<property name="billCardPanelEditor" ref="billFormEditor" />
+			</bean>
+		</property>
+		<property name="filterList">
+			<list>
+				<bean id="fbmbillnoheadfilter" class="nc.ui.cmp.bill.filter.CmpGatherBillnoRefModelFilter">
+					<property name="srcKey" value="note_no"></property>
+					<property name="destKey" value="note_no"></property>
+				</bean>
+				 <bean id="fbmbilltypeheadfilter" class="nc.ui.cmp.bill.filter.CmpGatherBillnoRefModelFilter"> 
+				<property name="srcKey" value="note_type"></property> 
+				<property name="srcPos" value="0"></property> 
+				<property name="srcTabCode" value="cmp_recbill"></property>
+				 <property name="destKey" value="note_no"></property> 
+				 </bean> 
+				<!-- <bean id="fbmnoorgheadfilter" class="nc.ui.cmp.bill.filter.CmpGatherBillnoRefModelFilter"> -->
+				<!-- <property name="srcKey" value="pk_org"></property> -->
+				<!-- <property name="destKey" value="note_no"></property> -->
+				<!-- </bean> -->
+				<!-- <bean id="fbmnoorgbodyfilter" class="nc.ui.cmp.bill.filter.CmpGatherBillnoRefModelFilter"> -->
+				<!-- <property name="srcKey" value="pk_org"></property> -->
+				<!-- <property name="srcPos" value="0"></property> -->
+				<!-- <property name="srcTabCode" value="cmp_recbill"></property> -->
+				<!-- <property name="destKey" value="note_no"></property> -->
+				<!-- <property name="destPos" value="1"></property> -->
+				<!-- <property name="destTabCode" value="items"></property> -->
+				<!-- </bean> -->
+				<bean id="fbmbillnobodyfilter"
+					class="nc.ui.cmp.bill.filter.CmpGatherBodyBillnoRefModelFilter">
+					<property name="srcKey" value="note_no"></property>
+					<property name="srcPos" value="1"></property>
+					<property name="srcTabCode" value="cmp_recbill"></property>
+					<property name="destKey" value="note_no"></property>
+					<property name="destPos" value="1"></property>
+					<property name="destTabCode" value="items"></property>
+				</bean>
+				<!-- <bean id="fbmbilltypebodyfilter" class="nc.ui.cmp.bill.filter.CmpGatherBillnoRefModelFilter"> -->
+				<!-- <property name="srcKey" value="note_type"></property> -->
+				<!-- <property name="srcPos" value="1"></property> -->
+				<!-- <property name="srcTabCode" value="cmp_recbill"></property> -->
+				<!-- <property name="destKey" value="note_no"></property> -->
+				<!-- <property name="destPos" value="1"></property> -->
+				<!-- <property name="destTabCode" value="items"></property> -->
+				<!-- </bean> -->
+			</list>
+		</property>
+	</bean>
+
+	<!--结算页签 -->
+	<bean id="oppui" class="nc.ui.cmp.bill.commom.OppUIContainer"
+		init-method="initUI">
+	</bean>
+
+	<!--根据元数据拿到模板上的所有数据而不是拿到变化过的 -->
+	<bean id="componentValueManager" class="nc.ui.pubapp.uif2app.view.BillCardAllDataValueStrategy">
+	</bean>
+
+	<!--单据金额变化事件监听器 -->
+	<bean id="CmpBillCardCalculator" class="nc.ui.cmp.bill.cal.CmpRecBillCardCalculator">
+		<property name="calItem" ref="relationItemForCal"></property>
+	</bean>
+	<bean id="relationItemForCal" class="nc.ui.cmp.bill.cal.CmpRecBillRelationItemForCal">
+	</bean>
+
+	<bean id="cmpBillFieldGet" class="nc.vo.cmp.bill.CmpBillFieldGet">
+	</bean>
+
+	<!--model事件监听器 -->
+	<bean id="appEventHandlerMediator" class="nc.ui.pubapp.uif2app.model.AppEventHandlerMediator">
+		<property name="model" ref="ManageAppModel" />
+		<property name="handlerMap">
+			<map>
+				<entry key="nc.ui.pubapp.uif2app.mediator.mutiltrans.NodekeyEvent">
+					<list>
+						<ref bean="CmpBillNodeKeyChangeListener" />
+						<ref bean="addActionGroup" />
+					</list>
+				</entry>
+
+				<entry key="nc.ui.pubapp.uif2app.event.card.CardBodyBeforeEditEvent">
+					<list>
+						<bean id="BodyBillItemBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardbefore.BodyBillItemBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="BodyCashAccountBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardbefore.BodyCashAccountBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="BodyCheckNoBeforeEditHandler"
+							class="nc.ui.cmp.viewhandler.cardbefore.BodyCheckNoBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="cardeditor" ref="billFormEditor"></property>
+						</bean>
+						<bean id="BodyFreeCustBeforeEditHandler"
+							class="nc.ui.cmp.viewhandler.cardbefore.BodyFreeCustBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="BodyBankAccBeforeEditHandler"
+							class="nc.ui.cmp.viewhandler.cardbefore.BodyBankAccBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="BodyObjectTypeBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardbefore.BodyObjectTypeBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="BodySanhuBillItemBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardbefore.BodySanhuBillItemBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="BodyPksubjctBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardbefore.BodyPksubjctBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+					</list>
+				</entry>
+
+				<entry key="nc.ui.pubapp.uif2app.event.card.CardBodyAfterEditEvent">
+					<list>
+
+						<bean id="BodyCardCustomerOrSupplierAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.BodyCardCustomerOrSupplierAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel"></property>
+						</bean>
+						<bean id="BodyCardObjectTypeAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.BodyCardObjectTypeAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+
+						<bean id="BodyCheckNoAfterEditHandler"
+							class="nc.ui.cmp.viewhandler.cardafter.BodyCheckNoAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel"></property>
+						</bean>
+						<!-- <bean id="BodyCurrTypeAfterEditHandler" class="nc.ui.cmp.viewhandler.cardafter.BodyCurrTypeAfterEditHandler"> 
+							<property name="fieldGet" ref="cmpBillFieldGet"></property> <property name="bcpsp" 
+							ref="scaleProcessor"></property> </bean> -->
+						<bean id="BodyCardPsndocAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.BodyCardPsndocAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="BodyTSPrimalAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.BodyTSPrimalAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel"></property>
+						</bean>
+
+						<bean id="BodyCardBalatypeAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.BodyCardBalatypeAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+
+						<bean id="BodyCardCountOrPriceAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.BodyCardCountOrPriceAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel"></property>
+						</bean>
+						<bean id="BodyCardPrimalAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.BodyCardPrimalAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel"></property>
+						</bean>
+						<bean id="BodyBankAccAfterEditHandler"
+							class="nc.ui.cmp.viewhandler.cardafter.BodyBankAccAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+					</list>
+				</entry>
+
+				<entry key="nc.ui.pubapp.uif2app.event.card.CardHeadTailBeforeEditEvent">
+					<list>
+						<bean id="HeadCashAccountBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardbefore.HeadCashAccountBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="HeadPksubjctBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.HeadPksubjctBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+
+						<bean id="HeadBankAccBeforeEditHandler"
+							class="nc.ui.cmp.viewhandler.cardbefore.HeadBankAccBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="HeadResissueBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardbefore.HeadResissueBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="HeadCheckNoBeforeEditHandler"
+							class="nc.ui.cmp.viewhandler.cardbefore.HeadCheckNoBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="cardeditor" ref="billFormEditor"></property>
+						</bean>
+						<bean id="HeadObjectTypeBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardbefore.HeadObjectTypeBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="HeadConsignagreementBeforeEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardbefore.HeadConsignagreementBeforeEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+					</list>
+				</entry>
+
+				<entry key="nc.ui.pubapp.uif2app.event.card.CardHeadTailAfterEditEvent">
+					<list>
+						<bean id="HBRelationAfterEditHandler" class="nc.ui.cmp.viewhandler.HBRelationAfterEditHandler">
+							<property name="htob" ref="CmpH2B" />
+							<property name="editor" ref="billFormEditor" />
+						</bean>
+
+						<bean id="HeadCurrTypeAfterEditHandler"
+							class="nc.ui.cmp.viewhandler.cardafter.HeadCurrTypeAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="HeadObjtypeAfterEditHandler"
+							class="nc.ui.cmp.viewhandler.cardafter.HeadObjtypeAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="HeadCusdocDocAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.HeadCusdocDocAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="HeadSupdocDocAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.HeadSupdocDocAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+						</bean>
+						<bean id="HeadObjectTypeAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.HeadObjectTypeAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel" />
+						</bean>
+						<bean id="HeadCustomerOrSupplierAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.HeadCustomerOrSupplierAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel" />
+						</bean>
+						<bean id="HeadPsnDocAfterEditHandler"
+							class="nc.ui.cmp.viewhandler.cardafter.HeadPsnDocAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel"></property>
+						</bean>
+						<bean id="HeadBalatypeAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.HeadBalatypeAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel"></property>
+						</bean>
+						<bean id="HeadConsignagreementAfterEditHandler"
+							class="nc.ui.cmp.bill.viewhandler.cardafter.HeadConsignagreementAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="model" ref="ManageAppModel"></property>
+						</bean>
+						<bean id="HeadCheckNoAfterEditHandler"
+							class="nc.ui.cmp.viewhandler.cardafter.HeadCheckNoAfterEditHandler">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="addLineAction">
+								<ref bean="CmpRecBillBodyAddLineAction" />
+							</property>
+						</bean>
+					</list>
+				</entry>
+
+				<entry key="nc.ui.pubapp.uif2app.event.card.CardPanelLoadEvent">
+					<list>
+						<bean id="LoadBillCardTemplate" class="nc.ui.cmp.viewhandler.card.LoadBillCardTemplate">
+							<property name="fieldGet" ref="cmpBillFieldGet"></property>
+							<property name="billform" ref="billFormEditor"></property>
+
+						</bean>
+
+						<!-- <bean id="HeadSupplierInitHandler" class="nc.ui.cmp.viewhandler.card.HeadSupplierInitHandler"> 
+							<property name="fieldGet" ref="cmpBillFieldGet"></property> </bean> -->
+					</list>
+				</entry>
+
+				<entry key="nc.ui.pubapp.uif2app.event.list.ListPanelLoadEvent">
+					<list>
+						<bean class="nc.ui.cmp.viewhandler.list.LoadBillListTemplate">
+							<property name="listener">
+								<list>
+									<bean class="nc.ui.cmp.viewhandler.list.CountDecimalListener">
+										<property name="targetkey" value="rec_count" />
+										<property name="source" value="ts" />
+									</bean>
+								</list>
+							</property>
+						</bean>
+					</list>
+				</entry>
+				<entry key="nc.ui.pubapp.uif2app.event.list.ListHeadRowChangedEvent">
+					<list>
+						<bean class="nc.ui.cmp.viewhandler.list.ListHeadRowChangeListener">
+						</bean>
+						<bean
+							class="nc.ui.tmpub.digit.listener.card.CardPanelRowChangedListener">
+							<constructor-arg ref="billFormEditor" />
+							<constructor-arg ref="srcDestCollection" />
+						</bean>
+					</list>
+				</entry>
+				<entry key="nc.ui.pubapp.uif2app.event.list.ListHeadDataChangedEvent">
+					<list>
+						<bean class="nc.ui.cmp.viewhandler.list.ListHeadModelListener">
+						</bean>
+					</list>
+				</entry>
+				<entry key="nc.ui.pubapp.uif2app.event.card.CardBodyAfterRowEditEvent">
+					<list>
+						<bean class="nc.ui.cmp.bill.viewhandler.CardBodyAfterRowEditHandler">
+						</bean>
+					</list>
+				</entry>
+			</map>
+		</property>
+	</bean>
+
+	<!-- 托收金额计算 -->
+	<bean id="TSEditHandleMediator" class="nc.ui.pubapp.uif2app.view.EditHandleMediator">
+		<constructor-arg ref="billFormEditor" />
+		<property name="dispatcher">
+			<bean class="nc.ui.pubapp.uif2app.view.eventdispatch.Many2ManyDispatcher">
+				<property name="many2one">
+					<map>
+						<!-- 币种金额折算代码 -->
+						<entry>
+							<key>
+								<list>
+									<value>pk_currtype</value>
+									<value>ts_primal</value>
+									<value>local_rate</value>
+									<value>ts_local</value>
+								</list>
+							</key>
+							<bean id="TSTMCurrtypeConvertorListener" class="nc.ui.tm.listener.TMCurrtypeConvertorListener">
+								<constructor-arg>
+									<list>
+										<value>pk_currtype</value>
+										<value>ts_primal</value>
+										<value>pk_org</value>
+										<value>local_rate</value>
+										<value>ts_local</value>
+										<value>pk_group</value>
+										<value>group_rate</value>
+										<value>group_local_ts</value>
+										<value>global_rate</value>
+										<value>global_local_ts</value>
+										<value>bill_date</value>
+									</list>
+								</constructor-arg>
+								<constructor-arg>
+									<list>
+										<value>BODY</value>
+										<value>BODY</value>
+										<value>BODY</value>
+										<value>BODY</value>
+										<value>BODY</value>
+										<value>BODY</value>
+										<value>BODY</value>
+										<value>BODY</value>
+										<value>BODY</value>
+										<value>BODY</value>
+										<value>BODY</value>
+									</list>
+								</constructor-arg>
+
+							</bean>
+						</entry>
+					</map>
+				</property>
+			</bean>
+		</property>
+	</bean>
+	<!--model多功能事件监听器 -->
+	<bean id="mutilFuncletMediator" class="nc.ui.cmp.bill.commom.NewMutilFuncletMediator">
+		<property name="cardPanel" ref="billFormEditor" />
+		<property name="oppui" ref="oppui" />
+		<property name="model" ref="ManageAppModel" />
+		<property name="listView" ref="listView" />
+		<property name="readMsg" ref="readMsg" />
+		<property name="nodeType" value="writeNode" />
+		<property name="pageLineActions">
+			<list>
+				<ref bean="firstLineAction" />
+				<ref bean="preLineAction" />
+				<ref bean="nextLineAction" />
+				<ref bean="lastLineAction" />
+			</list>
+		</property>
+	</bean>
+
+
+	<!-- 行号处理 -->
+	<bean id="rowNoMediator" class="nc.ui.pubapp.uif2app.view.RowNoMediator">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+	</bean>
+
+	<!-- 应用服务类，负责进行模型操作的处理########################################################### -->
+	<bean id="ManageModelService" class="nc.ui.cmp.bill.model.CmpBillAppModelService" />
+
+	<!--页签按钮########################################################### -->
+	<bean id="toftpanelActionContributors" class="nc.ui.uif2.actions.ActionContributors">
+		<property name="contributors">
+			<list>
+				<ref bean="listActions" />
+				<ref bean="cardActions" />
+				<ref bean="oppActions" />
+			</list>
+		</property>
+	</bean>
+
+	<!--列表按钮 -->
+	<bean id="listActions" class="nc.ui.uif2.actions.StandAloneToftPanelActionContainer">
+		<constructor-arg>
+			<ref bean="listView" />
+		</constructor-arg>
+		<property name="actions">
+			<list>
+				<ref bean="addActionGroup" />
+				<ref bean="editAction" />
+
+				<ref bean="delScheduleAction" />
+				<ref bean="copyAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="queryAction" />
+				<ref bean="refreshAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="transtypeAction" />
+				<ref bean="associateActionGroup" />
+				
+						<!-- 影像 -->
+				<ref bean="separatorAction" />
+				<ref bean="imageFuncActionGroup" />
+				<ref bean="separatorAction" />
+				<!-- 影像 -->
+				
+				<ref bean="billAssistantActionGroup" />
+				<ref bean="commonuseBillActionGroup" />
+
+				<ref bean="separatorAction" />
+				<ref bean="relatedQueryActionGroup" />
+
+				<ref bean="separatorAction" />
+				<ref bean="relatingActionGroup" />
+				
+				<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 start -->
+				<ref bean="separatorAction" />
+				<ref bean="prevVoucherAction"/>
+				<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 end -->
+				
+				<ref bean="separatorAction" />
+				<ref bean="excelImportAndExportActiongroup" />
+				<ref bean="printActiongroup" />
+
+			</list>
+		</property>
+	</bean>
+
+	<!--卡片按钮 -->
+	<bean id="cardActions" class="nc.ui.uif2.actions.StandAloneToftPanelActionContainer">
+		<constructor-arg>
+			<ref bean="billFormEditor" />
+		</constructor-arg>
+		<property name="model" ref="ManageAppModel" />
+		<property name="actions">
+			<list>
+
+				<ref bean="addActionGroup" />
+				<!-- <ref bean="addAction" /> <ref bean="auditAction" /> -->
+				<ref bean="editAction" />
+				<ref bean="delScheduleAction" />
+				<ref bean="copyAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="queryAction" />
+				<ref bean="cardRefreshAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="transtypeAction" />
+				<ref bean="associateActionGroup" />
+						<!-- 影像 -->
+				<ref bean="separatorAction" />
+				<ref bean="imageFuncActionGroup" />
+				<ref bean="separatorAction" />
+				<!-- 影像 -->
+				<ref bean="billAssistantActionGroup" />
+				<ref bean="commonuseBillActionGroup" />
+
+				<ref bean="separatorAction" />
+				<ref bean="relatedQueryActionGroup" />
+
+				<ref bean="separatorAction" />
+				<ref bean="relatingActionGroup" />
+				
+				<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 start -->
+				<ref bean="separatorAction" />
+				<ref bean="prevVoucherAction"/>
+				<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 end -->
+
+				<ref bean="separatorAction" />
+				<ref bean="printActiongroup" />
+			</list>
+		</property>
+		<property name="editActions">
+			<list>
+				<ref bean="saveAction" />
+				<ref bean="tempSaveAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="cancelAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="billAssistantActionGroup" />
+				<ref bean="commonuseBillActionGroup" />
+
+			</list>
+		</property>
+	</bean>
+
+	<!-- 关闭动作监听器 -->
+	<bean id="ClosingListener" class="nc.ui.uif2.FunNodeClosingHandler">
+		<property name="model" ref="ManageAppModel" />
+		<property name="saveaction" ref="saveAction" />
+		<property name="cancelaction" ref="cancelAction" />
+	</bean>
+	<!--增加按钮组 -->
+	<bean id="addActionGroup" class="nc.ui.cmp.bill.actions.F4AddFlowMenuAction">
+		<property name="transferBillViewProcessor" ref="transferProcessor" />
+		<property name="billform" ref="billFormEditor" />
+		<property name="listview" ref="listView" />
+		<property name="code">
+			<value>自制</value>
+		</property>
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng_0"></property>
+				<property name="defaultValue" value="新增"></property>
+				<property name="resId" value="03607mng-0398"></property>
+			</bean>
+		</property>
+	</bean>
+	<bean name="transferProcessor" class="nc.ui.pubapp.billref.dest.TransferBillViewProcessor">
+		<property name="list" ref="listView" />
+		<property name="transferLogic" ref="transferLogic" />
+		<property name="actionContainer" ref="listActions" />
+		<property name="billForm" ref="billFormEditor" />
+	</bean>
+	<bean name="transferLogic" class="nc.ui.pubapp.billref.dest.DefaultBillDataLogic">
+		<property name="billForm" ref="billFormEditor" />
+	</bean>
+	<!--结算信息按钮 -->
+	<bean id="oppActions" class="nc.ui.uif2.actions.StandAloneToftPanelActionContainer">
+		<constructor-arg>
+			<ref bean="oppui" />
+		</constructor-arg>
+	</bean>
+
+	<!-- 界面布局总装########################################################### -->
+	<bean id="container" class="nc.ui.uif2.TangramContainer"
+		init-method="initUI">
+		<property name="tangramLayoutRoot">
+			<bean class="nc.ui.uif2.tangramlayout.node.TBNode">
+				<property name="tabs">
+					<list>
+						<bean class="nc.ui.uif2.tangramlayout.node.HSNode">
+							<property name="name">
+								<bean class="nc.ui.uif2.I18nFB">
+									<property name="resDir" value="3607mng_0"></property>
+									<property name="defaultValue" value="列表"></property>
+									<property name="resId" value="03607mng-0101"></property>
+								</bean>
+							</property>
+							<property name="dividerLocation" value="0.2"></property>
+							<property name="left">
+								<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+									<property name="component">
+										<ref bean="queryArea" />
+									</property>
+								</bean>
+							</property>
+							<property name="right">
+								<bean class="nc.ui.uif2.tangramlayout.node.VSNode">
+									<property name="up">
+										<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+											<property name="component" ref="listInfoPnl" />
+										</bean>
+									</property>
+									<property name="down">
+										<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+											<property name="component" ref="listView" />
+										</bean>
+									</property>
+									<property name="dividerLocation" value="30f" />
+									<property name="showMode" value="NoDivider"></property>
+								</bean>
+							</property>
+						</bean>
+						<bean class="nc.ui.uif2.tangramlayout.node.VSNode">
+							<property name="name">
+								<bean class="nc.ui.uif2.I18nFB">
+									<property name="resDir" value="3607mng_0"></property>
+									<property name="defaultValue" value="卡片"></property>
+									<property name="resId" value="03607mng-0399"></property>
+								</bean>
+							</property>
+							<property name="up">
+								<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+									<property name="component" ref="cardInfoPnl" />
+								</bean>
+							</property>
+							<property name="down">
+								<bean class="nc.ui.uif2.tangramlayout.node.TBNode">
+									<property name="name">
+										<bean class="nc.ui.uif2.I18nFB">
+											<property name="resDir" value="3607mng_0"></property>
+											<property name="defaultValue" value="卡片"></property>
+											<property name="resId" value="03607mng-0399"></property>
+										</bean>
+									</property>
+									<property name="tabs">
+										<list>
+											<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+												<property name="component" ref="billFormEditor"></property>
+												<property name="name">
+													<bean class="nc.ui.uif2.I18nFB">
+														<property name="resDir" value="3607mng_0"></property>
+														<property name="defaultValue" value="业务信息"></property>
+														<property name="resId" value="03607mng-0102"></property>
+													</bean>
+												</property>
+											</bean>
+											<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+												<property name="component" ref="oppui"></property>
+												<property name="name">
+													<bean class="nc.ui.uif2.I18nFB">
+														<property name="resDir" value="3607mng_0"></property>
+														<property name="defaultValue" value="结算信息"></property>
+														<property name="resId" value="03607mng-0400"></property>
+													</bean>
+												</property>
+											</bean>
+										</list>
+									</property>
+								</bean>
+							</property>
+							<property name="dividerLocation" value="30f" />
+							<property name="showMode" value="NoDivider"></property>
+						</bean>
+					</list>
+				</property>
+				<property name="showMode" value="CardLayout" />
+			</bean>
+
+		</property>
+	</bean>
+
+	<!--交易类型 -->
+	<bean id="transtypeAction" class="nc.ui.cmp.bill.actions.RecTransTypeAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="transTypeRefModel" ref="transTypeRefModel" />
+		<property name="wherepart" value="parentbilltype = 'F4'" />
+		<!--<property name="nodeKey" value="D4" /> -->
+	</bean>
+
+	<bean id="transTypeRefModel" class="nc.ui.cmp.ref.FiBillTypeRefModel" />
+
+	<!--保存 -->
+	<bean id="saveAction" class="nc.ui.cmp.bill.actions.CmpRecBillSaveAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="context" ref="context" />
+	</bean>
+
+	<!--暂存 -->
+	<bean id="tempSaveAction" class="nc.ui.cmp.bill.actions.CmpRecBillTempSaveAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="context" ref="context" />
+	</bean>
+	<!--承付 -->
+	<bean id="commisionPayAction" class="nc.ui.cmp.bill.actions.CmpBillCommisionRecSaveUIAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="context" ref="context" />
+	</bean>
+	<bean id="recFactory" class="nc.ui.cmp.bill.RecBillCopyFactory" />
+
+	<!--复制 -->
+	<bean id="copyAction" class="nc.ui.cmp.bill.actions.CmpBillCopyAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="factory" ref="recFactory" />
+		<property name="listView" ref="listView" />
+	</bean>
+
+	<!--取消 -->
+	<bean id="cancelAction" class="nc.ui.cmp.bill.actions.CmpRecBillCancelAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="saveAction" ref="saveAction" />
+	</bean>
+
+	<!-- <bean id="cancelAction" class="nc.ui.pubapp.uif2app.actions.CancelAction"> 
+		<property name="model" ref="ManageAppModel" /> <property name="saveAction" 
+		ref="saveAction"/> </bean> -->
+
+	<!--增加 -->
+	<bean id="addAction" class="nc.ui.cmp.bill.actions.CmpRecBillAddAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="edit" ref="billFormEditor" />
+	</bean>
+
+	<!--行增加 -->
+	<bean id="addline" class="nc.ui.uif2.actions.AddLineAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="cardpanel" ref="billFormEditor" />
+	</bean>
+
+	<!--审核 -->
+	<bean id="auditAction" class="nc.ui.cmp.bill.actions.CmpBillAuditAction">
+		<property name="model" ref="ManageAppModel" />
+	</bean>
+
+	<bean id="cardRefreshAction" class="nc.ui.cmp.bill.actions.CmpRecBillCardRefreshAction">
+		<property name="model" ref="ManageAppModel" />
+	</bean>
+	<!--修改 -->
+	<bean id="editAction" class="nc.ui.cmp.bill.actions.CmpBillEditAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+	</bean>
+
+	<!--删除 -->
+	<bean id="delAction" class="nc.ui.cmp.bill.actions.CmpBillDeleteAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+	</bean>
+	<bean id="listDelAction" class="nc.ui.cmp.bill.actions.CmpBillListDeleteAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+	</bean>
+	<!--查询 -->
+
+	<bean id="queryDelegator" class="nc.ui.cmp.bill.actions.CmpBillQueryDelege">
+		<property name="context" ref="context" />
+		<property name="model" ref="ManageAppModel" />
+		<property name="nodeKey" value="D4" />
+	</bean>
+	<bean id="associateAction" class="nc.ui.cmp.bill.actions.AssociateUIAction">
+		<property name="context" ref="context" />
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="listView" />
+		<property name="billform" ref="billFormEditor" />
+		<property name="billType" value="F4" />
+	</bean>
+	<bean id="unAssociateAction" class="nc.ui.cmp.bill.actions.UnAssociateUIAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="context" ref="context" />
+		<property name="billType" value="F4" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+	</bean>
+	<!--model事件监听器 -->
+	<bean id="orgChangedMediator"
+		class="nc.ui.pubapp.uif2app.mediator.modelevent.OrgChangedMediator">
+		<property name="billform" ref="billFormEditor" />
+		<property name="model" ref="ManageAppModel"></property>
+		<!--默认的处理时更换所有参照的组织 -->
+		<property name="orgChangedImpl" ref="orgchange"></property>
+	</bean>
+	<!--更换所有参照的组织 -->
+	<bean id="orgchange" class="nc.ui.cmp.mediator.modelevent.OrgChangedEvent">
+		<property name="editor" ref="billFormEditor" />
+	</bean>
+
+	<bean id="scaleProcessor" class="nc.ui.cmp.scale.CmpBillCardPanelScaleProcessor" />
+	<bean id="listScaleProcessor" class="nc.ui.cmp.scale.CmpBillListPanelScaleProcessor" />
+
+	<!--业务信息需要给结算信息传递的表头信息 -->
+	<bean id="readMsg" class="nc.ui.cmp.bill.impl.CmpBillReadMsgImpl" />
+
+	<!-- 浏览按钮 卡片界面共享信息按钮 -->
+	<bean id="firstLineAction" class="nc.ui.uif2.actions.FirstLineAction">
+		<property name="model" ref="ManageAppModel" />
+	</bean>
+	<bean id="nextLineAction" class="nc.ui.uif2.actions.NextLineAction">
+		<property name="model" ref="ManageAppModel" />
+	</bean>
+	<bean id="preLineAction" class="nc.ui.uif2.actions.PreLineAction">
+		<property name="model" ref="ManageAppModel" />
+	</bean>
+	<bean id="lastLineAction" class="nc.ui.uif2.actions.LastLineAction">
+		<property name="model" ref="ManageAppModel" />
+	</bean>
+	<!-- 关联功能 -->
+	<bean id="associateActionGroup" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code">
+			<value>billAssistant</value>
+		</property>
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng_0"></property>
+				<property name="defaultValue" value="关联结算信息"></property>
+				<property name="resId" value="03607mng-0106"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="associateAction" />
+				<ref bean="unAssociateAction" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="relatingActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code">
+			<value>billRelating</value>
+		</property>
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng_0"></property>
+				<property name="defaultValue" value="关联功能"></property>
+				<property name="resId" value="03607mng-0098"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="cmpNoteRegisterAction" />
+				<ref bean="rentAffiliated" />
+			</list>
+		</property>
+	</bean>
+	
+	<!--影像-->
+	<bean id="imageFuncActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="imageFunc" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng_0"></property>
+				<property name="defaultValue" value="影像"></property>
+				<property name="resId" value="03607mng-0446"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="imageShowAction" />
+				<ref bean="imageScanAction" />
+			</list>
+		</property>
+	</bean>
+	<!-- 影像查看 --> 
+	<bean id="imageShowAction" class="nc.ui.cmp.bill.actions.CmpBillImageShowAction"> 
+		<property name="model" ref="ManageAppModel" /> 
+		<property name="pk_billtype" value="0000Z6000000000000F4" /> 
+	</bean> 
+	<!-- 影像扫描 --> 
+	<bean id="imageScanAction" class="nc.ui.cmp.bill.actions.CmpBillImageScanAction"> 
+		<property name="model" ref="ManageAppModel" /> 
+		<property name="pk_billtype" value="0000Z6000000000000F4" /> 
+		<property name="checkscanway" value="nc.bs.cmp.imag.service.CmpBillCheckScanWay" /> 
+	</bean>
+	
+	<!-- 辅助功能 -->
+	<bean id="billAssistantActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code">
+			<value>billAssistant</value>
+		</property>
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng_0"></property>
+				<property name="defaultValue" value="辅助功能"></property>
+				<property name="resId" value="03607mng-0401"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="fileDocManageAction" />
+				<ref bean="recBillReversalAction" />
+				<ref bean="CmpBillCancelReversalAction" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="recBillReversalAction"
+		class="nc.ui.cmp.bill.international.actions.CmpRecBillReversalAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+	</bean>
+	<bean id="CmpBillCancelReversalAction"
+		class="nc.ui.cmp.bill.international.actions.CmpBillCancelReversalAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+	</bean>
+
+	<bean id="rentAffiliated" class="nc.ui.cmp.bill.actions.RentAffiliatedAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+	</bean>
+	<bean id="relatedQueryActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code">
+			<value>relatedQuery</value>
+		</property>
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng_0"></property>
+				<property name="defaultValue" value="联查"></property>
+				<property name="resId" value="03607mng-0105"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="linkQueryAction" />
+				<ref bean="flowStateQueryAction" />
+				<ref bean="billLQueryVoucherAction" />
+				<ref bean="billLQueryNoteAction" />
+				<ref bean="BillLinkQueryBudgetAction" />
+				<ref bean="linkBConferQueryAction" />
+			</list>
+		</property>
+	</bean>
+	<bean id="linkQueryAction" class="nc.ui.pubapp.uif2app.actions.LinkQueryAction">
+		<property name="model" ref="ManageAppModel" />
+		<property name="billType" value="F4" />	
+	</bean>
+	<bean id="flowStateQueryAction" class="nc.ui.cmp.bill.actions.BillFlowStateQueryAction"
+		autowire="byName">
+		<property name="model" ref="ManageAppModel" />
+		<property name="container" ref="container" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+		<property name="loginContext" ref="context" />
+	</bean>
+	<bean id="billLQueryVoucherAction" class="nc.ui.cmp.bill.actions.BillLQueryVoucherAction"
+		autowire="byName">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+		<property name="loginContext" ref="context" />
+	</bean>
+	<bean id="BillLinkQueryBudgetAction" class="nc.ui.cmp.bill.actions.BillLinkQueryBudgetAction"
+		autowire="byName">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+		<property name="loginContext" ref="context" />
+	</bean>
+	<bean id="fileDocManageAction" class="nc.ui.cmp.bill.actions.CmpFileDocManageAction"
+		autowire="byName">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+	</bean>
+
+	<!-- 打印Action -->
+	<bean id="printActiongroup" class="nc.funcnode.ui.action.GroupAction">
+		<property name="actions">
+			<list>
+
+				<bean id="printaction"
+					class="nc.ui.pubapp.uif2app.actions.MetaDataBasedPrintAction">
+					<property name="preview" value="false" />
+					<property name="model" ref="ManageAppModel" />
+					<property name="beforePrintDataProcess" ref="printProcessor" />
+				</bean>
+				<bean id="printpreviewaction"
+					class="nc.ui.pubapp.uif2app.actions.MetaDataBasedPrintAction">
+					<property name="preview" value="true" />
+					<property name="model" ref="ManageAppModel" />
+					<property name="beforePrintDataProcess" ref="printProcessor" />
+				</bean>
+				<!-- 输出 -->
+				<bean id="outputAction" class="nc.ui.pubapp.uif2app.actions.OutputAction">
+					<property name="model" ref="ManageAppModel" />
+					<property name="parent" ref="billFormEditor" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="userdefitemContainer" class="nc.ui.uif2.userdefitem.UserDefItemContainer">
+		<property name="context" ref="context" />
+		<property name="params">
+			<list>
+				<bean class="nc.ui.uif2.userdefitem.QueryParam">
+					<property name="mdfullname" value="cmp.cmp_recbill" />
+				</bean>
+				<bean class="nc.ui.uif2.userdefitem.QueryParam">
+					<property name="mdfullname" value="cmp.cmp_recbilldetail" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+	<!-- 列表自定义项处理 -->
+	<bean name="userdefitemListPreparator" class="nc.ui.uif2.editor.UserdefitemContainerListPreparator">
+		<property name="container" ref="userdefitemContainer" />
+		<property name="params">
+			<list>
+				<bean class="nc.ui.uif2.editor.UserdefQueryParam">
+					<property name="mdfullname" value="cmp.cmp_recbill" />
+					<property name="pos" value="0" />
+					<property name="prefix" value="def" />
+				</bean>
+				<bean class="nc.ui.uif2.editor.UserdefQueryParam">
+					<property name="mdfullname" value="cmp.cmp_recbilldetail" />
+					<property name="pos" value="1" />
+					<property name="prefix" value="def" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+	<!-- 卡片自定义项配置 -->
+	<bean name="userdefitemPreparator" class="nc.ui.uif2.editor.UserdefitemContainerPreparator">
+		<property name="container" ref="userdefitemContainer" />
+		<property name="params">
+			<list>
+				<bean class="nc.ui.uif2.editor.UserdefQueryParam">
+					<property name="mdfullname" value="cmp.cmp_recbill" />
+					<property name="pos" value="0" />
+					<property name="prefix" value="def" />
+				</bean>
+				<bean class="nc.ui.uif2.editor.UserdefQueryParam">
+					<property name="mdfullname" value="cmp.cmp_recbilldetail" />
+					<property name="pos" value="1" />
+					<property name="prefix" value="def" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+
+	<bean id="remoteCallCombinatorCaller" class="nc.ui.uif2.editor.UIF2RemoteCallCombinatorCaller">
+		<property name="remoteCallers">
+			<list>
+				<ref bean="queryTemplateContainer" />
+				<ref bean="templateContainer" />
+				<ref bean="userdefitemContainer" />
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="nodeKeyFactoryBean" class="nc.ui.cmp.bill.impl.NodeKeyFactoryBean">
+		<property name="context" ref="context"></property>
+		<property name="defaultNodeKey" value="D4"></property>
+	</bean>
+	<bean id="nodeKeysFactoryBean" class="nc.ui.cmp.bill.impl.NodeKeysFactoryBean">
+		<property name="context" ref="context"></property>
+		<property name="defaultNodeKey" value="D4"></property>
+	</bean>
+
+	<!-- 模板容器，负责对模板的统一装载 -->
+	<bean id="templateContainer" class="nc.ui.uif2.editor.TemplateContainer"
+		init-method="load">
+		<property name="context" ref="context" />
+		<property name="nodeKeies" ref="nodeKeysFactoryBean" />
+	</bean>
+	<bean id="excelImportProcessor" class="nc.ui.cmp.bill.excelimport.RecBillExcelImportProcessor">
+	</bean>
+</beans>

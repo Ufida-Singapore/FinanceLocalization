@@ -1,0 +1,61 @@
+{
+	"title":
+	{		
+		"basic_info":"基本信息",
+		"details_info":"详细信息",
+		"pk_orginfo":"财务组织",
+		
+		"bill_no_find":"未查找到相应单据！",
+		"tip":"提示",
+		"tip_warm":"温馨提示",
+		"wrong":"错误",
+		"failed":"失败",
+		"failed_delete":"删除失败",
+		"failed_write":"录单失败"
+	},
+	"btn":
+	{
+		"save":"保存",
+		"cancel":"取消",			
+		"add":"新增",
+		"edit":"修改",
+		"delete":"删除",
+		"print":"打印",
+		"imageupload":"影像扫描",	
+		"imageshow":"影像查看",
+		"Add":"添加"
+	},
+	"msg":
+	{
+		"confim_cancel":"请确认是否要取消？",
+		"confim_delete":"删除是不可恢复的，确实要删除单据吗？",
+		"success_save":"保存成功！"
+	},
+	"approvalmsg":
+	{
+		"approvalSituation":"审批情况"	,
+		"iwebsumbit":"提交",
+		"approval":"批准"	,
+		"notapproval":"不批准",
+		"turndown":"驳回"	,
+		"inputinfo":"请输入意见",
+		"other":"其它",
+		"cancelapproval":"取消审批",
+		"billsaved":"已保存",
+		"billnotactive":"未生效",
+		"billfree":"自由态",
+		"billsubmit":"提交态",
+		"billdoing":"进行中态",
+		"billpassing":"通过态",
+		"billfailed":"未通过态",
+		"billactive":"已生效",
+		"billnotsubmit":"未确认",
+		"billapproved":"审批通过",
+		"billapproving":"审批中",
+		"billstored":"已暂存",
+		"billsigned":"已签字",
+		"billagree":"同意",
+		"rejectadvice":"驳回流程必须输入意见",
+		"inputlimitwords":"批语只能输入50个字以内"
+	}
+}

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>消息中心</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="UAP Message Center">
+    <meta name="keywords" content="UAP Message">
+
+	
+    <!-- build:css css/index.css -->
+    <link rel="stylesheet" href="/mp/css/content.css" />
+    <link rel="stylesheet" href="/mp/css/style.css" />
+    <link rel="stylesheet" href="/mp/css/responsive.css" />
+    <!-- endbuild -->
+		<link href="formwizard/approval.css" rel="stylesheet">
+		<link href="formwizard/fi.css" rel="stylesheet">
+		<link href="formwizard/paybillform.css" rel="stylesheet">
+		<link href="formwizard/reject.css" rel="stylesheet">
+	
+		<link href="formwizard/uui/css/u.base.min.css" rel="stylesheet">
+		<link href="formwizard/uui/css/u.ext.min.css" rel="stylesheet">
+		<link href="formwizard/common.css" rel="stylesheet">
+    <!-- build:css css/base.css -->
+    <link rel="stylesheet" href="/mp/bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/mp/css/blue.css" />
+    <link rel="stylesheet" href="/mp/css/sco.css" />
+    
+    <!-- endbuild -->
+
+    <!-- build:css css/widget.css -->
+    <link rel="stylesheet" href="/mp/bower_components/bootstrap-table/src/bootstrap-table.css">
+    <link rel="stylesheet" href="/mp/bower_components/fancybox/source/jquery.fancybox.css" />
+    <link rel="stylesheet" href="/mp/css/jquery.jqzoom.css" />
+    <link rel="stylesheet" href="/mp/bower_components/bootstrap-multiselect/css/bootstrap-multiselect.css"/>
+    <link rel="stylesheet" href="/mp/css/ladda-themeless.css">
+    <link rel="stylesheet" href="/mp/css/bootstrap-datetimepicker.css">
+    <link rel="stylesheet" href="/mp/bower_components/jquery-ui/jquery-ui.css">
+    <link rel="stylesheet" href="/mp/css/scrollbar.css">
+    <!-- endbuild -->
+	<link href="/mp/css/query.css" rel="stylesheet">
+	<link href="/mp/css/sco1.css" rel="stylesheet">
+	<link rel="stylesheet" href="/mp/css/content.css" />
+	
+    <!-- build:js js/base.js -->
+    <script src="/mp/bower_components/jquery/jquery-1.11.1.js"></script>
+    <script src="/mp/bower_components/jquery-ui/jquery-ui.js"></script>
+    <script src="/mp/bower_components/jquery/jquery-migrate-1.2.1.js"></script>
+    <script src="/mp/bower_components/jquery.cookie/jquery.cookie.js"></script>
+    <script src="/mp/bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="/mp/js/lib/jquery.placeholder.js"></script>
+    <script src="/mp/js/lib/sco.message.js"></script>
+    <script src="/mp/js/lib/bootbox.js"></script>
+    <!-- endbuild -->
+
+
+    <!-- build:js js/widget.js -->
+    <script src="/mp/js/common.js"></script>
+    <script src="/mp/bower_components/underscore/underscore.js"></script>
+    <script src="/mp/bower_components/backbone/backbone.js"></script>
+    <script src="/mp/bower_components/backbone.paginator/lib/backbone.paginator.js"></script>
+    <script src="/mp/bower_components/backbone.paginator/examples/js/backgrid.js"></script>
+    <script src="/mp/js/lib/backgrid-paginator.js"></script>
+    <script src="/mp/bower_components/bootstrap-table/src/bootstrap-table.js"></script>
+    <script src="/mp/bower_components/fancybox/source/jquery.fancybox.pack.js"></script>
+    <script src="/mp/js/lib/jquery.jqzoom-core.js"></script>
+    <script src="/mp/bower_components/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
+    <script src="/mp/js/lib/spin.js"></script>
+	<script src="/mp/js/lib/ladda.js"></script>
+    <script src="/mp/js/lib/bootstrap-datetimepicker.js"></script>
+    <script src="/mp/js/mp.zh-CN.js"></script>
+    <script src="/mp/js/lib/iscroll.js"></script>
+    
+    <script src="/mp/js/querytpl.js"></script>
+	<script src="/mp/js/sco.message.js"></script>
+
+	<script src="/mp/bower_components/My97DatePicker/WdatePicker.js"></script>
+<!-- 	<script src="/mp/bower_components/My97DatePicker/calendar.js"></script> -->
+	<script src="/mp/bower_components/My97DatePicker/config.js"></script>
+    <!-- endbuild -->
+	
+    <!-- endbuild -->
+    
+    <!--审批工作台多语-->
+    <script src="/mp/js/lang/baselang.js"></script>
+    <script type="text/javascript">
+		var lang = getCookieForLang();		
+		if(lang == 'en')
+			document.write("<script src='/mp/js/lang/workstation_english.js'><\/script>");
+		else
+			document.write("<script src='/mp/js/lang/workstation_simpchn.js'><\/script>");
+	</script>
+	
+    <script type="text/template" id="msg_area_template">
+        <li>
+            <h4><a href=""></a></h4>
+            <span><a class="trigger" href="#">Admin</a> 发布了文章</span>
+        </li>
+    </script>
+<script type="text/template" id="notice_detail_template">
+<div style="width: 100%;float: left;padding-bottom: 32px;">
+    <div class="msg_info_detail_line" style="min-width: 800px;width: 95%;">
+		<div class="notice_dealed_detail_img"></div>
+		<div class="msg_center">
+			<div>
+				<div class="msg_detail_title" title="<%-msg.msgVo.subject%>">
+						<div style="float:left;"><%-msg.msgVo.subject%></div>
+						<div class="msg_detail_sender_time" style="margin-right: 20px;">时间：<%-timeStamp2String(msg.msgVo.sendtime)%></div>
+						<div class="msg_detail_sender">发件人：<%-msg.msgVo.sendername%></div>
+				</div>
+			</div>
+			<div class="msg_detail_content"><%-msg.msgVo.content%></div>
+		</div>
+	</div>
+	<div class="msg_tag_info" style="width: 900px;">
+		<div class="i-tag"></div>
+		<span>
+		<%=trans("workstation_annex")%>	
+			<%if(msg.msgVo.attrurllist!=null&&msg.msgVo.attrurllist.length>0){%>
+             <%if(msg.msgVo.attrurllist.length>2){%>
+				<span class="tag_more_button">
+                   <a actioncode="moreChangeClass"><%=trans("workstation_more")%></a>
+                </span>
+              <%}%>
+			<%}else{%>
+			<%=trans("workstation_none")%>
+			<%}%>
+			&nbsp;&nbsp;
+		</span>
+		<% _.each(msg.msgVo.attrurllist,function(element, index, list) { %>
+			<%if(index<2){%>
+               <div class="i_tag_info">
+               <% var type = element.attrname.substring(element.attrname.lastIndexOf(".")+1)%>
+                <%if(type =="xls"){%>
+                  <div class="excel_img"></div>
+                <%}else if(type =="doc"){%>
+                  <div class="word_img"></div>
+                <%}else if(type =="ppt"){%>
+                  <div class="ppt_img"></div>
+                <%}else{%>
+                  <div class="word_img"></div>
+               <%}%>
+               <a target="_blank" href=<%-element.downloadurl%>>&nbsp;&nbsp;<%-element.attrname%></a>
+              </div>
+             <%}%>
+		<%})%>
+	</div>
+<div class="detail_tag_more" style="padding-left: 136px;">
+  <% _.each(msg.msgVo.attrurllist,function(element, index, list) { %>
+      <%if(index>1){%>
+              <div class="i_tag_info">
+                  <% var type = element.attrname.substring(element.attrname.lastIndexOf(".")+1)%>
+                  <%if(type =="xls"){%>
+                  <div class="excel_img"></div>
+                  <%}else if(type =="doc"){%>
+                  <div class="word_img"></div>
+                   <%}else if(type =="ppt"){%>
+                  <div class="ppt_img"></div>
+                   <%}else if(1<index<3){%>
+                  <div class="word_img"></div>
+                  <%}%>
+                  <a target="_blank" href=<%-element.downloadurl%>>&nbsp;&nbsp;<%-element.attrname%></a>
+             </div>
+     <%}%>
+  <%})%>
+</div>
+<%if(msg.msgVo.showBill){%>
+	<div class="msg_tag_info" style="padding-left: 38px;"> 
+		<div><%=msg.htmlBill%></div>
+	</div>
+<%}%>
+</div>
+	</script>
+<script type="text/template" id="notice_msg_more_template">
+<% _.each(msg,function(element, index, list) { %>
+<%if(index==list.length-1){%>
+         <div class="msg_more_backcol" style="border-bottom:solid 1px #C0C0C0;">
+         <%}else{%>
+        <div class="msg_more_backcol">
+        <%}%>	
+
+  <div class="msg_each_content">
+    <div class="msg_more_line_2">
+		<%if(element.msgstatus=='waitdeal'){%>
+         <div class="notice_waitdeal_img_wrap">
+		     <div class="notice_more_waitdeal_img" pk=<%= element.pk_sourcemsg %> sourcesystem="<%-element.sourcesystem%>"></div>
+         </div>
+         <%}else{%>
+         <div class="notice_more_dealed_img"></div>
+        <%}%>	
+		<div class="msg_center">
+            <div class="msg_title" style="margin-top: 8px;">
+			<div style="float:left;font-weight: bold;font-size: 13px;">
+               <a  title="<%-element.subject%>" href="javascript:void(0)" pk="<%-element.pk_sourcemsg%>" msgtype="<%-element.msgtype%>" id="<%-element.sourcesystem%>">
+					<% if(element.subject.length>20){%>
+						<%-element.subject.substring(0,20)%>...
+					<%}else{%>
+						<%-element.subject%>
+					<%}%>
+				</a>
+            </div>
+			<div class="msg_detail_sender_time"><%=trans("workstation_send_time")%><%-timeStamp2String(element.sendtime)%></div>
+            <div class="msg_detail_sender"><%=trans("workstation_sponsor")%><%-element.sendername%></div>
+			</div>
+			<div class="msg_more_content">
+                 <%if(element.content!=null){%>
+					<%if(element.content.length>150){%>
+					   <%-element.content.substring(0,150)%>...
+				    <%}else{%>
+					   <%-element.content%>
+					<%}%>
+				<%}%>
+            </div>
+		</div>        
+	</div>
+   <div class="msg_more_tag" style="margin-bottom:8px;">
+            <div class="i-more-tag"></div>
+                <span>
+                <%=trans("workstation_annex")%>
+        <%if(element.attrurllist!=null&&element.attrurllist.length>0){%>
+             <%if(element.attrurllist.length>2){%>
+				<span class="tag_more_button">
+                   <a><%=trans("workstation_more")%></a>
+                </span>
+             <%}%>
+		<%}else{%>
+		<%=trans("workstation_none")%>
+			<%}%>
+			&nbsp;&nbsp;
+                </span>
+		    <% _.each(element.attrurllist,function(e, index, list) { %>
+           <%if(element.attrurllist.length==1 && e.attrname.substring(e.attrname.lastIndexOf(".")+1)=="html"){%>
+           <%=trans("workstation_none")%>
+           <%}else{%>
+			    <%if(index<2){%>
+            <div class="i_tag_info">
+               <% var type = e.attrname.substring(e.attrname.lastIndexOf(".")+1)%>
+                <%if(type =="xls"){%>
+                  <div class="excel_img"></div>
+                <%}else if(type =="doc"){%>
+                  <div class="word_img"></div>
+                <%}else if(type =="ppt"){%>
+                  <div class="ppt_img"></div>
+                <%}else{%>
+                  <div class="word_img"></div>
+               <%}%>
+               <a target="_blank" href=<%-e.downloadurl%>>&nbsp;&nbsp;<%-e.attrname%></a>
+            </div>
+                <%}%>
+<%}%>
+		    <%})%>
+   </div>
+<div class="tag_more">
+  <% _.each(element.attrurllist,function(e, index, list) { %>
+      <%if(index>1){%>
+              <div class="i_tag_info">
+                  <% var type = e.attrname.substring(e.attrname.lastIndexOf(".")+1)%>
+                  <%if(type =="xls"){%>
+                  <div class="excel_img"></div>
+                  <%}else if(type =="doc"){%>
+                  <div class="word_img"></div>
+                   <%}else if(type =="ppt"){%>
+                  <div class="ppt_img"></div>
+                   <%}else{%>
+                  <div class="word_img"></div>
+                  <%}%>
+                   <a target="_blank" href=<%-e.downloadurl%>>&nbsp;&nbsp;<%-e.attrname%></a>
+             </div>
+     <%}%>
+  <%})%>
+</div>
+
+	</div>
+  </div>
+</div>
+<% }) %>
+
+</script>
+    <!-- build:remove:dist -->
+    <script src="/mp/js/mp-plugin/SEA.js"></script>
+    <script src="/mp/js/mp-plugin/UAP65.js"></script>
+    <script src="/mp/js/mp-plugin/NC57MP.js"></script>
+	<!--
+    <script src="js/mock/mock.js"></script>
+    <script src="js/mock/mockapp.js"></script>
+    <script src='http://127.0.0.1:8088/rap.plugin.js?projectId=1&mode=1'></script>
+    -->
+      <!-- /build -->
+
+
+    <!-- build:js js/app.js -->
+        <script src="/mp/js/lib/jquery.hoverIntent.js"></script>
+    <script src="/mp/js/lib/ajax-pushlet-client.js"></script>
+    <script src="/mp/msg/model/msg.js"></script>
+    <script src="/mp/msg/collection/msgs.js"></script>
+    <script src="/mp/msg/view/msgmoreview.js"></script>
+    <script src="/mp/msg/router/router.js"></script>
+    <script src="/mp/msg/msgmoreapp.js"></script>
+    
+    
+<!--     <script src="/mp/js/lib/jquery.hoverIntent.js"></script> -->
+<!--     <script src="/mp/js/lib/ajax-pushlet-client.js"></script> -->
+<!--     <script src="/mp/msg/model/msg.js"></script> -->
+<!--     <script src="/mp/msg/router/router.js"></script> -->
+<!--         <script src="/mp/msg/view/msgview.js"></script> -->
+<!--     <script src="/mp/msg/view/appview.js"></script> -->
+<!--     <script src="/mp/msg/view/rightview.js"></script> -->
+    
+<!--     <script src="/mp/msg/msgapp_forindexmore.js"></script> -->
+    <!-- endbuild -->
+
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+     <!-- build:js js/iesupport.js -->
+    <script src="/mp/bower_components/html5shiv/dist/html5shiv.min.js"></script>
+    <script src="/mp/bower_components/respond/dest/respond.min.js"></script>
+    <script src="/mp/js/lib/ie.js"></script>
+    <!-- endbuild -->
+    <![endif]-->
+
+    <link href="/mp/img/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <style>[touch-action="none"]{ -ms-touch-action: none; touch-action: none; }[touch-action="pan-x"]{ -ms-touch-action: pan-x; touch-action: pan-x; }[touch-action="pan-y"]{ -ms-touch-action: pan-y; touch-action: pan-y; }[touch-action="scroll"],[touch-action="pan-x pan-y"],[touch-action="pan-y pan-x"]{ -ms-touch-action: pan-x pan-y; touch-action: pan-x pan-y; }
+
+    h2, .h2 {
+        font-size: 20px
+    }
+    h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6{
+        font-weight:700;
+    }
+
+    @media (min-width: 1200px) {
+        .container {
+            width: 1002px
+        }
+    }
+
+    .btn-sm, .btn-group-sm > .btn {
+        padding: 1px 5px;
+        font-size: 13px;
+        line-height: 1.5;
+        border-radius: 2px
+    }
+    .dropdown-menu {
+        min-width: 0px !important;
+    }
+    .head-nav  .more li a{
+        border-bottom: 0px;
+        height:32px
+    }
+	.applyBtn{
+		background:#5cb85c;
+		  height: 31px;
+	}
+    #scroller {
+        position:relative;
+        /*	-webkit-touch-callout:none;*/
+        -webkit-tap-highlight-color:rgba(0,0,0,0);
+        float:left;
+        width:100%;
+        padding:0;
+    }
+    </style>
+
+</head>
+<body id="noticeMoreBody" onload="onloadLangSource()" style="font-size: 12px;overflow: scroll;">
+
+<!-- <header class="site-header   navbar-fixed-top " style="background: #e0e0e0;height: 45px;">
+    <div class="container inner clearfix" style="height: 100%;line-height: 45px;float: left;font-size: 16px;color: #4d4d4d;font-family:"微软雅黑";">
+       通知
+    </div>
+    
+</header>end .site-header -->
+<div class="msgcontainer" id="notice_msg_more_info1" style="position: absolute;width: 100%;">
+<!-- 查询模板开始 -->
+<div id="queryArea" class="selector" style="width: 90%;min-width: 600px;margin-top: 20px;margin-left: 50px;margin-right: 50px;position: relative;  padding-top: 22px;padding-bottom: 22px;margin-bottom: 0px;border: solid 1px #C0C0C0;" data-qtid="1001ZZ10000000007MOY" data-funcode="10140MAG" data-beanid='c7dc0ccd-8872-4eee-8882-160e8f49dfad'  data-showsize="6">
+			<!-- 补充空白div-->
+            <!-- <div class="padding-div"></div> -->
+					  
+<div id="theme" class="queryAreaItem s-line refer"  style="display: inline-block;margin-left: 20px;" >
+	<div class="more-refer-wrap">
+		<div class="date-start"></div>
+		<div class="date-end"></div>
+		<div class="refer-key" style="width: 80px;">
+			<span id="spantheme">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;主题：</span>
+		</div>
+			<div class="refer-value" style="padding-right: 28px;margin-left: 0px;" data-value='' data-isnotmdcondition=false data-operacode='=@like@left like@right like@' data-ifmust=false data-itemkey='goodsprtname' data-label='主题'  data-returntype='2' data-type='0'>
+		        <div class="q-list">
+                       <!-- 文本类型-->
+                       <div class="refer-input">
+							<input id="themeInput" size=16 type="text" class="form-control input-txt"  style="box-shadow: none;font-size: 12px;" name="theme" maxlength="" value='' placeholder="主题/内容">
+						</div>
+	            </div>
+				<div class="refer-btns">
+	            	<a href="javascript:;" class="btn  btn-primary btn-sm ok-btn disabled">确定</a>
+	            	<a href="javascript:;" class="btn  btn-default btn-sm cancel-btn">取消</a>
+	            </div>
+            </div>
+          </div>
+</div>
+
+<div id="sender" class="queryAreaItem s-line refer"  style="display:inline-block;" >
+	<div class="more-refer-wrap">
+		<div class="date-start"></div>
+		<div class="date-end"></div>
+		<div class="refer-key" style="width: 80px;"><span id="spansender">&nbsp;&nbsp;&nbsp;发送人：</span></div>
+			<div class="refer-value" style="margin-left: 0px;padding-right: 0px;" data-value='' data-isnotmdcondition=false data-operacode='=@like@left like@right like@' data-ifmust=false data-itemkey='goodsprtname' data-label='发送人'  data-returntype='2' data-type='0'>
+		        <div class="q-list">
+                       <!-- 文本类型-->
+                       <div class="refer-input">
+							<input id="senderInput" size=16 type="text" class="form-control input-txt"  style="box-shadow: none;font-size: 12px;" name="sender" maxlength="" value="" placeholder="请输入发送人">
+						</div>
+	            </div>
+				<div class="refer-btns">
+	            	<a href="javascript:;" class="btn  btn-primary btn-sm ok-btn disabled">确定</a>
+	            	<a href="javascript:;" class="btn  btn-default btn-sm cancel-btn">取消</a>
+	            </div>
+            </div> 
+    </div>
+</div>
+
+<div id="sendtime" class="queryAreaItem s-line refer"  style="display:none; margin-left: 20px;" >
+	<div class="more-refer-wrap">
+		<div class="date-start"></div>
+		<div class="date-end"></div>
+		<div class="refer-key" style="width: 80px;">
+			<span id="send_time">发送时间：</span>
+		</div>
+			<div class="refer-value" style="padding-right: 28px;margin-left: 0px;" data-value='' data-isnotmdcondition=false data-operacode='between@=@>@>=@<@<=@' data-ifmust=false data-itemkey='version' data-label='时间范围'  data-returntype='2' data-type='1'>
+		        <div class="q-list">
+                       <!-- 数值类型（整型）-->
+						<div class="refer-input">
+							<!-- <input size=16 type="text" class="form-control input-txt" data-plugin='{"formater":{"type":"number","precision":2},"masker":{"type":"number"}}' style="box-shadow: none;font-size: 12px;" valid-type="integer" errormsg="请输入整数"  name="sendtime" id="datepicker"  value='' placeholder="请输入发送时间"> -->
+							<input size=16 type="text" class="form-control input-txt" style="box-shadow: none;width:134px;" onFocus="$('#senderPopDiv').css('display','none');var endtime=$dp.$('endtime');WdatePicker({doubleCalendar:true,lang:getCookieForLang(),onpicked:function(){endtime.focus();},maxDate:'#F{$dp.$D(\'endtime\')}'})"  data-plugin='{"formater":{"type":"number","precision":2},"masker":{"type":"number"}}'  valid-type="integer" errormsg="请输入整数"  name="starttime" id="starttime" value='' placeholder="yyyy-MM-dd">
+							<em id="workstation_to">至</em>
+							<input size=16 type="text" class="form-control input-txt" style="box-shadow: none;width:134px;" onFocus="$('#senderPopDiv').css('display','none'); WdatePicker({doubleCalendar:true,lang:getCookieForLang(),minDate:'#F{$dp.$D(\'starttime\')}'})"  data-plugin='{"formater":{"type":"number","precision":2},"masker":{"type":"number"}}'  valid-type="integer" errormsg="请输入整数"  name="endtime" id="endtime" value='' placeholder="yyyy-MM-dd">
+						</div>
+	            </div>
+				<div class="refer-btns">
+	            	<a href="javascript:;" class="btn  btn-primary btn-sm ok-btn disabled">确定</a>
+	            	<a href="javascript:;" class="btn  btn-default btn-sm cancel-btn">取消</a>
+	            </div>
+            </div>
+          </div>
+</div>
+
+<div id="status" class="queryAreaItem s-line refer"  style="display: none;margin-left: 20px;" >
+	<div class="more-refer-wrap">
+		<div class="date-start"></div>
+		<div class="date-end"></div>
+		<div class="refer-key" style="width: 80px;">
+			<span id="processing_status">处理状态：</span>
+		</div>
+			<div class="refer-value" style="padding-right: 28px;margin-left: 0px;" data-value='' data-isnotmdcondition=false data-operacode='=@<>@' data-ifmust=false data-itemkey='deletestate' data-label='处理状态'  data-returntype='2' data-type='6'>
+		        <div class="q-list">
+                           <div class="sub-more-tabcontent" id="sub-more-tabcontent">	
+									    <a href="javascript:changeMoreClass('sub-more-tabcontent','all');" id="noticeAllInfo" class="msg_more_tab checked" actioncode="all" style="border-radius: 3px;">全部</a>
+						                <a href="javascript:changeMoreClass('sub-more-tabcontent','dealed');" id="noticeDealed" class="msg_more_tab" actioncode="dealed" style="border-radius: 3px;">处理</a>
+						                <a href="javascript:changeMoreClass('sub-more-tabcontent','waitdeal');" id="noticeWaitDeal" class="msg_more_tab" actioncode="waitdeal" style="border-radius: 3px;">未处理</a>
+						   </div> 
+	            </div>
+				<div class="refer-btns">
+	            	<a href="javascript:;" class="btn  btn-primary btn-sm ok-btn disabled">确定</a>
+	            	<a href="javascript:;" class="btn  btn-default btn-sm cancel-btn">取消</a>
+	            </div>
+            </div>
+           <div class="refer-ext" style="height:30px;">
+           	<!-- <a href="javascript:;" id="searchBtn" class="search-btn">检索</a> -->
+           	<a id="searchBtn" class="more-search-btn">检索</a>
+           </div>
+          </div>
+         </div>
+<div id="senderPopDiv" class="hidden">
+	<div class="bootstrap-tablediv" style="position: fixed; width: 50%;background-color: #fff;margin-left: 300px;margin-top: -80px; z-index: 10;">
+		<table id="senderRefTablegp"
+			data-show-refresh="false" data-search="true"
+			data-side-pagination="server"
+			data-pagination="true"
+			data-page-list="[3, 6, 12, 24, 48]">
+				<thead>
+					<tr>
+						<th data-field="state" data-radio="true"></th>
+						<th id="dept_code" data-field="code" data-align="center" data-sortable="true">编码</th>
+						<th id="dept_name" data-field="name" data-align="center" data-sortable="true">名称</th>
+						<th id="dept" data-field="dept" data-align="center" data-sortable="true">部门</th>
+					</tr>
+				</thead>
+		</table>
+	</div>	
+</div>
+			</div>
+<!-- 查询模板结束 -->
+<div class="panel-body" id="notice_msg_more_info" style="padding: 0;width: 100%;min-width: 600px;position: relative;"></div>
+<div id="toSelectMore">
+    <div id="scroller">
+       <div class="toselectmore">
+			<a href="#;" id="click_to_load_more">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;点击加载更多......&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
+	   </div>
+    </div>
+</div>
+
+</div><!-- end .wrap -->
+<script>
+$(document).ready(function () {
+	
+     $("#datepicker").datepicker({ 
+    	showOtherMonths:true,
+    	nextText:"下个月",
+    	prevText:"上个月",
+        showButtonPanel:true,//是否显示按钮面板  
+        dateFormat: 'yy-mm-dd',//日期格式  
+        clearText:"清除",//清除日期的按钮名称  
+        closeText:"关闭",//关闭选择框的按钮名称  
+        yearSuffix: '年', //年的后缀  
+        showMonthAfterYear:true,//是否把月放在年的后面  
+        monthNames: ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'],  
+        dayNames: ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'],  
+        dayNamesShort: ['周日','周一','周二','周三','周四','周五','周六'],  
+        dayNamesMin: ['日','一','二','三','四','五','六'],  
+        });
+    /* $(document).keypress(function(e) {
+        if (e.which == '13') {
+        	var theme="";
+        	var sendtime="";
+        	var sender="";
+        	var msgstatus="";
+        	var id = "";
+        	$("input:text").each(function(){
+        		var name = $(this).attr("name");
+        		var value = $(this).attr("value");
+        		if("theme"==name){
+        			theme=value;
+        		}else if("sendtime"==name){
+        			sendtime=value;
+        		}else if("sender"==name){
+        			sender=value;
+        		}
+        	});
+        	 $(".sub-more-tabcontent > a").each(function(){
+        		id = $(this).attr("id");
+        		var classname = $(this).attr('class');
+        		if(classname.includes("checked")){
+        			 if("noticeAllInfo"==id){
+        	        		msgstatus="waitdeal";
+        	    		}else if("noticeDealed"==id){
+        	    			msgstatus="dealed";
+        	    		}else if("noticeWaitDeal"==id){
+        	    			msgstatus="waitdeal";
+        	    		} 
+        		}
+
+        	}); 
+        	app.msgs.trigger('noticeMoreSelectInfo',theme,sendtime,sender,msgstatus); 
+        }
+    }); */
+})
+function changeMoreClass(e,actionBtn){
+	$('#'+e+' > a').each(function(){
+		if($(this).attr('actioncode')==actionBtn){
+			$(this).attr('class',$(this).attr('class').replace('checked','')+' checked');
+		}else{
+			$(this).attr('class',$(this).attr('class').replace('checked',''));
+		}
+		
+	});
+};
+$("#searchBtn").click(function(e){
+	var theme="";
+	var starttime="";
+	var endtime="";
+	var sender="";
+	var msgstatus="";
+	var id = "";
+	var sendervalue= "";
+
+	theme=$("#themeInput").attr('value');
+	//兼容IE9placeholder问题
+	if(theme=="主题/内容"){
+		theme="";
+	}
+	starttime=$("#starttime").attr('value');
+	if(starttime=="yyyy-MM-dd"){
+		starttime="";
+	}
+	endtime=$("#endtime").attr('value');
+	if(endtime=="yyyy-MM-dd"){
+		endtime="";
+	}
+	sendervalue=$("#senderInput").attr('value');
+	if(sendervalue=="请输入发送人"){
+		sendervalue="";
+	}
+	if(sendervalue!="" && sendervalue!= null){
+		sender=$("#senderInput").attr('data-code');
+	}
+	 $(".sub-more-tabcontent > a").each(function(){
+		id = $(this).attr("id");
+		var classname = $(this).attr('class');
+		//if(classname.includes("checked")){
+		if(classname.indexOf("checked")>=0){
+			 if("noticeAllInfo"==id){
+	        		msgstatus="all";
+	    		}else if("noticeDealed"==id){
+	    			msgstatus="deal";
+	    		}else if("noticeWaitDeal"==id){
+	    			msgstatus="waitdeal";
+	    		} 
+		}
+
+	}); 
+	app.msgs.trigger('noticeMoreSelectInfo',theme,starttime,endtime,sender,msgstatus); 
+});
+$("#toSelectMore").click(function(e){
+	
+	var theme="";
+	var starttime="";
+	var endtime="";
+	var sender="";
+	var msgstatus="";
+	var id = "";
+	var sendervalue= "";
+	
+	theme=$("#themeInput").attr('value');
+	//兼容IE9placeholder问题
+	if(theme=="主题/内容"){
+		theme="";
+	}
+	starttime=$("#starttime").attr('value');
+	if(starttime=="yyyy-MM-dd"){
+		starttime="";
+	}
+	endtime=$("#endtime").attr('value');
+	if(endtime=="yyyy-MM-dd"){
+		endtime="";
+	}
+	sendervalue=$("#senderInput").attr('value');
+	if(sendervalue=="请输入发送人"){
+		sendervalue="";
+	}
+	 if(sendervalue!="" && sendervalue!= null){
+		sender=$("#senderInput").attr('data-code');
+	} 
+	 $(".sub-more-tabcontent > a").each(function(){
+		id = $(this).attr("id");
+		var classname = $(this).attr('class');
+		//if(classname.includes("checked")){
+		if(classname.indexOf("checked")>=0){
+			 if("noticeAllInfo"==id){
+	        		msgstatus="all";
+	    		}else if("noticeDealed"==id){
+	    			msgstatus="deal";
+	    		}else if("noticeWaitDeal"==id){
+	    			msgstatus="waitdeal";
+	    		} 
+		}
+
+	});
+	app.msgs.trigger('noticeSelectMore',theme,starttime,endtime,sender,msgstatus); 
+
+});
+//更多页面附件下载
+/* $(".msg_more_tag").live('click',function(e) {
+    e.preventDefault();
+    var fileUrl=$("a",this).attr("href");
+    var fileNameExt = fileUrl.substr(fileUrl.lastIndexOf('.') + 1);
+    if(/(gif|jpe?g|png|txt|html)$/i.test(fileNameExt)){
+        $.fancybox.open({
+            scrolling: 'no',
+            href :fileUrl,
+            scrollOutside:false,
+            'type' : 'iframe'
+        });
+    }else{
+        $.moreAttchDownload(fileUrl);
+    }
+}); */
+//详情页面附件下载
+$(".i_tag_info").live('click',function(e) {
+	var e = e || window.event; 
+	if (e.preventDefault) { 
+		e.preventDefault(); 
+	} else { 
+		e.returnValue = false; 
+	}
+    //var fileUrl = $(this).attr("href");
+    var fileUrl=$("a",this).attr("href");
+    var index = fileUrl.indexOf("?");
+    var form;
+    var action = fileUrl.substring(0,index);
+    var target ="_self";
+    if(~window.navigator.appVersion.indexOf('MSIE 8.0')) { 
+    	target = '_blank';
+    }
+    
+    if(!$('#id_download_form')[0]){
+    	form = $('<form>',{
+  			action:action,
+  			target:target,
+  			method:'get',
+  			id:'id_download_form'
+  		}).appendTo(document.body);
+    }else{
+    	form = $('#id_download_form');
+    	form.empty();
+    	form.attr('action',action);
+    }
+		  
+		var queryStr = fileUrl.substring(index+1);
+    var queryarr = queryStr.split("&");
+    for(var j=0;j<queryarr.length;j++){
+      	 var item = queryarr[j].split("=");
+      	 $('<input>',{
+      		 type:'hidden',
+      		 name:item[0],
+      		 value:item[1]||''
+      	}).appendTo(form);
+     }
+    form.submit();
+    
+    return false;
+});
+//发件人检索
+ $("#senderInput").click(function(e){
+	//$("#senderPopDiv").addClass('sender-div');
+	app.msgs.trigger('senderInit');
+});
+
+ $(function(){
+ var arr = CheckBrowser();
+	if(arr && arr[0].indexOf('火狐')!=-1){
+ 		$('input[type="text"]').css('min-height','30px');
+//	 		$('#sender').find('.more-refer-wrap').css('margin-left','50px');
+		$('.selector .q-list').css('min-width','195px');
+		$('#sender').find('.refer-value').css('min-width','150px');
+ 	}
+ if(arr && arr[0]=='IE'){
+ 	var $img = $('img');
+ 	$('img').each(function(){
+ 		if($(this).attr('src')!=undefined && $(this).attr('src')!=''&& $(this).attr('src').indexOf('svg')!=-1){
+ 			$(this).attr('src',$(this).attr('src').substring(0,$(this).attr('src').lastIndexOf('.'))+'.png');
+ 		}
+ 	})
+ 	
+ 	
+ 	setTimeout(function(){
+ 	if(!placeholderSupport()){   // 判断浏览器是否支持 placeholder
+ 		    $('[placeholder]').focus(function() {
+ 		        var input = $(this);
+ 		        if (input.val() == input.attr('placeholder')) {
+ 		            input.val('');
+ 		            input.removeClass('placeholder');
+ 		        }
+ 		    }).blur(function() {
+ 		        var input = $(this);
+ 		        if (input.val() == '' || input.val() == input.attr('placeholder')) {
+ 		            input.addClass('placeholder');
+ 		            input.val(input.attr('placeholder'));
+ 		        }
+ 		    }).blur();
+ 		};
+ 	},500)
+ }
+ });
+
+ function placeholderSupport() {
+     return 'placeholder' in document.createElement('input');
+ }
+ 
+	 function CheckBrowser() {
+	     ua = navigator.userAgent;
+	     ua = ua.toLocaleLowerCase();
+	     var browserType="";
+	     var browserVersion="";
+	     if (ua.match(/msie/) != null || ua.match(/trident/) != null) {
+	         browserType = "IE";
+	         //哈哈，现在可以检测ie11.0了！
+	         browserVersion = ua.match(/msie ([\d.]+)/) != null ? ua.match(/msie ([\d.]+)/)[1] : ua.match(/rv:([\d.]+)/)[1];
+	     } else if (ua.match(/firefox/) != null) {
+	         browserType = "火狐";
+	     } else if (ua.match(/opera/) != null) {
+	         browserType = "欧朋";
+	     } else if (ua.match(/chrome/) != null) {
+	         browserType = "谷歌";
+	     } else if (ua.match(/safari/) != null) {
+	         browserType = "Safari";
+	     }
+	     var arr = new Array(browserType, browserVersion);
+	     return arr;
+	 }
+	 
+	 
+	 
+</script>
+
+<!--审批工作台多语 通知界面-->
+
+</body>
+</html>

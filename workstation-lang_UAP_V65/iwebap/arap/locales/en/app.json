@@ -1,0 +1,62 @@
+{
+	"title":
+	{		
+		"basic_info":"Basic Information",
+		"details_info":"Detail Information",
+		"pk_orginfo":"Final Information",
+		
+		"bill_no_find":"Did not find the corresponding documents!",
+		"tip":"Tips",
+		"tip_warm":"Tips",
+		"wrong":"Wrong",
+		"failed":"Failed",
+		"failed_delete":"Delete Failed",
+		"failed_write":"The Order Failed"
+	},
+	"btn":
+	{
+		"save":"Save",
+		"cancel":"Cancel",			
+		"add":"Add",
+		"edit":"Edit",
+		"delete":"Delete",
+		"print":"Print",
+		"imageupload":"Image Scanning",	
+		"imageshow":"Image View",	
+		"approvalSituation":"Approval Stuation"	,
+		"add":"Add"
+	},
+	"msg":
+	{
+		"confim_cancel":"Please confirm whether you want to cancel?",
+		"confim_delete":"Delete is not recoverable, do you want to delete the document?",
+		"success_save":"Saved Successfully!"
+	},
+	"approvalmsg":
+	{
+		"approvalSituation":"Apptoval Situation",
+		"iwebsumbit":"Submit",
+		"approval":"Approval",
+		"notapproval":"Not Approval",
+		"turndown":"Reject",
+		"inputinfo":"Please input your advice",
+		"other":"Other",
+		"cancelapproval":"Cancel Approval",
+		"billsaved":"Saved",
+		"billfree":"Free",
+		"billnotactive":"Not Active",
+		"billsubmit":"Submit",
+		"billactive":"Effective",
+		"billdoing":"Doing",
+		"billpassing":"Passing State",
+		"billfailed":"Failed",
+		"billnotsubmit":"Unconfirmed",
+		"billapproved":"Approved",
+		"billapproving":"Approving",
+		"billstored":"Stored",
+		"billsigned":"Signed",
+		"billagree":"Agree",
+		"rejectadvice":"Reject the process must enter comments",
+		"inputlimitwords":"Approval can only enter 50 words or less"
+	}
+}

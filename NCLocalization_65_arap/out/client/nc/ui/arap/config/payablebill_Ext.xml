@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+    <!--卡片新增 合并显示-->
+	<bean class="nc.ui.pubapp.plugin.action.ReplaceActionInfo">
+        <property name="actionContainer" ref="cardActions" />
+        <!-- notedit 或edit -->
+        <property name="actionType" value="notedit"/>
+        <property name="target" ref="printOperateActionGroup"/>
+        <property name="action" ref="newprintOperateActionGroup"/>
+    </bean>
+    
+    <!--列表新增 合并显示-->
+	<bean class="nc.ui.pubapp.plugin.action.ReplaceActionInfo">
+        <property name="actionContainer" ref="listActions" />
+        <!-- notedit 或edit -->
+        <property name="actionType" value="notedit"/>
+        <property name="target" ref="printOperateActionGroup_List"/>
+        <property name="action" ref="newprintOperateActionGroup_List"/>
+    </bean>
+	
+
+    <!--合并显示-->
+    <bean id="payableShowChgAction" class="nc.ui.arap.actions.PayableShowChgAction"
+		autowire="byName">
+		<property name="model" ref="ManageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+	</bean>
+	
+    
+    <!--打印列表中增加[合并显示][明细显示]按钮-->
+    <bean id="newprintOperateActionGroup_List" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="newprintOperateActionGroup_List" />
+		<property name="name"><bean class="nc.ui.uif2.I18nFB">	<property name="resDir" value="common" />	<property name="resId" value="arapcommonv6-0139" />	<property name="defaultValue" value="鎵撳嵃" /></bean></property>
+		<property name="actions">
+			<list>
+				<ref bean="printBill" />
+				<ref bean="printPreview" />
+				<ref bean="printOutput" />
+				<ref bean="separatorAction" />
+				<ref bean="officialPrint" />
+				<ref bean="cancelPrint" />
+				<ref bean="separatorAction" />
+				<ref bean="printList" />
+                <ref bean="separatorAction" />
+                <ref bean="payableShowChgAction" />
+			</list>
+		</property>
+	</bean>
+	
+	<!--打印列表中增加[合并显示][明细显示]按钮-->
+	<bean id="newprintOperateActionGroup" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="printOperateActionGroup" />
+		<property name="name"><bean class="nc.ui.uif2.I18nFB">	<property name="resDir" value="common" />	<property name="resId" value="arapcommonv6-0139" />	<property name="defaultValue" value="鎵撳嵃" /></bean></property>
+		<property name="actions">
+			<list>
+				<ref bean="printBill" />
+				<ref bean="printPreview" />
+				<ref bean="printOutput" />
+				<ref bean="separatorAction" />
+				<ref bean="officialPrint" />
+				<ref bean="cancelPrint" />
+				<ref bean="separatorAction" />
+                <ref bean="payableShowChgAction" />
+			</list>
+		</property>
+	</bean>
+	
+	<bean class="nc.ui.pubapp.plugin.action.ActionInterceptorInfo">
+        <property name="target" ref="editAction"/>
+        <property name="interceptor">
+            <bean class="nc.ui.arap.actions.interceptor.PayEditActionInterceptor">
+                <property name="payable" ref="payableShowChgAction"/>
+            </bean> 
+        </property>
+    </bean>
+    
+    <bean class="nc.ui.pubapp.plugin.action.ActionInterceptorInfo">
+        <property name="target" ref="queryAction"/>
+        <property name="interceptor">
+            <bean class="nc.ui.arap.actions.interceptor.PayQueryActionInterceptor">
+                <property name="payable" ref="payableShowChgAction"/>
+                <property name="queryAction" ref="queryAction"/>
+            </bean> 
+        </property>
+    </bean>
+    
+    <bean class="nc.ui.pubapp.plugin.action.ActionInterceptorInfo">
+        <property name="target" ref="refreshAllAction"/>
+        <property name="interceptor">
+            <bean class="nc.ui.arap.actions.interceptor.PayRefreshActionInterceptor">
+                <property name="payable" ref="payableShowChgAction"/>
+            </bean> 
+        </property>
+    </bean>
+
+</beans>

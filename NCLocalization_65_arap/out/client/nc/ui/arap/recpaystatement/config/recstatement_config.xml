@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+
+	<import
+		resource="classpath:nc/ui/arap/recpaystatement/config/statement_base.xml" />
+
+	<!-- 列表视图 -->
+	<bean id="listView" class="nc.ui.arap.recpaystatement.view.ListView"
+		init-method="initUI">
+		<property name="model" ref="billManageModel"></property>
+		<property name="multiSelectionEnable" value="true"></property>
+		<property name="nodekey" value="RS"></property>
+	</bean>
+
+	<!--
+		################################ 功能按钮 ################################
+	-->
+	<!-- 查询 -->
+	<bean id="queryAction"
+		class="nc.ui.arap.recpaystatement.action.ArapRecStatementQueryAction">
+		<property name="model" ref="billManageModel"></property>
+		<property name="listView" ref="listView"></property>
+		<property name="dataManager" ref="modelDataManager"></property>
+		<property name="nodeKey" value=""></property>
+		<property name="tpaProgressUtil">
+			<bean class="nc.ui.uif2.components.progress.TPAProgressUtil">
+				<property name="context" ref="context" />
+			</bean>
+		</property>
+	</bean>
+
+</beans>

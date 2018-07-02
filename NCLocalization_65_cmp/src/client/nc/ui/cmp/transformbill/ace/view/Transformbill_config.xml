@@ -1,0 +1,1113 @@
+<?xml version="1.0" encoding="gbk"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!-- 导入配置文件 -->
+	<import resource="Transformbill_precision.xml" />
+	<!-- 环境变量 -->
+	<bean id="context" class="nc.vo.uif2.LoginContext" />
+
+	<!-- 模型部分配置 -->
+
+	<!-- 单据操作代理 -->
+	<bean id="maintainProxy"
+		class="nc.ui.cmp.transformbill.ace.serviceproxy.AceTransformbillMaintainProxy" />
+	<!-- 对象转换器工厂，由此获取操作对象的特征信息 -->
+	<bean id="boadatorfactory"
+		class="nc.ui.pubapp.uif2app.view.value.AggVOMetaBDObjectAdapterFactory" />
+
+	<!-- 管理应用模型 -->
+	<bean id="manageAppModel" class="nc.ui.pubapp.uif2app.model.BillManageModel">
+		<property name="businessObjectAdapterFactory" ref="boadatorfactory"></property>
+		<property name="context" ref="context"></property>
+		<property name="billType" value="36S4" />
+	</bean>
+	<bean id="modelDataManager"
+		class="nc.ui.pubapp.uif2app.model.pagination.PaginationModelDataManager">
+		<property name="model" ref="manageAppModel"></property>
+		<property name="paginationModel" ref="paginationModel" />
+		<property name="pageQueryService" ref="pageQueryService" />
+	</bean>
+
+	<bean id="paginationModel"
+		class="nc.ui.pubapp.uif2app.model.pagination.PubPaginationModel"
+		init-method="init">
+		<property name="paginationQueryService" ref="maintainProxy" />
+	</bean>
+
+	<bean id="pageQueryService"
+		class="nc.ui.pubapp.uif2app.model.pagination.UIPageQueryService">
+		<property name="allPagePkQueryServiceMethod"
+			value="nc.itf.cmp.transformbill.ITransformBillQueryService.queryAllPksByQueryScheme"></property>
+		<property name="dataOfPksQueryServiceMethod"
+			value="nc.itf.cmp.transformbill.ITransformBillQueryService.queryBillsByPKS"></property>
+	</bean>
+	<bean id="paginationBar" class="nc.ui.uif2.components.pagination.PaginationBar"
+		 init-method="registeCallbak">
+		<property name="paginationModel" ref="paginationModel" />
+		<property name="context" ref="context" />
+		
+	</bean>
+
+	<!-- 模板容器，负责对模板的统一装载 -->
+	<bean id="templateContainer" class="nc.ui.pubapp.uif2app.view.TemplateContainer">
+		<property name="context" ref="context" />
+	</bean>
+
+	<!-- 查询模板加载bean -->
+	<bean id="queryTemplateContainer" class="nc.ui.uif2.editor.QueryTemplateContainer">
+		<property name="context" ref="context"></property>
+	</bean>
+
+	<!-- 界面元素 -->
+	<!-- 列表视图 -->
+	<bean id="listView" class="nc.ui.pubapp.uif2app.view.ShowUpableBillListView"
+		init-method="initUI">
+		<property name="paginationBar" ref="paginationBar" />
+		<property name="model" ref="manageAppModel"></property>
+		<property name="templateContainer" ref="templateContainer"></property>
+		<!-- 自定义项 -->
+		<property name="userdefitemListPreparator" ref="userdefitemListPreparator" />
+	</bean>
+	<!-- 列表自定义项处理 -->
+	<bean name="userdefitemListPreparator" class="nc.ui.uif2.editor.UserdefitemContainerListPreparator">
+		<property name="container" ref="userdefitemContainer" />
+		<property name="params">
+			<list>
+				<bean class="nc.ui.uif2.editor.UserdefQueryParam">
+					<property name="mdfullname" value="cmp.cmp_transformbill" />
+					<property name="pos" value="0" />
+					<property name="prefix" value="vdef" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+<!-- 卡片自定义项配置 -->
+	<bean name="userdefitemPreparator" class="nc.ui.uif2.editor.UserdefitemContainerPreparator">
+		<property name="container" ref="userdefitemContainer" />
+		<property name="params">
+			<list>
+				<bean class="nc.ui.uif2.editor.UserdefQueryParam">
+					<property name="mdfullname" value="cmp.cmp_transformbill" />
+					<property name="pos" value="0" />
+					<property name="prefix" value="vdef" />
+				</bean>
+			</list>
+		</property>
+	</bean>	
+	<bean id="userdefitemContainer" class="nc.ui.uif2.userdefitem.UserDefItemContainer">
+		<property name="context" ref="context" />
+		<property name="params">
+			<list>
+				<bean class="nc.ui.uif2.userdefitem.QueryParam">
+					<property name="mdfullname" value="cmp.cmp_transformbill" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<!--卡控件 -->
+	<bean id="billFormEditor" class="nc.ui.cmp.transformbill.ace.view.TransformBillFormEditor"
+		init-method="initUI">
+		<property name="model" ref="manageAppModel"></property>
+		<property name="templateContainer" ref="templateContainer" />
+		<property name="showOrgPanel" value="true" />
+		<!-- 自定义项 -->
+		<property name="userdefitemPreparator" ref="userdefitemPreparator" />
+	</bean>
+
+	<!-- 快速查询区域 -->
+	<bean id="queryArea" class="nc.ui.pubapp.uif2app.tangramlayout.UEQueryAreaShell"
+		init-method="initUI">
+		<property name="queryAreaCreator" ref="queryAction" />
+	</bean>
+	<!-- 查询信息栏 -->
+	<bean id="queryInfo" class="nc.ui.uif2.tangramlayout.CardLayoutToolbarPanel">
+		<property name="model" ref="manageAppModel" />
+	</bean>
+
+	<!-- 卡片界面的工具栏和返回按钮 -->
+	<bean id="cardInfoPnl"
+		class="nc.ui.pubapp.uif2app.tangramlayout.UECardLayoutToolbarPanel">
+		<property name="titleAction">
+			<bean id="returnaction" class="nc.ui.pubapp.uif2app.actions.UEReturnAction">
+				<property name="goComponent" ref="listView" />
+				<property name="saveAction" ref="saveAction" />
+				<property name="model" ref="manageAppModel" />
+			</bean>
+		</property>
+		<property name="model" ref="manageAppModel" />
+	</bean>
+
+	<!-- 界面布局总装 -->
+	<bean id="container" class="nc.ui.uif2.TangramContainer"
+		init-method="initUI">
+		<property name="model" ref="manageAppModel" />
+		<property name="tangramLayoutRoot">
+			<bean class="nc.ui.uif2.tangramlayout.node.TBNode">
+				<property name="showMode" value="CardLayout" />
+				<property name="tabs">
+					<list>
+						<bean class="nc.ui.uif2.tangramlayout.node.HSNode">
+							<property name="left">
+								<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+									<property name="component" ref="queryArea" />
+								</bean>
+							</property>
+							<property name="right">
+								<bean class="nc.ui.uif2.tangramlayout.node.VSNode">
+									<property name="up">
+										<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+											<property name="component" ref="queryInfo" />
+										</bean>
+									</property>
+									<property name="down">
+										<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+											<property name="name">
+												<bean class="nc.ui.uif2.I18nFB">
+													<property name="resDir" value="common"></property>
+													<property name="defaultValue" value="列表"></property>
+													<property name="resId" value="UC001-0000107"></property>
+												</bean>
+											</property>
+											<property name="component" ref="listView" />
+										</bean>
+									</property>
+									<property name="dividerLocation" value="25f" />
+								</bean>
+							</property>
+							<property name="dividerLocation" value="0.22f" />
+						</bean>
+						<bean class="nc.ui.uif2.tangramlayout.node.VSNode">
+							<property name="up">
+								<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+									<property name="component" ref="cardInfoPnl" />
+								</bean>
+							</property>
+							<property name="down">
+								<bean class="nc.ui.uif2.tangramlayout.node.CNode">
+									<property name="name">
+										<bean class="nc.ui.uif2.I18nFB">
+											<property name="resDir" value="common"></property>
+											<property name="defaultValue" value="卡片"></property>
+											<property name="resId" value="UC001-0000106"></property>
+										</bean>
+									</property>
+									<property name="component" ref="billFormEditor" />
+								</bean>
+							</property>
+							<property name="dividerLocation" value="30f" />
+						</bean>
+					</list>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+
+
+	<!-- 事件监听 -->
+	<bean id="eventMediator" class="nc.ui.pubapp.uif2app.model.AppEventHandlerMediator">
+		<property name="model" ref="manageAppModel" />
+		<property name="handlerGroup">
+			<list>
+				<!-- 表头表尾字段编辑前事件 -->
+				<bean class="nc.ui.pubapp.uif2app.event.EventHandlerGroup">
+					<property name="event"
+						value="nc.ui.pubapp.uif2app.event.card.CardHeadTailBeforeEditEvent" />
+					<property name="handler">
+						<bean
+							class="nc.ui.cmp.transformbill.ace.handler.AceHeadTailBeforeEditHandler">
+							<property name="billFormEditor" ref="billFormEditor" />
+						</bean>
+					</property>
+				</bean>
+				<!-- 表头表尾字段编辑后事件 -->
+				<bean class="nc.ui.pubapp.uif2app.event.EventHandlerGroup">
+					<property name="event"
+						value="nc.ui.pubapp.uif2app.event.card.CardHeadTailAfterEditEvent" />
+					<property name="handler">
+						<bean
+							class="nc.ui.cmp.transformbill.ace.handler.AceHeadTailAfterEditHandler" />
+					</property>
+				</bean>
+				<!-- 新增事件 -->
+				<bean class="nc.ui.pubapp.uif2app.event.EventHandlerGroup">
+					<property name="event"
+						value="nc.ui.pubapp.uif2app.event.billform.AddEvent" />
+					<property name="handler">
+						<bean class="nc.ui.cmp.transformbill.ace.handler.AceAddHandler">
+							<constructor-arg ref="billFormEditor" />
+						</bean>
+					</property>
+				</bean>
+				<!-- 组织改变事件 -->
+				<bean class="nc.ui.pubapp.uif2app.event.EventHandlerGroup">
+					<property name="event"
+						value="nc.ui.pubapp.uif2app.event.OrgChangedEvent" />
+					<property name="handler">
+						<bean class="nc.ui.cmp.transformbill.ace.handler.AceOrgChangedHandler">
+							<constructor-arg ref="billFormEditor" />
+						</bean>
+					</property>
+				</bean>
+
+			</list>
+		</property>
+	</bean>
+
+	<!-- Actions -->
+	<bean id="toftpanelActionContributors" class="nc.ui.uif2.actions.ActionContributors">
+		<property name="contributors">
+			<list>
+				<ref bean="actionsOfList" />
+				<ref bean="actionsOfCard" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 列表显示下的按钮 -->
+	<bean id="actionsOfList" class="nc.ui.uif2.actions.StandAloneToftPanelActionContainer">
+		<constructor-arg ref="listView" />
+		<property name="model" ref="manageAppModel" />
+		<property name="actions">
+			<list>
+				<ref bean="addAction" />
+				<ref bean="editAction" />
+				<ref bean="deleteAction" />
+				<ref bean="copyAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="queryAction" />
+				<ref bean="refreshAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="commitMenuAction" />
+				<ref bean="auditMenuAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="transferMenuAction" />
+				<ref bean="settleMenuAction" />
+				<ref bean="payMenuAction" />
+				<ref bean="eupayMenuAction" />
+				<ref bean="makeBillAction" />
+				<ref bean="redHandleAction" />
+				
+					<!-- 影像 -->
+				<ref bean="separatorAction" />
+				<ref bean="imageFuncActionGroup" />
+				<ref bean="separatorAction" />
+				<!-- 影像 -->
+				
+				<ref bean="billAssistantActionGroup" />
+
+				<ref bean="separatorAction" />
+				<ref bean="linkMenuAction" />
+
+				<ref bean="separatorAction" />
+				<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 start -->
+				<ref bean="prevVoucherAction"/>
+				<ref bean="separatorAction" />
+				<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 end -->
+				<ref bean="importExportActionGroup" />
+				<ref bean="printMenuAction" />
+				<ref bean="separatorAction" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 卡片显示下的按钮 -->
+	<bean id="actionsOfCard" class="nc.ui.uif2.actions.StandAloneToftPanelActionContainer">
+		<constructor-arg ref="billFormEditor" />
+		<property name="model" ref="manageAppModel" />
+		<!-- 此处配置的Action浏览态始终可见 -->
+		<property name="actions">
+			<list>
+				<ref bean="addAction" />
+				<ref bean="editAction" />
+				<ref bean="deleteAction" />
+				<ref bean="copyAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="queryAction" />
+				<ref bean="cardRefreshAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="commitMenuAction" />
+				<ref bean="auditMenuAction" />
+
+				<ref bean="separatorAction" />
+				<ref bean="transferMenuAction" />
+				<ref bean="settleMenuAction" />
+				<ref bean="payMenuAction" />
+				<ref bean="eupayMenuAction" />
+				<ref bean="makeBillAction" />
+				<ref bean="redHandleAction" />
+				
+				<!-- 影像 -->
+				<ref bean="separatorAction" />
+				<ref bean="imageFuncActionGroup" />
+				<ref bean="separatorAction" />
+				<!-- 影像 -->
+				
+				<ref bean="billAssistantActionGroup" />
+
+				<ref bean="separatorAction" />
+				<ref bean="linkMenuAction" />
+				
+				<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 start -->
+				<ref bean="separatorAction" />
+				<ref bean="prevVoucherAction"/>
+				<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览 end -->
+				
+				<ref bean="separatorAction" />
+				<ref bean="importExportActionGroup" />
+				<ref bean="printMenuAction" />
+
+			</list>
+		</property>
+
+		<!-- 此处配置的Action编辑态始终可见 -->
+		<property name="editActions">
+			<list>
+				<!-- <ref bean="saveTempAction" /> -->
+				<ref bean="saveAction" />
+				<ref bean="saveAddAction" />
+				<ref bean="saveSendApproveAction" />
+				<ref bean="separatorAction" />
+				<ref bean="cancelAction" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 分隔按钮 -->
+	<bean id="separatorAction" class="nc.funcnode.ui.action.SeparatorAction" />
+	<!-- 显示列表的拦截器 -->
+	<bean id="showListInterceptor"
+		class="nc.ui.pubapp.uif2app.actions.interceptor.ShowUpComponentInterceptor">
+		<property name="showUpComponent" ref="listView" />
+	</bean>
+	<!-- 显示卡片的拦截器 -->
+	<bean id="showCardInterceptor"
+		class="nc.ui.pubapp.uif2app.actions.interceptor.ShowUpComponentInterceptor">
+		<property name="showUpComponent" ref="billFormEditor" />
+	</bean>
+
+	<bean id="addAction" class="nc.ui.pubapp.uif2app.actions.AddAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="interceptor" ref="showCardInterceptor" />
+	</bean>
+	<bean id="editAction" class="nc.ui.cmp.transformbill.action.TransformbillEditAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="powercheck" value="true" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="billType" value="36S4" />
+		<property name="billCodeName" value="vbillno" />
+		<property name="interceptor" ref="showCardInterceptor" />
+	</bean>
+	<bean id="deleteAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillDeleteAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="actionName" value="DELETE" />
+		<property name="powercheck" value="true" />
+		<property name="billType" value="36S4" />
+		<property name="billCodeName" value="vbillno" />
+		<property name="validationService">
+			<bean class="nc.ui.cmp.transformbill.validate.TransformBillDeleteValidateService">
+				
+			</bean>
+		</property>
+		
+	</bean>
+
+	<bean id="saveAction" class="nc.ui.cmp.transformbill.action.TransformbillSaveAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="actionName" value="SAVEBASE" />
+		<property name="billType" value="36S4" />
+		<property name="validationService" ref="validateService" />
+	</bean>
+
+	<bean id="saveAddAction" class="nc.ui.cmp.transformbill.action.TransformbillSaveAdd">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="actionName" value="SAVEBASE" />
+		<property name="billType" value="36S4" />
+		<property name="validationService" ref="validateService" />
+		<property name="addAction" ref="addAction" />
+	</bean>
+
+	<!-- 保存提交 , 编辑态增加此按钮 -->
+	<bean id="saveSendApproveAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillSaveAndCommitAction">
+		<constructor-arg ref="saveAction" />
+		<constructor-arg ref="commitAction" />
+		<property name="model" ref="manageAppModel" />
+	</bean>
+
+	<!-- 保存组合校验 -->
+	<bean id="validateService" class="nc.ui.pubapp.uif2app.validation.CompositeValidation">
+		<property name="validators">
+			<list>
+				<bean class="nc.ui.pubapp.uif2app.validation.TemplateNotNullValidation">
+					<property name="billForm" ref="billFormEditor" />
+				</bean>
+				<bean class="nc.ui.pubapp.pub.power.PowerSaveValidateService">
+					<property name="insertActionCode" value="save" />
+					<property name="editActionCode" value="edit" />
+					<property name="billCodeFiledName" value="vbillno" />
+					<property name="permissionCode" value="36S4" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+	<bean id="cancelAction" class="nc.ui.pubapp.uif2app.actions.CancelAction">
+		<property name="model" ref="manageAppModel" />
+	</bean>
+	<!-- 复制 -->
+	<bean id="copyAction" class="nc.ui.cmp.transformbill.action.TransformbillCopyAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="interceptor" ref="showCardInterceptor" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="copyActionProcessor">
+			<bean class="nc.ui.cmp.transformbill.action.CopyActionProcessor"></bean>
+		</property>
+	</bean>
+	
+	<!--影像-->
+	<bean id="imageFuncActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="imageFunc" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng_0"></property>
+				<property name="defaultValue" value="影像"></property>
+				<property name="resId" value="03607mng-0446"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="imageShowAction" />
+				<ref bean="imageScanAction" />
+			</list>
+		</property>
+	</bean>
+	<!-- 影像查看 --> 
+	<bean id="imageShowAction" class="nc.ui.cmp.bill.actions.CmpBillImageShowAction"> 
+		<property name="model" ref="manageAppModel" /> 
+		<property name="pk_billtype" value="0001Z61000000000Z9AN" /> 
+	</bean> 
+	<!-- 影像扫描 --> 
+	<bean id="imageScanAction" class="nc.ui.cmp.bill.actions.CmpBillImageScanAction"> 
+		<property name="model" ref="manageAppModel" /> 
+		<property name="pk_billtype" value="0001Z61000000000Z9AN" /> 
+		<!-- 0 不控制，1转岗扫描，2制单人扫描-->
+		<property name="checkscanway" value="nc.imag.scan.service.CheckScanWay" /> 
+	</bean>
+
+	<!-- 辅助功能 -->
+	<bean id="billAssistantActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code">
+			<value>billAssistant</value>
+		</property>
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="common"></property>
+				<property name="defaultValue" value="辅助功能"></property>
+				<property name="resId" value="UC001-0000137"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="fileDocManageAction" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="fileDocManageAction" class="nc.ui.pubapp.uif2app.actions.FileDocManageAction">
+		<property name="model" ref="manageAppModel" />
+	</bean>
+
+
+	<!-- 查询按钮 -->
+	<bean id="queryAction" class="nc.ui.pubapp.uif2app.query2.action.DefaultQueryAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="dataManager" ref="modelDataManager" />
+		<property name="showUpComponent" ref="listView" />
+		<property name="templateContainer" ref="queryTemplateContainer" />
+		<property name="qryCondDLGInitializer" ref="queryCondDLGInitializer" />
+	</bean>
+
+	<bean name="queryCondDLGInitializer"
+		class="nc.ui.cmp.transformbill.query.TransformbillQueryConditionInitializer">
+		<property name="model" ref="manageAppModel" />
+	</bean>
+
+	<!-- 列表下刷新 -->
+	<bean id="refreshAction" class="nc.ui.pubapp.uif2app.query2.action.DefaultRefreshAction">
+		<property name="dataManager" ref="modelDataManager" />
+		<property name="model" ref="manageAppModel" />
+	</bean>
+
+	<!-- 卡片下刷新 -->
+	<bean id="cardRefreshAction" class="nc.ui.pubapp.uif2app.actions.RefreshSingleAction">
+		<property name="model" ref="manageAppModel" />
+	</bean>
+
+	<!-- 提交 -->
+	<bean id="commitAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillCommitAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="billType" value="36S4" />
+		<property name="actionName" value="SAVE" />
+		<property name="filledUpInFlow" value="true" />
+		<property name="validationService">
+			<bean class="nc.ui.pubapp.pub.power.PowerValidateService">
+				<property name="actionCode" value="commit" />
+				<property name="billCodeFiledName" value="vbillno" />
+				<property name="permissionCode" value="36S4" />
+			</bean>
+		</property>
+
+	</bean>
+
+
+
+
+	<!-- 收回 -->
+	<bean id="unCommitAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillUnComitAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="billType" value="36S4" />
+		<property name="actionName" value="UNSAVEBILL" />
+		<property name="filledUpInFlow" value="true" />
+		<property name="validationService">
+			<bean class="nc.ui.pubapp.pub.power.PowerValidateService">
+				<property name="actionCode" value="uncommit" />
+				<property name="billCodeFiledName" value="vbillno" />
+				<property name="permissionCode" value="36S4" />
+			</bean>
+		</property>
+	</bean>
+	<!-- 提交按钮组 -->
+	<bean id="commitMenuAction" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="commitMenuAction" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="common"></property>
+				<property name="defaultValue" value="提交"></property>
+				<property name="resId" value="UC001-0000029"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="commitAction" />
+				<ref bean="unCommitAction" />
+			</list>
+		</property>
+	</bean>
+
+	<bean id="approvepowervalidservice" class="nc.ui.pubapp.pub.power.PowerValidateService">
+		<property name="actionCode" value="approve" />
+		<property name="billCodeFiledName" value="vbillno" />
+		<property name="permissionCode" value="36S4" />
+	</bean>
+
+	<bean id="unapprovepowervalidservice" class="nc.ui.pubapp.pub.power.PowerValidateService">
+		<property name="actionCode" value="unapprove" />
+		<property name="billCodeFiledName" value="vbillno" />
+		<property name="permissionCode" value="36S4" />
+	</bean>
+
+	<!-- 审批 -->
+	<bean id="approveAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillApproveAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="billType" value="36S4" />
+		<property name="actionName" value="APPROVE" />
+		<property name="validationService" ref="approvepowervalidservice" />
+		<property name="filledUpInFlow" value="true" />
+	</bean>
+	<!-- 弃审 -->
+	<bean id="unApproveAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillUnApproveAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="billType" value="36S4" />
+		<property name="actionName" value="UNAPPROVE" />
+		<property name="validationService" ref="unapprovepowervalidservice" />
+		<property name="filledUpInFlow" value="true" />
+	</bean>
+	<!-- 审批按钮组 -->
+	<bean id="auditMenuAction" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="auditMenuAction" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="审批"></property>
+				<property name="resId" value="03607mng1-0019"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="approveAction" />
+				<ref bean="unApproveAction" />
+				<ref bean="queryAuditFlowAction" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 提交资金组织 -->
+	<bean id="transferAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillTransferAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="code" value="TRANSFERFTS" />
+		<property name="caSigner" ref="clientSigner" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="委托办理"></property>
+				<property name="resId" value="03607mng1-0023"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 取消提交资金组织 -->
+	<bean id="unTransferAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillUnTransferAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="code" value="UNTRANSFERFTS" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="取消委托"></property>
+				<property name="resId" value="03607mng1-0024"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 提交资金组织按钮组 -->
+	<bean id="transferMenuAction" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="transferMenuAction" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="委托办理"></property>
+				<property name="resId" value="03607mng1-0023"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="transferAction" />
+				<ref bean="unTransferAction" />
+			</list>
+		</property>
+	</bean>
+	<!-- 结算 -->
+	<bean id="settleAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillSettleAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="code" value="SETTLE" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="结算"></property>
+				<property name="resId" value="03607mng1-0025"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 取消结算 -->
+	<bean id="unSettleAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillUnSettleAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="code" value="UNSETTLE" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="取消结算"></property>
+				<property name="resId" value="03607mng1-0026"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 结算按钮组 -->
+	<bean id="settleMenuAction" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="settleMenuAction" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="结算"></property>
+				<property name="resId" value="03607mng1-0025"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="settleAction" />
+				<ref bean="unSettleAction" />
+			</list>
+		</property>
+	</bean>
+	<bean id="settleSuccessAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillSettleSuccessAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="code" value="SETTLESUCCESS" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="结算成功"></property>
+				<property name="resId" value="03607mng1-0045"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 取消结算 -->
+	<bean id="unSettleSuccessAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillUnSettleSuccessAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="code" value="UNSETTLESUCCESS" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="取消结算成功"></property>
+				<property name="resId" value="03607mng1-0046"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 结算按钮组 -->
+	<!-- <bean id="settleSuccessMenuAction" class="nc.funcnode.ui.action.GroupAction"> 
+		<property name="code" value="settleSuccessMenuAction" /> <property name="name"> 
+		<bean class="nc.ui.uif2.I18nFB"> <property name="resDir" value="3607mng1_0"></property> 
+		<property name="defaultValue" value="结算成功"></property> <property name="resId" 
+		value="03607mng1-0045"></property> </bean> </property> <property name="actions"> 
+		<list> <ref bean="settleSuccessAction" /> <ref bean="unSettleSuccessAction" 
+		/> </list> </property> </bean> -->
+	<bean id="outPayConfirmUI" class="nc.ui.cmp.transformbill.view.TransformbillPayConfirmUI">
+		<property name="billForm" ref="billFormEditor" />
+		<property name="billModel" ref="manageAppModel" />
+	</bean>
+
+	<!-- 签名安全应用 -->
+	<bean id="clientSigner" class="nc.ui.tmpub.security.DefCommonClientSign">
+		<constructor-arg ref="context" />
+		<property name="constructClassName" value="nc.vo.sf.delivery.DeliveryEncryptVO" />
+		<property name="signAttributeNameVO" ref="signAttributeNameVO" />
+	</bean>
+
+	<bean id="signAttributeNameVO" class="nc.vo.tmpub.security.SignAttributeNameVO">
+		<property name="parentAttributeName" value="encryptkey" />
+	</bean>
+	<!-- 支付 -->
+	<bean id="payAction" class="nc.ui.cmp.transformbill.action.TransformbillPayAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="payConfirmUI" ref="outPayConfirmUI" />
+		<property name="code" value="PAY" />
+		<property name="caSigner" ref="clientSigner" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="网上付款"></property>
+				<property name="resId" value="03607mng1-0047"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 网银补录 -->
+	<bean id="netBankEditAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillNetBankEditAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="payConfirmUI" ref="outPayConfirmUI" />
+		<property name="code" value="NETBANKEDIT" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="补录网银信息"></property>
+				<property name="resId" value="03607mng1-0048"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 网银补录 -->
+	<bean id="netBankUpdateAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillNetBankUpdateAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="payConfirmUI" ref="outPayConfirmUI" />
+		<property name="code" value="UPDATENETBANK" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="更新网银支付状态"></property>
+				<property name="resId" value="03607mng1-0049"></property>
+			</bean>
+		</property>
+	</bean>
+
+	<!-- 支付按钮组 -->
+	<bean id="payMenuAction" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="payMenuAction" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="支付"></property>
+				<property name="resId" value="03607mng1-0050"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="payAction" />
+				<ref bean="netBankEditAction" />
+				<ref bean="netBankUpdateAction" />
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 欧盟支付按钮组 -->
+	<bean id="eupayMenuAction" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="eupayMenuAction" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="欧盟支付"></property>
+				<property name="resId" value="03607mng1-0257"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="settleSuccessAction" />
+				<ref bean="unSettleSuccessAction" />
+				<ref bean="exportEuropeAction" />
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="exportEuropeAction" class="nc.ui.cmp.transformbill.action.ExportEuropeAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+		<property name="loginContext" ref="context" />
+	</bean>
+	
+	<!-- 制单 -->
+	<bean id="makeBillAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillMakeBillAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+		<property name="loginContext" ref="context" />
+	</bean>
+	<!-- 红冲 -->
+	<bean id="redHandleAction"
+		class="nc.ui.cmp.transformbill.action.TransformBillRedHandleAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billtype" value="36S4" />
+		<property name="code" value="REDHANDLE" />
+		<property name="caSigner" ref="clientSigner" />
+	</bean>
+	<!-- 打印 -->
+	<bean id="printAction" class="nc.ui.pubapp.uif2app.actions.MetaDataBasedPrintAction">
+		<property name="preview" value="false" />
+		<property name="model" ref="manageAppModel" />
+		<property name="beforePrintDataProcess" ref="printProcessor" />
+	</bean>
+	<!-- 打印处理类，精度等 -->
+	<bean id="printProcessor" class="nc.ui.cmp.base.actions.CmpDefaultPrintProcessor">
+		<property name="model" ref="manageAppModel" />
+		<property name="srcDestItemCollection" ref="cardSrcDestCollection"></property>
+	</bean>
+
+	<!-- 预览 -->
+	<bean id="previewAction" class="nc.ui.pubapp.uif2app.actions.MetaDataBasedPrintAction">
+		<property name="preview" value="true" />
+		<property name="model" ref="manageAppModel" />
+		<property name="beforePrintDataProcess" ref="printProcessor" />
+	</bean>
+
+	<!-- 输出 -->
+	<bean id="outputAction" class="nc.ui.pubapp.uif2app.actions.OutputAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="parent" ref="billFormEditor" />
+	</bean>
+	
+	<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览  20171017 start -->
+	<!-- 保存态预览凭证 -->
+	<bean id="prevVoucherAction" class="nc.ui.cmp.bill.actions.PreviewVoucherAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+	</bean>
+	<!-- add by weiningc  633适配至65  现金管理单据保存后支持凭证预览  20171017 end -->
+	
+	<!-- 打印按钮组 -->
+	<bean id="printMenuAction" class="nc.funcnode.ui.action.GroupAction">
+		<property name="code" value="printMenuAction" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="common"></property>
+				<property name="defaultValue" value="打印"></property>
+				<property name="resId" value="UC001-0000007"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="printAction" />
+				<ref bean="previewAction" />
+				<ref bean="outputAction" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 导入/导出 -->
+	<bean id="importExportActionGroup" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="ImportExport" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607mng1_0"></property>
+				<property name="defaultValue" value="导入导出"></property>
+				<property name="resId" value="03607mng1-0016"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<ref bean="excelImportAction" />
+				<ref bean="separatorAction" />
+				<ref bean="excelTemplateExportAction" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 导入 -->
+	<bean id="excelImportAction" class="nc.ui.uif2.excelimport.ImportAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="importableEditor" ref="supplierPriceImportableEditor" />
+	</bean>
+	<!-- 导出 -->
+	<bean id="excelTemplateExportAction" class="nc.ui.uif2.excelimport.ExportExcelTemplateAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="importableEditor" ref="supplierPriceImportableEditor" />
+	</bean>
+	<bean id="supplierPriceImportableEditor" class="nc.ui.cmp.transformbill.excel.TfbImportableEditor">
+		<property name="appModel" ref="manageAppModel" />
+		<property name="billcardPanelEditor" ref="billFormEditor" />
+		<property name="addAction" ref="addAction" />
+		<property name="saveAction" ref="saveAction" />
+		<property name="cancelAction" ref="cancelAction" />
+	</bean>
+
+	<!-- 联查单据 -->
+	<bean id="linkQueryAction" class="nc.ui.pubapp.uif2app.actions.LinkQueryAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="billType" value="36S4" />
+	</bean>
+	<!-- 查看审批流 <bean id="queryAuditFlowAction" class="nc.ui.pubapp.uif2app.actions.pflow.PFApproveStatusInfoAction"> 
+		<property name="model" ref="manageAppModel" /> <property name="billType" 
+		value="36S4" /> </bean> -->
+	<bean id="queryAuditFlowAction" class="nc.ui.uif2.actions.pf.PFApproveInfoAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="btnName">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="3607set1_0"></property>
+				<property name="defaultValue" value="查看审批意见"></property>
+				<property name="resId" value="03607set1-0066"></property>
+			</bean>
+		</property>
+	</bean>
+	<!-- 联查凭证 -->
+	<bean id="linkVoucherAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillVoucherQueryAction"
+		autowire="byName">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+		<property name="loginContext" ref="context" />
+	</bean>
+	<!-- 联查网银 -->
+	<bean id="linkNetBankAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillNetBankQueryAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="payConfirmUI" ref="outPayConfirmUI" />
+	</bean>
+	<!-- 联查支付确认单 -->
+	<bean id="linkPayConfirmAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillPayConfirmQueryAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+	</bean>
+	<!-- 联查划出账户余额 -->
+	<bean id="linkAccBalOutAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillAccBalOutQueryAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+	</bean>
+	<!-- 联查划出账户余额 -->
+	<bean id="linkAccBalInAction"
+		class="nc.ui.cmp.transformbill.action.TransformbillAccBalInQueryAction">
+		<property name="model" ref="manageAppModel" />
+		<property name="editor" ref="billFormEditor" />
+		<property name="listView" ref="listView" />
+	</bean>
+	<!-- 联查按钮组 -->
+	<bean id="linkMenuAction" class="nc.funcnode.ui.action.MenuAction">
+		<property name="code" value="linkQuery" />
+		<property name="name">
+			<bean class="nc.ui.uif2.I18nFB">
+				<property name="resDir" value="common"></property>
+				<property name="defaultValue" value="联查"></property>
+				<property name="resId" value="UC001-0000146"></property>
+			</bean>
+		</property>
+		<property name="actions">
+			<list>
+				<!-- <ref bean="queryAuditFlowAction" /> -->
+				<ref bean="linkVoucherAction" />
+				<ref bean="linkAccBalInAction" />
+				<ref bean="linkAccBalOutAction" />
+				<ref bean="linkQueryAction" />
+				<ref bean="linkNetBankAction" />
+				<ref bean="linkPayConfirmAction" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 打开节点监听 -->
+	<bean id="initDataListener"
+		class="nc.ui.cmp.transformbill.listener.TransformbillFuncNodeInitDataListener">
+		<property name="billFormEditor" ref="billFormEditor"></property>
+		<property name="listview" ref="listView" />
+		<property name="queryAction" ref="queryAction" />
+		
+	</bean>
+
+	<!-- 节点关闭的校验 -->
+	<bean id="closingListener" class="nc.ui.pubapp.common.validateservice.ClosingCheck">
+		<property name="model" ref="manageAppModel" />
+		<property name="saveAction" ref="saveAction" />
+	</bean>
+
+	<!-- 自动修正卡片界面的分数显示控件(换算率) -->
+	<bean id="fractionFixMediator" class="nc.ui.pubapp.uif2app.view.FractionFixMediator"
+		init-method="initUI">
+		<constructor-arg ref="billFormEditor" />
+	</bean>
+	<!-- 双击列表行后显示卡片 -->
+	<bean id="mouseClickShowPanelMediator" class="nc.ui.pubapp.uif2app.view.MouseClickShowPanelMediator">
+		<property name="listView" ref="listView" />
+		<property name="showUpComponent" ref="billFormEditor" />
+		<property name="hyperLinkColumn" value="vbillno" />
+	</bean>
+
+	<bean id="remoteCallCombinatorCaller" class="nc.ui.uif2.editor.UIF2RemoteCallCombinatorCaller">
+		<property name="remoteCallers">
+			<list>
+				<ref bean="queryTemplateContainer" />
+				<ref bean="templateContainer" />
+				<ref bean="userdefitemContainer" />
+			</list>
+		</property>
+	</bean>
+
+</beans>

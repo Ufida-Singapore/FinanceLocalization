@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+    <title>消息中心</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="description" content="UAP Message Center">
+    <meta name="keywords" content="UAP Message">
+
+    <!-- build:css css/index.css -->
+    <link rel="stylesheet" href="/mp/css/style.css" />
+    <link rel="stylesheet" href="/mp/css/responsive.css" />
+    <!-- endbuild -->
+
+    <!-- build:css css/base.css -->
+    <link rel="stylesheet" href="/mp/bower_components/bootstrap/dist/css/bootstrap.css" />
+    <link rel="stylesheet" href="/mp/css/blue.css" />
+    <link rel="stylesheet" href="/mp/css/sco.css" />
+    
+    <!-- endbuild -->
+
+    <!-- build:css css/widget.css -->
+    <link rel="stylesheet" href="/mp/bower_components/bootstrap-table/src/bootstrap-table.css">
+    <link rel="stylesheet" href="/mp/bower_components/fancybox/source/jquery.fancybox.css" />
+    <link rel="stylesheet" href="/mp/css/jquery.jqzoom.css" />
+    <link rel="stylesheet" href="/mp/bower_components/bootstrap-multiselect/css/bootstrap-multiselect.css"/>
+    <link rel="stylesheet" href="/mp/css/ladda-themeless.css">
+    <link rel="stylesheet" href="/mp/css/bootstrap-datetimepicker.css">
+    <link rel="stylesheet" href="/mp/css/jquery.scrollbar.css">
+    <link rel="stylesheet" href="/mp/css/ref.css">
+    
+    <!-- endbuild -->
+	<link href="/mp/css/query.css" rel="stylesheet">
+	<link href="/mp/css/sco1.css" rel="stylesheet">
+	
+	<link rel="stylesheet" href="/mp/bower_components/daterangepicker/font-awesome.min.css" />
+ 	<link rel="stylesheet" href="/mp/bower_components/daterangepicker/daterangepicker-bs3.css" />
+ 	
+    <!-- build:js js/base.js -->
+     <script src="/mp/js/respond.src.js"></script>
+    <script src="/mp/bower_components/jquery/jquery-1.11.1.js"></script>
+    <script src="/mp/bower_components/jquery/jquery-migrate-1.2.1.js"></script>
+    <script src="/mp/bower_components/jquery.cookie/jquery.cookie.js"></script>
+    <script src="/mp/bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="/mp/js/lib/jquery.placeholder.js"></script>
+    <script src="/mp/js/lib/sco.message.js"></script>
+    <script src="/mp/js/lib/bootbox.js"></script>
+    <!-- endbuild -->
+
+
+    <!-- build:js js/widget.js -->
+    <script src="/mp/js/common.js"></script>
+    <script src="/mp/bower_components/underscore/underscore.js"></script>
+    <script src="/mp/bower_components/backbone/backbone.js"></script>
+    <script src="/mp/bower_components/backbone.paginator/lib/backbone.paginator.js"></script>
+    <script src="/mp/bower_components/backbone.paginator/examples/js/backgrid.js"></script>
+    <script src="/mp/js/lib/backgrid-paginator.js"></script>
+    <script src="/mp/bower_components/bootstrap-table/src/bootstrap-table.js"></script>
+    <script src="/mp/bower_components/fancybox/source/jquery.fancybox.pack.js"></script>
+    <script src="/mp/js/lib/jquery.jqzoom-core.js"></script>
+    <script src="/mp/bower_components/bootstrap-multiselect/js/bootstrap-multiselect.js"></script>
+    <script src="/mp/js/lib/spin.js"></script>
+	<script src="/mp/js/lib/ladda.js"></script>
+    <script src="/mp/js/mp.zh-CN.js"></script>
+    <script src="/mp/js/jquery.scrollbar.js"></script>
+    <script src="/mp/js/refer.js"></script>
+	<script src="/mp/js/sco.message.js"></script>
+	
+	<!--审批工作台多语-->
+    <script src="/mp/js/lang/baselang.js"></script>
+    <script type="text/javascript">
+		var lang = getCookieForLang();		
+		if(lang == 'en')
+			document.write("<script src='/mp/js/lang/workstation_english.js'><\/script>");
+		else
+			document.write("<script src='/mp/js/lang/workstation_simpchn.js'><\/script>");
+	</script>
+	
+	<script src="/mp/bower_components/My97DatePicker/WdatePicker.js"></script>
+<!-- 	<script src="/mp/bower_components/My97DatePicker/calendar.js"></script> -->
+	<script src="/mp/bower_components/My97DatePicker/config.js"></script>
+	<link rel="stylesheet" href="/mp/css/content.css" />
+	<script src="/mp/js/ajaxfileupload.js"></script>
+    <!-- endbuild -->
+    
+    
+    <script type="text/template" id="msg_area_template">
+        <li>
+            <h4><a href=""></a></h4>
+            <span><a class="trigger" href="#">Admin</a> 发布了文章</span>
+        </li>
+    </script>
+ 
+    <script type="text/template" id="msg_item_template">
+	<div class="context" billtype=<%-msg.extendattrobj.workflowInfo.billtype%>>
+		<div class="status<%=msg.msgstatus=='dealed'?' status_did':''%>">
+            <span class="mp_msgtype <%=msgType(msg)%>" title=""></span>
+        </div>
+        <div class="p-summary">
+            <!--a class="author open-msg"  href="#" ><span class="preview"></span></a-->
+            <h2 class="indexmoreh2" style="margin-top:-9px;"><a href="#" class="open-msg content_more"  ncurl=<%=msg.url%>  ifdealed=<%=msg.msgstatus%> billtype=<%-msg.extendattrobj.workflowInfo.billtype%> title="<%-msg.subject%>"  pk=<%= msg.pk_sourcemsg %> actioncode="getBill"><%-msg.subject%></a></h2>
+        </div>
+		<div class="meta">
+				<span class="contact"><%=trans("workstation_sponsor")%><%- msg.extendattrobj.workflowInfo.commter %>&nbsp;&nbsp;&nbsp;</span>
+				<span class="sub-tab-hr"></span>
+                <span class="datetime">&nbsp;&nbsp;&nbsp;<%= dateTimeFromNow(msg)%>&nbsp;&nbsp;&nbsp;</span>
+				<span class="sub-tab-hr"></span>
+				 <ul class="meta-tags">
+                    <li style="vertical-align: top;">&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+                    <li  style="min-width:130px;"> <div  class="attch"><%=trans("workstation_annex")%><div class="greennum_circle" style="display:	<%=_.size(msg.attrurllist)==0?'none;':'block;'%>"><%=_.size(msg.attrurllist)%></div><%=_.size(msg.attrurllist)==0?trans("workstation_none"):''%>&nbsp;&nbsp;</div></li>
+                </ul>
+	
+        </div>
+
+	</div>
+ 	<div class="p-excerpt1 excerpt-bg1 ">
+        <div class="preStyle"><%-msg.content %></div>
+
+     </div>
+ 	<div class="context1">
+			<%if(msg.extendattrobj.workflowInfo.lastApproveActivity){%>
+				 <p>
+              		<%=trans("workstation_last_approver")%><%-msg.extendattrobj.workflowInfo.lastApprover%>/<%-msg.extendattrobj.workflowInfo.lastApproveActivity%><%=trans("workstation_approval_comments")%><%-msg.extendattrobj.workflowInfo.lastApproveNote%><%=trans("workstation_processing_time")%><%= msg.extendattrobj.workflowInfo.lastApproveTime <=0?"":timeStamp2String(msg.extendattrobj.workflowInfo.lastApproveTime) %>
+            	</p>
+			<%}else{%>
+				<!--<div style="width:100%;height:30px;"></div>-->
+			<%}%>
+           
+			<%if(msg.extendattrobj.workflowInfo.addApproveStatus==1){%>
+				<div class="ellipse_jq" style="display:block;">加签中</div>
+			<%}else if(msg.extendattrobj.workflowInfo.addApproveStatus==2){%>
+				<div class="ellipse_yjq" style="display:block;">已加签</div>
+			<%}%>
+			
+    </div>
+	<hr class="content_hr"/>
+	
+	<div class="sub-tabcontent">
+		<input type="text" class="form-control input-txt noneinput" placeholder='<%=trans("workstation_enter_approv")%>' oninput="textInputControl(this)"/>
+
+			<% _.each(msg.actionlist,function(action,index){ %>
+					<a href="javascript:changeClass('<%= msg.pk_sourcemsg %>','<%=action.actioncode%>');" ifdealed=<%=msg.msgstatus%> billtype=<%-msg.extendattrobj.workflowInfo.billtype%> ifdealed=<%=msg.msgstatus%>  data="7" class="<%-action.actioncode=='unApprove'?'btn-unApprove':'actionBtn'%>" pk=<%= msg.pk_sourcemsg %> actioncode=<%=action.actioncode%>><%-action.actioncode=="agree"?trans("workstation_approval"):(action.actioncode=="disAgree"?trans("workstation_do_not_approval"):(action.actioncode=="showFlowImg"?trans("workstation_Process"):trans("workstation_cancel_approval")))%></a>
+            
+			<%})%>
+			<a ncurl=<%=msg.url%> href="javascript:changeClass('<%= msg.pk_sourcemsg %>','getBill');" ifdealed=<%=msg.msgstatus%> billtype=<%-msg.extendattrobj.workflowInfo.billtype%> data="30" class="content_more" pk=<%= msg.pk_sourcemsg %> actioncode="getBill"><%=trans("workstation_more_operations")%></a>
+			
+	 </div>
+	
+    </script>
+    <!--消息系统-->
+    <script type="text/template" id="msg_system_template">
+ 		<% _.each(msgsystem,function(element, index, list) { %>
+        <a href="#/filter/<%=element.code%>" data-type=<%=element.code%>  class="sourcesystem"><%-element.label%></a>
+        <% }) %>
+    </script>
+
+    <!--消息类型-->
+    <script type="text/template" id="msg_type_template">
+
+        <% _.each(msgtype,function(element, index, list) { %>
+        <% if (index<3){ %>
+        <li data-type=<%=element.code%>
+
+        <% if (index==0) { %>
+             <%= "class=current" %>
+             <% }%>
+        >
+        <a href="#/msg/msgs/<%=element.code%>"><%-element.name%></a>
+        </li>
+        <% } }) %>
+
+        <% if (_.size(msgtype)>3){ %>
+        <li class="menu__item dropdown">
+            <a data-toggle="dropdown" href="#" class="more">
+                <span>更多</span>
+            </a>
+            <ul class="dropdown-menu more">
+                <% _.each(msgtype,function(element, index, list) { %>
+                <% if (index>=3) %>
+                <li   data-type=<%=element.code%> ><a href="#/msg/msgs/<%=element.code%>"><%-element.name%></a></li>
+                <% }) %>
+            </ul>
+        </li>
+        <% } %>
+    </script>
+       
+    <!--用户选择 -->
+    <script type="text/template" id="msg_assignuser_template">
+
+			<div class="middletop">
+							 <% _.each(nodeAssignUser,function(element, index, list){%>
+								<%if(list.length==1){%>
+				<div class="people-tab">
+					<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>
+				</div>
+ 			<% }else if(list.length>1){ %>   
+          		<%if(index%2==0){%>
+					<div class="people-tab">
+					<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>				
+          		<% }else{ %>
+             			<span class="sub-tab-hr"></span>
+             			<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>
+						</div>	
+           		<%}%>
+				<%if(index==list.length-1 && list.length%2 != 0){%>
+					</div>
+				<%}%>
+			<% } %>
+							<%})%>
+						    <!-- 分割线  -->
+        <div class="horizontalline"></div>
+						</div>
+
+        		<% _.each(nodeAssignUser,function(element, index, list){%>
+				
+       					<div class="middlecontent" forkey="<%=element.activityDefId%>" keyname="<%=element.activityDesc%>" mustassign="<%=element.mustAssign%>">
+							<div class="contentleft">
+								<% _.each(element.allUsers,function(user,index){%>
+									<%if(index%2==0){%>
+										<div class="leftcontent" forkey="<%=element.activityDefId%>">
+											<div class="checkboxFive">
+								  				<input type="checkbox" value="<%=user.code%>" forkey="<%=element.activityDefId%>" id="<%=element.activityDefId%><%=index%>" name="" />
+									  			<label for="<%=element.activityDefId%><%=index%>"></label>
+								  			</div>
+								  			<div class="tocheckname" title="<%-user.name%>"><%-user.name%></div>
+										</div>
+									<%}%>
+								
+								<%})%>
+							</div>
+							<div class="contentright">
+								<% _.each(element.allUsers,function(user,index){%>
+									<%if(index%2!=0){%>
+								<div class="rightcontent"  forkey="<%=element.activityDefId%>">
+
+									<div class="checkboxFive">
+								  		<input type="checkbox" value="<%=user.code%>" forkey="<%=element.activityDefId%>" id="<%=element.activityDefId%><%=index%>" name="" />
+									  	<label for="<%=element.activityDefId%><%=index%>"></label>
+								  	</div>
+									<div class="tocheckname" title="<%-user.name%>"><%-user.name%></div>
+									</div>
+								<%}%>
+							<%})%>
+							</div>
+						</div>
+        <%})%>
+
+    </script>
+
+    <!--点击更多 用户选择  -->
+    <script type="text/template" id="assignusermore_template">
+
+	<div class="moremiddletop">
+		<% _.each(morenodeAssignUser,function(element, index, list){%>
+                
+			<%if(list.length==1){%>
+				<div class="people-tab">
+					<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>
+				</div>
+ 			<% }else if(list.length>1){ %>   
+          		<%if(index%2==0){%>
+					<div class="people-tab">
+					<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>				
+          		<% }else{ %>
+             			<span class="sub-tab-hr"></span>
+             			<div  targetName="people" class="checked" id=<%=element.activityDefId%> title="<%-element.activityDesc%>" ><%-element.activityDesc%></div>
+						</div>	
+           		<%}%>
+				<%if(index==list.length-1 && list.length%2 != 0){%>
+					</div>
+				<%}%>
+			<% } %>
+			<%})%>
+        <!-- 分割线  -->
+        <div class="horizontalline"></div>
+	</div>
+
+	<% _.each(morenodeAssignUser,function(element, index, list){%>
+  	<div class="moremiddlecontent" forkey="<%=element.activityDefId%>" keyname="<%=element.activityDesc%>" mustassign="<%=element.mustAssign%>">
+		<div class="morecontentleft">
+			  <% _.each(element.allUsers,function(user,index){%>
+				<%if(index%2==0){%>
+					<div class="moreleftcontent" forkey="<%=element.activityDefId%>">
+						<div class="checkboxFive">
+			  				<input type="checkbox" value="<%=user.code%>" forkey="<%=element.activityDefId%>" id="<%=element.activityDefId%><%=index%>" name="" >
+				  			<label for="<%=element.activityDefId%><%=index%>"></label>
+			  			</div>
+			  			<div class="tocheckname" title="<%-user.name%>"><%-user.name%></div>
+			  			</div>
+					<%}%>
+				<%})%>
+		</div>
+		<div class="morecontentright" forkey="<%=element.activityDefId%>" keyname="<%=element.activityDesc%>">
+			<% _.each(element.allUsers,function(user,index){%>
+				<%if(index%2!=0){%>
+			<div class="morerightcontent" forkey="<%=element.activityDefId%>">
+
+				<div class="checkboxFive">
+			  		<input type="checkbox" value="<%=user.code%>" forkey="<%=element.activityDefId%>" id="<%=element.activityDefId%><%=index%>" name="" >
+				  	<label for="<%=element.activityDefId%><%=index%>"></label>
+			  	</div>
+				<div class="tocheckname" title="<%-user.name%>"><%-user.name%></div>
+				
+			 </div>
+				<%}%>
+			<%})%>
+		
+		</div>
+	</div>
+	<%})%>	
+    </script>
+
+	<!--审批动作页签显示-->
+    <script type="text/template" id="msg_todoaction_template">
+	<% _.each(workflowsphis.todo_action_info.actions,function(element, index, list) {%>
+
+	<% if (element.action_code=="reject"){ %>
+		<a href="#page3">驳回</a>
+	<% } %>
+	<% if (element.action_code=="reassign"){ %>
+		<a href="#page4">改派</a>
+	<% } %>
+	<% if (element.action_code=="addApprove"){ %>
+		<a href="#page5">加签</a>
+	<% } %>	
+		
+    <%})%>
+
+    </script>
+    
+    
+    
+    <!--流程审批记录-->
+    <script type="text/template" id="msg_workflowdealhis_template">
+	<% _.each(workflowsphis.history_task,function(element, index, list) {%>
+                        <% if (index==0){ %>
+							<div class="row approve-pass"  ifshow="approveopen" onclick="showorhide()">
+						 <% }else{ %>
+ 						<% if (index>0 && index<workflowsphis.history_task.length-3){%>
+							<div class="row approve-pass" style="display: none;">
+						 <% } %>
+						 <% if (index>=workflowsphis.history_task.length-3 && index<=workflowsphis.history_task.length-1){%>
+							<div class="row approve-pass" style="display: block;">
+						 <% } %>
+                      <% } %>
+							<div class="approve-left">
+								<div class="out_circle">
+								<% if (index==0 && workflowsphis.history_task.length>4){ %>
+									<div class="approve-bage" style='background:url(/mp/img/approve-bage-whitecircle.png) no-repeat;'></div>
+								 <% }else{%>
+									<div class="approve-bage"><%=index+1%></div>
+								 <%} %>
+								</div>
+								<div class="approve-vertical-line"></div>
+							</div>
+							<div class="approve-right">
+								
+									<span class="approve-person">
+						<% if (index==0){ %>
+							<p class=""><%-element.noteVO.activityName%>&nbsp;&nbsp;<%-element.noteVO.checkman%>&nbsp;&nbsp;<%-element.noteVO.dealDate<=0?"":timeStamp2String(element.noteVO.dealDate)%></p>
+							<p class=""><%-element.noteVO.actionname%>&nbsp;&nbsp;&nbsp;&nbsp;<%-element.noteVO.checknote%></p>
+							<%if(workflowsphis.todo_action_info.pk_workflownote==element.noteVO.pk_workflownote){%>
+							<p>
+								<a href="#" id="dealedfj">附件上传</a>
+								<button type="button" id="dealedqs" class="btn btn-success btn-xs actionBtn" pk="" actioncode="unApprovenew">取消审批</button>
+							</p> 
+							<%}%>
+
+						<% }else{%>
+							<div class="titwork">
+								<p class="titp"><%-element.noteVO.activityName%>&nbsp;&nbsp;<%-element.noteVO.checkman%>&nbsp;&nbsp;<%-element.noteVO.dealDate<=0?"":timeStamp2String(element.noteVO.dealDate)%></p>
+									
+
+									<div class="post" style="<%-_.size(element.flowAttVOs)==0?'display:none;':'display:block;'%>">
+										<div class="meta">
+											 <ul class="meta-tags">
+											    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+											    <li> <div class="attch" data-original-title="" title="">附件 :&nbsp;</div><span class="greennum_circle1"><%-_.size(element.flowAttVOs)%></span></li>
+											</ul>
+
+											<div class="top_cusp">
+												<ul>
+												<% _.each(element.flowAttVOs,function(filee, index, list) {%>
+												  <li>
+													<div class="filecontainer">
+													<span class="fileimgtit"><img src="<%-filee.imgstr%>" <%-filee.styleflag=='1'?'style=background:black;':''%> ></span>
+													<span class="filehref"><a target="_blank" title="<%-filee.attrname%>" href="<%-'msg/download/'+filee.attraddress+'?sourceSystemCode='+filee.sourceSystemCode+'&pk_sourcemsg='+filee.pk_sourcemsg+'&msgtype='+filee.msgtype+'&fileType=flowAtt'+'&fileName='+filee.fileName%>"><%-filee.attrname%></a></span>
+													<span class="fileperson" style="float:right;"><%-filee.uploader%></span>
+													</div>
+												  </li>
+
+												<%})%>
+
+												 </ul>
+
+												 <span class="cusp01">
+													<span class="cusp02"></span>
+												 </span> 
+											 </div>
+
+										</div>
+									</div>
+							</div>
+
+							<div><p class="notecontent"><%-element.noteVO.actionname%>&nbsp;&nbsp;&nbsp;&nbsp;<%-element.noteVO.checknote%></p></div>
+							
+							<%if(workflowsphis.todo_action_info.pk_workflownote==element.noteVO.pk_workflownote){%>
+							<p>
+								<button type="button" id="dealedqs" class="btn btn-success btn-xs actionBtn" pk="" actioncode="unApprovenew">取消审批</button>
+							</p> 
+							<%}%>
+
+						<%} %>
+									
+									</span>	
+								<%if(element.noteVO.addApproveStatus==1){%>
+									<div class="jqstatus">
+										<div class="ellipse_jq" style="display:block;">加签中</div>
+									</div>
+								<%}else if(element.noteVO.addApproveStatus==2){%>
+									<div class="jqstatus">
+										<div class="ellipse_yjq" style="display:block;">已加签</div>
+									</div>
+								<%}%>
+		
+							</div>
+
+
+							
+						</div>
+         <%})%>
+
+    </script>
+    <!--环节选择 -->
+    <script type="text/template" id="msg_node_template">
+		<div class="form-group">
+            <div class="input-group" >
+                <span class="input-group-addon">驳回环节：</span>
+                <select   class="refUserMulti form-control">
+                    <% _.each(nodeAssign,function(node){%>
+                    <option value=<%=node.id%>><%-node.name%></option>
+                    <%})%>
+                 </select>
+            </div>
+        </div>
+    </script>
+	
+	<!--环节选择  new-->
+    <script type="text/template" id="msg_activityitem_template">
+		<div class="moremiddlecontent" forkey="" keyname="" mustassign="">
+				<div class="morecontentleft">
+					<% _.each(workitem,function(element, index) { %>
+						<%if(index%2==0){%>
+						<div class="moreleftcontent" forkey="">
+							<div class="checkboxFive">
+				  				<input type="checkbox" value="<%-element.id%>" forkey="" id="<%-element.id%><%-index%>" name="" >
+					  			<label for="<%-element.id%><%-index%>"></label>
+				  			</div>
+				  			<div class="tocheckname" title="<%-element.name%>"><%-element.name%></div>
+				  			
+						</div>
+						<%}%>
+					<%})%>
+				</div>
+			
+				<div class="morecontentright" forkey="" keyname="">
+					<% _.each(workitem,function(element, index) { %>
+						<%if(index%2!=0){%>
+					<div class="morerightcontent" forkey="">
+		
+						<div class="checkboxFive">
+					  		<input type="checkbox" value="<%-element.id%>" forkey="" id="<%-element.id%><%-index%>" name="" >
+					  			<label for="<%-element.id%><%-index%>"></label>
+					  	</div>
+						<div class="tocheckname" title="<%-element.name%>"><%-element.name%></div>
+						
+					 </div>
+						<%}%>
+					<%})%>
+				</div>
+			</div>
+		
+	 </script>
+	
+	
+	<script type="text/template" id="notice_alert_template">
+<% _.each(msg,function(element, index, list) { %>
+	<%if(index==list.length-1){%>
+	<div class="msg_info">
+	<%}else{%>
+	<div class="msg_info_line">
+	<%}%>
+		<%if(element.msgtype=='notice'){%>
+		 <%if(element.msgstatus=='waitdeal'){%>
+		 <div id="noticeWaitdealImg<%-index%>" class="notice_waitdeal_img" pk=<%= element.pk_sourcemsg %> sourcesystem="<%-element.sourcesystem%>"></div>
+         <%}else{%>
+         <div class="notice_dealed_img"></div>
+        <%}%>
+	<%}else{%>
+		 <%if(element.msgstatus=='waitdeal'){%>
+         <div id="alertWaitdealImg<%-index%>" class="alert_waitdeal_img" pk=<%= element.pk_sourcemsg %> sourcesystem="<%-element.sourcesystem%>"></div>
+         <%}else{%>
+         <div class="alert_dealed_img"></div>
+        <%}%>
+	<%}%>		
+		<div class="msg_center">
+			<div class="msg_title" id="noticeTitile<%-index%>">
+				<a title="<%-element.subject%>" class="msg_info_href" href="javascript:void(0)" pk="<%-element.pk_sourcemsg%>" msgtype="<%-element.msgtype%>" id="<%-element.sourcesystem%>">
+					<% if(element.subject.length>11){%>
+						<%-element.subject.substring(0,11)%>...
+					<%}else{%>
+						<%-element.subject%>
+					<%}%>
+				</a>
+			</div>
+			<div class="msg_content">
+				<%if(element.content!=null){%>
+					<%if(element.content.length>22){%>
+					<%-element.content.substring(0,22)%>...
+					<%}else{%>
+					<%-element.content%>
+					<%}%>
+				<%}%>
+			</div>
+		</div>
+	</div>
+<% }) %>
+	</script>
+	
+<script type="text/template" id="notice_detail_template">
+<div style="width: 743px">    
+    <div class="detail_header">
+       <% if(msg.msgVo.msgtype=='notice'){%>
+		  <label class="detail_header_label">通知-详情</label>
+	   <%}else{%>
+		  <div>预警-详情</div>
+	   <%}%>
+	</div>
+    <div class="msg_info_detail_line">
+	<% if(msg.msgVo.msgtype=='notice'){%>
+		<div class="notice_dealed_detail_img"></div>
+	<%}else{%>
+		<div class="alert_dealed_img"></div>
+	<%}%>
+		<div class="msg_center">
+			<div>
+				<div class="msg_detail_title" title="<%-msg.msgVo.subject%>">
+						<div style="float:left;"><%-msg.msgVo.subject%></div>
+						<div class="msg_detail_sender_time" style="margin-right: 20px;">时间：<%-timeStamp2String(msg.msgVo.sendtime)%></div>
+						<div class="msg_detail_sender">发件人：<%-msg.msgVo.sendername%></div>
+				</div>
+			</div>
+			<div class="msg_detail_content"><%-msg.msgVo.content%></div>
+		</div>
+	</div>
+	<% if(msg.msgVo.msgtype=='notice'){%>
+	<div class="msg_info">
+		<div class="i-tag" style="margin-left: 60px;"></div>
+		<span>
+			附件：	
+			<%if(msg.msgVo.attrurllist!=null&&msg.msgVo.attrurllist.length>0){%>
+				<%-msg.msgVo.attrurllist.length%>	
+			<%}else{%>
+				无
+			<%}%>
+			&nbsp;&nbsp;
+		</span>
+		<% _.each(msg.msgVo.attrurllist,function(element, index, list) { %>
+			<a>&nbsp;&nbsp;<%-element.attrname%></a>
+		<%})%>
+	</div>
+	<%}else{%>
+	<div class="msg_info">
+        <div class="i-tag" style="margin-left: 70px;"></div>
+		<span>
+			附件：	
+			<%if(msg.msgVo.attrurllist!=null&&msg.msgVo.attrurllist.length>0){%>
+				<%-msg.msgVo.attrurllist.length%>	
+			<%}else{%>
+				无
+			<%}%>
+			&nbsp;&nbsp;
+		</span>
+		<% _.each(msg.msgVo.attrurllist,function(element, index, list) { %>
+            <a target="_blank" href=<%-element.downloadurl%>>&nbsp;&nbsp;<%-element.attrname%></a>
+		<%})%>
+		<div><%=msg.htmlBill%></div>
+	</div>
+	<%}%>
+</div>
+	</script>
+	<script type="text/template" id="alert_detail_template">
+<div style="width: 743px">    
+    <div class="detail_header">
+		  <label class="detail_header_label">预警-详情</label>
+	</div>
+    <div class="msg_info_detail_line">
+        <div class="alert_detail_dealed_img"></div>
+		<div class="msg_center">
+			<div>
+				<div class="msg_detail_title" title="<%-msg.msgVo.subject%>">
+						<div style="float:left;"><%-msg.msgVo.subject%></div>
+						<div class="msg_detail_sender_time" style="margin-right: 20px;">时间：<%-timeStamp2String(msg.msgVo.sendtime)%></div>
+						<div class="msg_detail_sender">发件人：<%-msg.msgVo.sendername%></div>
+				</div>
+			</div>
+			<div class="msg_detail_content"><%-msg.msgVo.content%></div>
+		</div>
+    <div class="alert_msg_info">
+        <div class="i-tag" style="margin-left: 40px;"></div>
+		<span>
+			附件：	
+			<%if(msg.msgVo.attrurllist!=null&&msg.msgVo.attrurllist.length>0){%>
+				<%-msg.msgVo.attrurllist.length%>	
+			<%}else{%>
+				无
+			<%}%>
+			&nbsp;&nbsp;
+		</span>
+		<% _.each(msg.msgVo.attrurllist,function(element, index, list) { %>
+            <a target="_blank" href=<%-element.downloadurl%>>&nbsp;&nbsp;<%-element.attrname%></a>
+		<%})%>
+	 </div>
+   </div>
+	<div class="msg_info" style="margin-left: 70px;"> 
+		<div><%=msg.htmlBill%></div>
+	</div>
+</div>
+	</script>
+<script type="text/template" id="notice_msg_more_template">
+<% _.each(msg,function(element, index, list) { %>
+<div class="msg_more_backcol">
+  <div class="msg_each_content">
+    <div class="msg_more_line_2">
+		<%if(element.msgstatus=='waitdeal'){%>
+		 <div class="notice_waitdeal_img"></div>
+         <%}else{%>
+         <div class="notice_dealed_img"></div>
+        <%}%>	
+		<div class="msg_center">
+            <div class="msg_title">
+			<div style="float:left;font-weight: bold;font-size: 13px;"><%-element.subject%></div>
+			<div class="msg_detail_sender_time">时间：<%-element.sendtime%></div>
+            <div class="msg_detail_sender">发件人：<%-element.sendername%></div>
+			</div>
+			<div class="msg_content" style="height:100%;"><%-element.content%></div>
+		</div>        
+	</div>
+   <div class="msg_more_tag">
+       <div class="i-more-tag"></div>
+       <span>
+			附件:
+			&nbsp;&nbsp;
+      </span>
+    </div>
+  </div>
+</div>
+<% }) %>
+	</script>
+	<script type="text/template" id="alert_msg_more_template">
+<% _.each(msg,function(element, index, list) { %>
+<div class="msg_more_backcol">
+  <div class="msg_each_content">
+    <div class="msg_more_line_2">
+		<%if(element.msgstatus=='waitdeal'){%>
+		 <div class="alert_waitdeal_img"></div>
+         <%}else{%>
+         <div class="alert_dealed_img"></div>
+        <%}%>	
+		<div class="msg_center">
+            <div class="msg_title">
+			<div style="float:left;font-weight: bold;font-size: 13px;"><%-element.subject%></div>
+			<div class="msg_detail_sender_time">时间：<%-element.sendtime%></div>
+            <div class="msg_detail_sender">发件人：<%-element.sendername%></div>
+			</div>
+			<div class="msg_content" style="height:100%;"><%-element.content%></div>
+		</div>
+	</div>
+    <div class="msg_more_tag">
+       <div class="i-more-tag"></div>
+       <span>
+			附件:
+			&nbsp;&nbsp;
+      </span>
+    </div>
+  </div>
+</div>
+<% }) %>
+</script>
+<script type="text/template" id="task_tab_template">
+       <div class="wait_approve_div_01" style="padding-left:20px;" id="task_tab"><span>任务&nbsp;&nbsp;</span><span id="task_tab_item"><%-msg%></span></div>
+        <%if(msg!=0){%>
+		 <div class="red_circle" id="task_tab_red_circle"></div>
+        <%}%>
+</script>
+<script type="text/template" id="notice_tab_template">
+        <div class="wait_approve_div_01" style="padding-left:20px;" id="task_tab"><span>通知&nbsp;&nbsp;</span><span id="notice_tab_item"><%-msg%></span></div>
+        <%if(msg!=0){%>
+		 <div class="red_circle" id="notice_tab_red_circle"></div>
+        <%}%>
+</script>
+<script type="text/template" id="alert_tab_template">
+        <div class="wait_approve_div_01" style="padding-left:20px;" id="task_tab"><span>预警&nbsp;&nbsp;</span><span id="alert_tab_item"><%-msg%></span></div>
+        <%if(msg!=0){%>
+		 <div class="red_circle" id="alert_tab_red_circle"></div>
+        <%}%>
+</script>
+    <!-- build:remove:dist -->
+    <script src="/mp/js/mp-plugin/SEA.js"></script>
+    <script src="/mp/js/mp-plugin/UAP65.js"></script>
+    <script src="/mp/js/mp-plugin/NC57MP.js"></script>
+	<!--
+    <script src="js/mock/mock.js"></script>
+    <script src="js/mock/mockapp.js"></script>
+    <script src='http://127.0.0.1:8088/rap.plugin.js?projectId=1&mode=1'></script>
+    -->
+      <!-- /build -->
+
+
+    <!-- build:js js/app.js -->
+    <script src="/mp/js/lib/jquery.hoverIntent.js"></script>
+    <script src="/mp/js/lib/ajax-pushlet-client.js"></script>
+    <script src="/mp/msg/model/msg.js"></script>
+    <script src="/mp/msg/collection/msgs.js"></script>
+    <script src="/mp/msg/view/msgview.js"></script>
+    <script src="/mp/msg/view/appview.js"></script>
+    <script src="/mp/msg/router/router.js"></script>
+     <script src="/mp/msg/view/rightview.js"></script>
+    <script src="/mp/msg/msgapp_forindexmore.js"></script>
+    <script src="/mp/js/commonforindexmore.js"></script>
+    <script src="/mp/js/querytpl.js"></script>
+    <!-- endbuild -->
+
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+     <!-- build:js js/iesupport.js -->
+    <script src="/mp/bower_components/html5shiv/dist/html5shiv.min.js"></script>
+    <script src="/mp/bower_components/respond/dest/respond.min.js"></script>
+    <script src="/mp/js/lib/ie.js"></script>
+    <!-- endbuild -->
+    <![endif]-->
+
+    <link href="/mp/img/favicon.ico" rel="shortcut icon" type="image/x-icon">
+
+    <style>[touch-action="none"]{ -ms-touch-action: none; touch-action: none; }[touch-action="pan-x"]{ -ms-touch-action: pan-x; touch-action: pan-x; }[touch-action="pan-y"]{ -ms-touch-action: pan-y; touch-action: pan-y; }[touch-action="scroll"],[touch-action="pan-x pan-y"],[touch-action="pan-y pan-x"]{ -ms-touch-action: pan-x pan-y; touch-action: pan-x pan-y; }
+
+    h2, .h2 {
+        font-size: 20px
+    }
+    h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6{
+        font-weight:700;
+    }
+
+    .btn-sm, .btn-group-sm > .btn {
+        padding: 1px 5px;
+        font-size: 13px;
+        line-height: 1.5;
+        border-radius: 2px
+    }
+    .dropdown-menu {
+        min-width: 0px !important;
+    }
+    .head-nav  .more li a{
+        border-bottom: 0px;
+        height:32px
+    }
+	.applyBtn{
+		background:#5cb85c;
+		  height: 31px;
+	}
+    #scroller {
+        position:relative;
+        /*	-webkit-touch-callout:none;*/
+        -webkit-tap-highlight-color:rgba(0,0,0,0);
+        float:left;
+        width:100%;
+        padding:0;
+    }
+    </style>
+
+</head>
+<body id="body" onload="onloadLangSource()">
+<div class="allcontent">
+<!-- <header class="site-header   navbar-fixed-top " style="background: #e0e0e0;height: 45px;">
+    <div class="container inner clearfix" style="
+    height: 100%;
+    line-height: 45px;
+    float: left;
+    font-size: 16px;
+	">
+       任务
+    </div>
+    
+</header>end .site-header -->
+<div class="container">
+<div class="row edge" style="
+    margin-top: 40px;
+">
+<div id="main" class="col-md-12">
+<div class="" id="tab-nav">	
+<input type="hidden" id="isdealed" value="dealed"/>
+<!-- 				<div id="headbur2"> -->
+<!-- 						<ul> -->
+<!-- 							<li>单据类型：</li> -->
+<!-- 							<li class="sub-tabli"> -->
+<!-- 								<a href="#"  class="checked">全部</a> -->
+<!-- 								<a href="#">会议费报销单</a> -->
+<!-- 								<a href="#">交通费报销单</a> -->
+<!-- 								<a href="#">财务报销单</a> -->
+<!-- 								<input type="text" calss="form-control input-txt" style="border:1px solid #CCC;height:24px;line-height:24px;"/> -->
+<!-- 					   		 </li> -->
+					   		 		
+<!-- 						</ul> -->
+<!-- 						<br/> -->
+<!-- 						<ul> -->
+<!-- 							<li>时间范围：</li> -->
+<!-- 							<li class="sub-tabli"> -->
+<!-- 								<a href="#"  class="checked">全部</a> -->
+<!-- 								<a href="#">一天内</a> -->
+<!-- 					   		 </li> -->
+<!-- 					   		 <li class=""> -->
+<!-- 								<input type="text" id="starttime" calss="form-control input-txt" style="border:1px solid #CCC;height:24px;line-height:24px;width:120px;"/> -->
+<!-- 								至 -->
+<!-- 								<input type="text" id="endtime" calss="form-control input-txt" style="border:1px solid #CCC;height:24px;line-height:24px;width:120px;"/> -->
+<!-- 					   		 </li> -->
+<!-- 						</ul> -->
+<!-- 						<br/> -->
+<!-- 						<ul> -->
+<!-- 							<li >处理状态：</li> -->
+<!-- 							<li class="sub-tabli"> -->
+<!-- 								<a href="#"  class="checked">全部</a> -->
+<!-- 								<a href="#">处理</a> -->
+<!-- 								<a href="#">未处理</a> -->
+<!-- 					   		 </li> -->
+<!-- 						</ul> -->
+<!-- 						<br/> -->
+<!-- 						<ul> -->
+<!-- 							<li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;主题：</li> -->
+<!-- 							<li class=""> -->
+<!-- 								<input type="text" calss="form-control input-txt" style="border:1px solid #CCC;height:24px;line-height:24px;width:120px;"/> -->
+<!-- 					   		 </li> -->
+<!-- 					   		 <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;发送人：</li> -->
+<!-- 					   		 <li class=""> -->
+<!-- 								<input type="text" calss="form-control input-txt" style="border:1px solid #CCC;height:24px;line-height:24px;width:120px;"/> -->
+<!-- 					   		 </li> -->
+<!-- 						</ul> -->
+<!-- 				</div> -->
+	</div>
+		<!-- 查询模板开始 -->
+
+<!-- <div id="1001ZZ10000000007MOY" class="panel-body panel-body-gray"> -->
+<div>
+	<div class="row" style="position: relative;    z-index: 2;    max-width: ;">
+		<div class="col-md-12">
+			<div role="form" class="form-inline" name="head" enable="">
+			<div id="queryArea" class="selector" data-qtid="1001ZZ10000000007MOY" data-funcode="10140MAG" data-beanid='c7dc0ccd-8872-4eee-8882-160e8f49dfad'  data-showsize="6">
+			<div class="padding-div"></div>
+			<div class="selectionContainer" style="border: 1px solid #b3b3b3;">
+				<div class="tab-content" style="padding-top:22px;padding-bottom:22px">
+					  <div class="tab-pane fade in active" id="1001ZZ10000000007MOY-tab-selected" style="display:none">
+					  	<div class="selections">
+						  	<span href="" class="ss-item clear-all" style="display: none;">清空<i></i></span>
+						</div>
+					  </div>
+					  
+					  
+<div id="allbilltype" class="queryAreaItem s-line refer"  style="display: block;  margin-left: 25px;" >
+	<div class="more-refer-wrap">
+		<div class="refer-key">
+			<span id="documenttype">单据类型：</span>
+		</div>
+		    <div class="refer-value" style="    float: left;padding-right: 28px;margin-left: 0px;" data-value='' data-isnotmdcondition=false data-operacode='=@<>@' data-ifmust=false data-itemkey='deletestate' data-label='单据类型'  data-returntype='2' data-type='5'>   
+		        <div class="q-list" style="    margin-top: 3px;">
+                           <!-- 逻辑或下拉类型-->
+						<ul class="valueList" id="billTypeId" status="billtype">
+            				<li data-value='1' data-name='全部' style="width:50px;">
+								<span rel="nofollow" class="selected" style="color:#fff;width:50px;"><i></i>全部</span>
+			                </li>
+						</ul>
+	            </div>
+            </div>
+           <div class="refer-ext" style="    position: relative;float: left;margin-left: -20px;text-align: center">
+           	<div style="float:left;min-width:50px;"><a href="javascript:;"  style="float:left;min-width:50px;" class="pop blue-hover" pop="pop" code="">其他</a></div>
+           	<div class="billtype-tabledivmore" style="display:none;">
+                   <table id="allbilltypetable"
+                  data-show-refresh="false" data-search="true"
+                   data-side-pagination="server"
+                   data-pagination="true"
+                   data-page-list="[3, 6, 12, 24, 48]">
+                       <thead>
+                           <tr>
+                               <th data-field="state" data-radio="true"></th>
+                               <th data-field="code" data-align="center" data-sortable="true">编码</th>
+                               <th data-field="name" data-align="center" data-sortable="true">单据名称</th>
+                           </tr>
+                       </thead>
+                   </table>
+            </div>
+           </div>
+          </div>
+         </div>
+
+<div id="timebetween" class="queryAreaItem s-line refer"  style="display: block;  margin-left: 25px;"  >
+	<div class="more-refer-wrap">
+		<div class="date-start"></div>
+		<div class="date-end"></div>
+		<div class="refer-key">
+			<span id="timelimit">时间范围：</span>
+		</div>
+			<div class="refer-value" style="padding-right: 28px;margin-left: 0px;" data-value='' data-isnotmdcondition=false data-operacode='between@=@>@>=@<@<=@' data-ifmust=false data-itemkey='version' data-label='时间范围'  data-returntype='2' data-type='1'>
+		        <div class="q-list">
+                       <!-- 数值类型（整型）-->
+						<div class="refer-input">
+							<input size=12 type="text" class="form-control input-txt"  placeholder="yyyy-MM-dd" onFocus="$('#senderPopDiv').css('display','none');$('.billtype-tabledivmore').css('display','none'); var endtime=$dp.$('endtime');WdatePicker({doubleCalendar:true,lang:getCookieForLang(),onpicked:function(){endtime.focus();},maxDate:'#F{$dp.$D(\'endtime\')}'})"  data-plugin='{"formater":{"type":"number","precision":2},"masker":{"type":"number"}}'  valid-type="integer" errormsg="请输入整数"  name="starttime" id="starttime" value='' >
+							<em>至</em>
+								
+							<input size=12 type="text" class="form-control input-txt"  placeholder="yyyy-MM-dd" onFocus="$('#senderPopDiv').css('display','none');$('.billtype-tabledivmore').css('display','none'); WdatePicker({doubleCalendar:true,lang:getCookieForLang(),minDate:'#F{$dp.$D(\'starttime\')}'})"  data-plugin='{"formater":{"type":"number","precision":2},"masker":{"type":"number"}}'  valid-type="integer" errormsg="请输入整数"  name="endtime" id="endtime" value='' >
+<!-- 							<a  class="btn btn-default input-btn">确定</a> -->
+						</div>
+	            </div>
+				<div class="refer-btns">
+	            	<a href="javascript:;" class="btn  btn-primary btn-sm ok-btn disabled">确定</a>
+	            	<a href="javascript:;" class="btn  btn-default btn-sm cancel-btn">取消</a>
+	            </div>
+            </div>
+           <div class="refer-ext">
+           	<a href="javascript:;" style="visibility: hidden;" class="search-btn"></a>
+           	<a href="javascript:;"  style="visibility: hidden;" class="refer-e-more moreItem">更多</a>
+            <a href="javascript:;" style="visibility: hidden;"   class="refer-e-multiple multi-btn">多选</a>
+           </div>
+          </div>
+         </div>
+
+<div id="them" class="queryAreaItem s-line refer"  style="display: inline-block; margin-left: 25px;" >
+	<div class="more-refer-wrap">
+		<div class="date-start"></div>
+		<div class="date-end"></div>
+		<div class="refer-key" style="width: 80px;"><span id="theme">主&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;题：</span></div>
+			<div class="refer-value" style="padding-right: 28px;margin-left: 0px;" data-value='' data-isnotmdcondition=false data-operacode='=@like@left like@right like@' data-ifmust=false data-itemkey='goodsprtname' data-label='主题'  data-returntype='2' data-type='0'>
+		        <div class="q-list">
+                       <!-- 文本类型-->
+                       <div class="refer-input">
+							<input id="themename" size=12 type="text" class="form-control input-txt"  name="goodsprtname" maxlength="" value="" placeholder="请输入主题">
+<!-- 							<a  class="btn btn-default input-btn">确定</a> -->
+						</div>
+	            </div>
+				<div class="refer-btns">
+	            	<a href="javascript:;" class="btn  btn-primary btn-sm ok-btn disabled">确定</a>
+	            	<a href="javascript:;" class="btn  btn-default btn-sm cancel-btn">取消</a>
+	            </div>
+            </div> 
+    </div>
+</div>
+<div id="sender" class="queryAreaItem s-line refer"  style="display: inline-block;" >
+	<div class="more-refer-wrap">
+		<div class="date-start"></div>
+		<div class="date-end"></div>
+		<div class="refer-key" style="width: 80px;"><span id="spansender">&nbsp;&nbsp;&nbsp;发送人：</span></div>
+			<div class="refer-value" style="padding-right: 28px;margin-left: 0px;" data-value='' data-isnotmdcondition=false data-operacode='=@like@left like@right like@' data-ifmust=false data-itemkey='goodsprtname' data-label='发送人'  data-returntype='2' data-type='0'>
+		        <div class="q-list">
+                       <!-- 文本类型-->
+                       <div class="refer-input">
+							<input id="senderInput" size=12 type="text" class="form-control input-txt"  name="goodsprtname" maxlength="" value="" placeholder="请输入发送人">
+<!-- 							<a  class="btn btn-default input-btn">确定</a> -->
+						</div>
+	            </div>
+				<div class="refer-btns">
+	            	<a href="javascript:;" class="btn  btn-primary btn-sm ok-btn disabled">确定</a>
+	            	<a href="javascript:;" class="btn  btn-default btn-sm cancel-btn">取消</a>
+	            </div>
+            </div> 
+    </div>
+</div>
+
+<div id="senderPopDiv" class="hidden">
+	<div class="bootstrap-tablediv" style="position: fixed;max-width: 400px;background-color: #fff;     left: 370px;  margin-right: 12px;margin-top: -9px; z-index: 10;">
+		<table id="senderRefTablegp"
+			data-show-refresh="false" data-search="true"
+			data-side-pagination="server"
+			data-pagination="true"
+			data-page-list="[3, 6, 12, 24, 48]">
+				<thead>
+					<tr>
+						<th data-field="state" data-radio="true"></th>
+						<th id="dept_code" data-field="code" data-align="center" data-sortable="true">编码</th>
+						<th id="dept_name" data-field="name" data-align="center" data-sortable="true">名称</th>
+						<th id="dept" data-field="dept" data-align="center" data-sortable="true">部门</th>
+					</tr>
+				</thead>
+		</table>
+	</div>	
+</div>
+
+
+<div id="status" class="queryAreaItem s-line refer"  style="display: none; margin-left: 25px;" >
+	<div class="more-refer-wrap">
+		<div class="date-start"></div>
+		<div class="date-end"></div>
+		<div class="refer-key" style="width: 80px;">
+			<span id="processing_status">处理状态：</span>
+		</div>
+			<div class="refer-value" style="padding-right: 28px;margin-left: 0px;" data-value='' data-isnotmdcondition=false data-operacode='=@<>@' data-ifmust=false data-itemkey='deletestate' data-label='处理状态'  data-returntype='2' data-type='6'>
+		        <div class="q-list">
+                           <!-- 逻辑或下拉类型-->
+						<ul class="valueList">
+            				<li data-value='all' data-name='全部'   style="width:50px;">
+								<span id="all" rel="nofollow" data-code="all" class="selected"  style="color:#fff;width:50px;"><i></i>全部</span>
+			                </li>
+            				<li data-value='dealed' data-name='处理' style="width:50px;">
+								<span id="already_deal" rel="nofollow" data-code="dealed" style="width:50px;"><i></i>已处理</span>
+			                </li>
+            				<li  data-value='waitdeal' data-name='未处理' style="width:50px;">
+								<span id="untreated" rel="nofollow" data-code="waitdeal" style="width:50px;"><i></i>未处理</span>
+			                </li>			                
+						</ul>
+	            </div>
+				<div class="refer-btns">
+	            	<a href="javascript:;" class="btn  btn-primary btn-sm ok-btn disabled">确定</a>
+	            	<a href="javascript:;" class="btn  btn-default btn-sm cancel-btn">取消</a>
+	            </div>
+            </div>
+           <div class="refer-ext" style="height:30px;">
+           	<!-- <a href="javascript:;" style="visibility: hidden;" class="search-btn"></a> -->
+           	<!-- <a href="javascript:;" id="searchBtn" class="search-btn">检索</a> -->
+           	<a id="searchBtn" class="more-search-btn">检索</a>
+           </div>
+          </div>
+         </div>
+
+			</div>
+			</div>
+			</div>
+			</div>
+			</div>	
+			</div>
+			</div>
+		<!-- 查询模板结束 -->
+		
+		
+		
+		
+		
+		
+		<!--弹出层时背景层DIV-->
+	<div id="fade" class="black_overlay">
+		<div >
+			<span class="MyDiv_close"><img src="../mp/img/close.svg"  onclick="CloseDiv('MyDiv','fade')"/></span>
+		</div>
+	</div>
+		<div id="MyDiv" class="white_content">
+
+		<div class="MyDiv_left">
+			<div class="left_content">
+			
+			</div>
+		</div>
+		<div class="left_one">
+		
+		</div>
+		<div class="MyDiv_middle">
+			<div class="left_icon">
+				<div><img src="../mp/img/move_icon.svg"/></div>
+				<div><img src="../mp/img/yuanshi_icon.svg"/></div>
+				<div><img src="../mp/img/bigger_icon.svg"/></div>
+				<div><img src="../mp/img/smailer_icon.svg"/></div>
+			</div>
+		</div>
+		<div class="left_two">
+		
+		</div>
+		
+		<div class="MyDiv_right">
+		<div class="r_title">
+			<span id="work_history"  class="actionBtn" actioncode="showFlow" pk="">审批历史</span>
+			<span class="r_span"></span>
+			<span id="flow_img">流程图<img src="../mp/img/work_icon.svg"/></span>
+			<ul class="meta-tags">
+               <li>
+               	<div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;">
+               	<div class="arrow"></div>
+               	<h4 class="popover-title" style="display: none;"></h4>
+               	<div class="popover-content">
+               		sdgsfsdfsdf
+               	</div>
+               	</div>
+               </li>
+           </ul>
+		</div>
+		
+		<div class="grid-body with-scroll">
+				<div class="row" style="height: 100%;width:100%;"> 
+					<div id="approvalinfos" class="form-wizard-steps approve approve-ver ">
+						<div id="workflowiera">
+						
+						</div>
+						<div class="row approve-pending approve-todo-action" >
+							<div class="approve-left"> 
+								<div class="out_circletodo">
+									<div class="approve-bage">
+									</div>
+								</div>
+							</div>
+							<div class="approve-right" id="lastright">
+								
+											<div class="tabs">
+												
+											    <div class="tabcontent">
+												    <div class="tabhost">
+												    	<a href="#page1"  class="selected"  id="selfirst">批准</a>
+												        <a href="#page2">不批准</a>
+												        <a href="#page3">驳回</a>
+												        <a href="#page4">改派</a>
+												        <a href="#page5">加签</a>
+														
+												    </div>
+											    	<div id="page1" class="page">
+														<textarea placeholder="请输入审批意见(默认为 ：批准)..." class="form-control  form-group" rows="2" id="agreemsg"></textarea>
+														<div class="peoplecontent">
+														<div class="psonslttitle selections" id="">
+													        	<p>请指派审批人：</p>
+													    </div>
+														<div class="people-tablediv">
+															
+															
+												        </div>
+												        </div>
+														 <div class="psonslfoolter">
+														        	<div class="post">
+																		<div class="meta" style="margin-right: 0px;">
+																			 <ul class="meta-tags">
+															                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+															                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><a href="#" style="color:#428bca;text-decoration: none;"><strong>上传附件</strong></a></div></li>
+															                </ul>
+																        </div>
+																	</div>
+														        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="">取消</button></div>
+														        	<div class="lasttwo"><button type="button" class="btn btn-success btn-xs actionBtn" pk="" actioncode="agree">确定</button></div>
+														        	
+														 </div>
+													</div>
+											        <div id="page2"  class="page">
+											        	<textarea placeholder="请输入审批意见..." class="form-control  form-group" rows="2" id="disagreemsg"></textarea>
+														<div class="peoplecontent">
+														<div class="psonslttitle selections" id="">
+													        	<p>请指派审批人：</p>
+													    </div>
+														 <div class="people-tablediv2">
+															
+															  	
+												        </div>
+												        </div>
+														 <div class="psonslfoolter">
+														        	<div class="post">
+																		<div class="meta" style="margin-right: 0px;">
+																			 <ul class="meta-tags">
+															                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+															                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px;display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><a href="#" style="color:#428bca;text-decoration: none;"><strong>上传附件</strong></a></div></li>
+															                </ul>
+																        </div>
+																	</div>
+														        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="">取消</button></div>
+														        	<div class="lasttwo"><button type="button" class="btn btn-success btn-xs actionBtn" pk="" actioncode="disAgree">确定</button></div>
+														        	
+														 </div>
+											        </div>
+											        <div id="page3"  class="page">
+											        	<div>
+													        	<textarea placeholder="请输入审批意见..." class="form-control  form-group" rows="2"></textarea>
+													        </div>
+													        <div class="psonslttitle selections" id="">
+													        	<p>选择驳回环节：</p>
+													        </div>
+											        
+											        		<div class="bootstrap-tablediv" style="overflow: hidden;min-width: 260px;">
+											                   			
+												            </div>
+														   	<div class="psonslfoolter">
+													        	<div class="post">
+																	<div class="meta" style="margin-right: 0px;">
+																		 <ul class="meta-tags">
+														                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+														                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><a href="#" style="color:#428bca;text-decoration: none;"><strong>上传附件</strong></a></div></li>
+														                </ul>
+															        </div>
+																</div>
+													        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="">取消</button></div>
+													        	<div class="lasttwo"><button type="button" class="btn btn-success btn-xs actionBtn" pk="" actioncode="reject">确定</button></div>
+													 		</div>
+											        </div>
+											        <div id="page4"  class="page">
+													        <div>
+													        	<textarea placeholder="请输入审批意见..." class="form-control  form-group" rows="2"></textarea>
+													        </div>
+													        <div class="psonslttitle selections" id="gpperson">
+													        	<p>选择改派处理人员：</p>
+													        </div>
+											        
+											        		<div class="bootstrap-tablediv">
+											                    <table id="userRefTablegp"
+											                    data-show-refresh="false" data-search="true"
+											                    data-side-pagination="server"
+											                    data-pagination="true"
+											                    data-page-list="[3, 6, 12, 24, 48]">
+											                        <thead>
+											                            <tr>
+											                                <th data-field="state" data-radio="true"></th>
+											                                <th data-field="code" data-sortable="true">编码</th>
+											                                <th data-field="name" data-align="center" data-sortable="true">名称</th>
+											                            </tr>
+											                        </thead>
+											                    </table>
+												            </div>
+															   	<div class="psonslfoolter">
+														        	<div class="post">
+																		<div class="meta" style="margin-right: 0px;">
+																			 <ul class="meta-tags">
+															                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+															                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px;display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><a href="#" style="color:#428bca;text-decoration: none;"><strong>上传附件</strong></a></div></li>
+															                </ul>
+																        </div>
+																	</div>
+														        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="">取消</button></div>
+														        	<div class="lasttwo"><button type="button" class="btn btn-success btn-xs actionBtn" pk="" actioncode="reassign">确定</button></div>
+														        	
+														 </div>
+											        </div>
+											        <div id="page5"  class="page">
+													        <div>
+													        	<textarea placeholder="请输入审批意见(默认为：加签)..." class="form-control  form-group" rows="2"></textarea>
+													        </div>
+													        <div class="psonslttitle selections" id="joinperson">
+													        	<p>选择加签处理人员：</p>
+													        </div>
+											        
+											        		<div class="bootstrap-tablediv">
+											                    <table id="userRefTablenew"
+											                    data-show-refresh="false" data-search="true"
+											                    data-side-pagination="server"
+											                    data-pagination="true"
+											                    data-page-list="[3, 6, 12, 24, 48]">
+											                        <thead>
+											                            <tr>
+											                                <th data-field="state" data-checkbox="true"></th>
+											                                <th data-field="code" data-sortable="true">编码</th>
+											                                <th data-field="name" data-align="center" data-sortable="true">名称</th>
+											                            </tr>
+											                        </thead>
+											                    </table>
+												            </div>
+															   	<div class="psonslfoolter">
+														        	<div class="post">
+																		<div class="meta" style="margin-right: 0px;">
+																			 <ul class="meta-tags">
+															                    <li>&nbsp;&nbsp;&nbsp;<i class="i-tag"></i></li>
+															                    <li> <div class="attch" data-original-title="" title="">附件&nbsp;:<div class="greennum_circle" style="display:	block;">1</div>		&nbsp;</div><div class="pop-tag popover tag-popup fade bottom in" style="top: 17px; display: none;"><div class="arrow"></div><h4 class="popover-title" style="display: none;"></h4><div class="popover-content"><ol><li class="fancy-view" style="display: list-item"><a target="_blank" href="msg/download/a3b387dd2a9efa819a7ff926f2b3c692?sourceSystemCode=UAP63&amp;pk_sourcemsg=1001T110000000001PEI&amp;msgtype=TASK">用友员工IT手册 (2013v6.0) .pdf&nbsp;&nbsp;&nbsp;曹磊</a><a></a></li><ol></ol></ol></div></div>&nbsp;<div class="sccfj"><a href="#" style="color:#428bca;text-decoration: none;"><strong>上传附件</strong></a></div></li>
+															                </ul>
+																        </div>
+																	</div>
+														        	<div class="laseone"><button type="button" class="btn btn-fail btn-xs actionBtn" pk="" actioncode="disagree">取消</button></div>
+														        	<div class="lasttwo"><button type="button" id="onok" class="btn btn-success btn-xs actionBtn" pk="" actioncode="addApprove">确定</button></div>
+														        	
+														 </div>
+											        </div>
+											    </div>
+											</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			 </div>
+			 </div>
+			  <!-- 内容区结束 -->
+	</div>
+<div id="content" style="margin-top: 27px;">
+    <div id="scroller">
+        <div id="pullDown" class="hide">
+            <span class="pullDownIcon"></span><span class="pullDownLabel">更多...</span>
+        </div>
+        <div id="container" class="morecontainer" style="margin-top:0px;margin-top: -38px;border:1px solid #b3b3b3; border-top:none;"></div><!-- end #container -->
+         <div class="toselectmore">
+			<a href="#" id="click_to_load_more">点击加载更多...</a>
+	   </div>
+<!--         <div class="page-nav"> -->
+<!--             <ul class="pagination"> -->
+<!--             </ul> -->
+<!--         </div> -->
+        </div>
+</div><!-- end #content -->
+
+</div><!-- end #main -->
+
+
+
+</div>
+
+</div><!-- end .wrap -->
+
+<script>
+    $(document).ready(function () {
+          if(!$.isIE()){
+
+          	//初始化绑定iScroll控件
+//               loaded();
+          	 
+              window.addEventListener('DOMContentLoaded', function() {
+                  var page = document.getElementById('body'),
+                          nav = window.navigator,
+                          ua = nav.userAgent,
+                          isFullScreen = nav.standalone;
+
+                  if (ua.indexOf('Android') !== -1) {
+                      // 56对应的是Android Browser导航栏的高度
+                      page.style.height = window.innerHeight + 56 + 'px';
+                  } else if (/iPhone|iPod|iPad/.test(ua)) {
+                      // 60对应的是Safari导航栏的高度
+                      page.style.height = window.innerHeight + (isFullScreen ? 0 : 60) + 'px'
+                  }
+              }, false);
+          }
+    	//附件下载
+    		$(".msg_tag_info").live('click',function(e) {
+    		    e.preventDefault();
+    		    var fileUrl=$("a",this).attr("href");
+    		    var fileNameExt = fileUrl.substr(fileUrl.lastIndexOf('.') + 1);
+    		    if(/(gif|jpe?g|png|txt|html)$/i.test(fileNameExt)){
+    		        $.fancybox.open({
+    		            scrolling: 'no',
+    		            href :fileUrl,
+    		            scrollOutside:false,
+    		            'type' : 'iframe'
+    		        });
+    		    }else{
+    		        $.detailAttchDownload(fileUrl);
+    		    }
+    		});
+    		$(".fancy-view").live('click',function(e) {
+	            e.preventDefault();
+	            var fileUrl=$("a",this).attr("href");
+	            var fileNameExt = fileUrl.substr(fileUrl.lastIndexOf('.') + 1);
+	            if(/(gif|jpe?g|png|txt|html)$/i.test(fileNameExt)){
+	                $.fancybox.open({
+	                    scrolling: 'no',
+	                    href :fileUrl,
+	                    scrollOutside:false,
+	                    'type' : 'iframe'
+	                });
+	            }else{
+	                $.attchDownload(fileUrl);
+	            }
+	        });
+
+    });
+    
+    $('.page textarea').bind('input', function(e) {
+	    if(this.value.length>450) this.value=this.value.substr(0,450);
+    });
+    
+    $(".toselectmore").click(function(e){//
+	 app.msgs.trigger('pullpushnew',true); 
+	});
+  //发件人检索
+    $("#senderInput").click(function(e){
+   	//$("#senderPopDiv").addClass('sender-div');
+   	$('.billtype-tabledivmore').css('display','none');
+   	$('#senderPopDiv').show();
+   	app.msgs.trigger('senderInit');
+   }); 
+  
+	//关闭弹出层
+	function CloseDiv(show_div,bg_div){
+		var parentbody = $('body',window.parent.document);
+		parentbody.css('overflow-y','scroll');
+		parentbody.find('#'+show_div).hide();
+		parentbody.find('#'+bg_div).hide();
+		parentbody.find('#joinperson > span').remove();
+		parentbody.find('#gpperson > span').remove();
+		parentbody.find('#workflowiera').children().remove();
+		parentbody.find('.people-tablediv').children().remove();
+		parentbody.find('.people-tablediv2').children().remove();
+		parentbody.find('.tabhost').children().attr('class','')
+	    parentbody.find('#selfirst').attr('class','selected');
+		parentbody.find('.tabcontent>.page').hide();
+		parentbody.find('#page1').show();
+	        
+        if(parentbody.find('.fancybox-overlay')){
+        	parentbody.find('.fancybox-overlay').show();
+        }
+        
+        //改变右侧流程审批记录最后一条的class
+        parentbody.find('.out_circletodo-dealed .approve-bage-dealed').attr('class','approve-bage');
+        parentbody.find('.out_circletodo-dealed').attr('class','out_circletodo');
+        parentbody.find('#lastright').show();
+        parentbody.find('.out_circletodo .approve-bage').html('');
+        parentbody.find('.out_circletodo .approve-content').hide();
+	};
+    function ajaxFileUpload(sourcesystem,pk) {  
+    $.ajaxFileUpload({  
+        url : '/mp/uploadControl/uploadFile',   //submit to UploadFileServlet
+        type:'POST',
+        secureuri : false,
+        fileElementId : 'fileToUpload'+pk,
+        dataType :'JSON', //or json xml whatever you like~
+        //data:{pluginCode:sourcesystem,pk_message: pk},
+        pluginCode:sourcesystem,
+        pk_message: pk,
+        //data:"pluginCode="+sourcesystem+"&pk_message="+pk,
+	    //dataType:"html",
+        success : function(data, status) {
+        	if(data.forbidden){
+        		$.scojs_message(data.msg, $.scojs_message.TYPE_ERROR);
+        	}else{
+        		//$("#result").append(data); 
+                $.scojs_message('文件上传成功', $.scojs_message.TYPE_OK);
+                //局部刷新附件
+                app.msgs.trigger('refrashTaskItem',sourcesystem,pk);
+                //app.msgs.trigger('refrash');
+        	}
+        },  
+        error : function(data, status, e) {   
+            //$("#result").append(data);  
+            $.scojs_message('文件上传失败', $.scojs_message.TYPE_ERROR);
+        }  
+    });  
+    return false;  
+};
+
+$(function(){
+var arr = CheckBrowser();
+if(arr && arr[0].indexOf('火狐')!=-1){
+	$('.selector .q-list').css('min-width','165px');
+	$('input[type="text"]').css('min-height','30px');
+}
+if(arr && arr[0]=='IE'){
+	var $img = $('img');
+	$('img').each(function(){
+		if($(this).attr('src')!=undefined && $(this).attr('src')!=''&& $(this).attr('src').indexOf('svg')!=-1){
+			$(this).attr('src',$(this).attr('src').substring(0,$(this).attr('src').lastIndexOf('.'))+'.png');
+		}
+	})
+	
+	
+	setTimeout(function(){
+	if(!placeholderSupport()){   // 判断浏览器是否支持 placeholder
+		    $('[placeholder]').focus(function() {
+		        var input = $(this);
+		        if (input.val() == input.attr('placeholder')) {
+		            input.val('');
+		            input.removeClass('placeholder');
+		        }
+		    }).blur(function() {
+		        var input = $(this);
+		        if (input.val() == '' || input.val() == input.attr('placeholder')) {
+		            input.addClass('placeholder');
+		            input.val(input.attr('placeholder'));
+		        }
+		    }).blur();
+		};
+	},500)
+}
+});
+
+function placeholderSupport() {
+    return 'placeholder' in document.createElement('input');
+}
+//首页审批意见字数限制
+function textInputControl(e) {
+	if(e.value.length>450) e.value=e.value.substr(0,450);
+}
+
+</script>
+</div>
+
+<!--审批工作台多语修改-->
+
+
+</body>
+</html>
