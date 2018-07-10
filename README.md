@@ -1,4 +1,4 @@
-# FinanceLocalization
+# Finance Localization
 NC Finance Localization Package for Singapore
 
 ## Overview
