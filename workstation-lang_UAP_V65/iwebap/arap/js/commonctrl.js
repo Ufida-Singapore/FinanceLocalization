@@ -693,6 +693,7 @@ define(['jquery', 'knockout','compevent','bignumber','/iwebap/js/BillFormActionU
 		ctrl.afterAddSave = ctrl.totalMoneyChange;
 		ctrl.afterSave = ctrl.totalMoneyChange;	
 		$("#"+ dataTableID + "_Desc").html('共&nbsp;&nbsp;<span data-bind="text:totalBodyNum('+ dataTableID + ')"></span>&nbsp;&nbsp;条,&nbsp;&nbsp;合计：&nbsp;&nbsp;<span class="test" data-bind="text:totalBody"></span>');
+		translateLang();
 	}	
 	
 	function getPkFieldName(){
@@ -749,6 +750,7 @@ define(['jquery', 'knockout','compevent','bignumber','/iwebap/js/BillFormActionU
 				$("#xingFlag").css("display","none");
 				$("#inputListFlag").css("display","none");
 				$("#mainorg_pk_org").addClass('not_edit_state');
+				translateLang();
 			} 
 		}
 	}
@@ -781,7 +783,7 @@ define(['jquery', 'knockout','compevent','bignumber','/iwebap/js/BillFormActionU
 	
 	
 	ctrl.del = function(e){
-			$.showMessageDialog({type:"warning",title:"温馨提示",msg:"删除是不可恢复的，确实要删除单据吗？",backdrop:true,
+			$.showMessageDialog({type:"warning",title:"Tips",msg:"The deletion is unrecoverable. Do you really want to delete the document?",backdrop:true,
 				okfn:function(){
 					var data = ctrl.getValue();
 					var param = {};
@@ -800,7 +802,7 @@ define(['jquery', 'knockout','compevent','bignumber','/iwebap/js/BillFormActionU
 							if(result["success"] == "true"){
 								 window.close();
 							}else{
-								$.showMessageDialog({type:"info",title:"删除失败",msg:result["message"],backdrop:true});
+								$.showMessageDialog({type:"info",title:"Failed to delete",msg:result["message"],backdrop:true});
 							}
 	        			},
 					});
@@ -946,6 +948,7 @@ define(['jquery', 'knockout','compevent','bignumber','/iwebap/js/BillFormActionU
 						$("#imageupload").show();
 					}
 					getApproveInfosNew(openbillid,param.tradetype,$("#approvalinfos"),pk_org.pk,{filtToDoAction:hideUseLessButtons});
+					translateLang();
 					//getBillFlowInfos(openbillid,param.tradetype,result.head.billno.pk,$("#linkinfos"));
 				}else{
 					var type = result["type"]?result["type"]:"info";
@@ -963,12 +966,12 @@ define(['jquery', 'knockout','compevent','bignumber','/iwebap/js/BillFormActionU
 	}
 	ctrl.cancel =function(e){
 		if(appModel.getUIState() == $.UIState.ADD){
-			$.showMessageDialog({type:"warning",title:"温馨提示",msg:"请确认是否要取消？",backdrop:true,okfn:function(){			
+			$.showMessageDialog({type:"warning",title:"Tips",msg:"Please confirm if you want to cancel?",backdrop:true,okfn:function(){			
 				//关闭当前窗口
 				window.close();
 			}});
 		}else if(appModel.getUIState() == $.UIState.EDIT){
-			$.showMessageDialog({type:"warning",title:"温馨提示",msg:"请确认是否要取消？",backdrop:true,okfn:function(){
+			$.showMessageDialog({type:"warning",title:"Tips",msg:"Please confirm if you want to cancel?",backdrop:true,okfn:function(){
 				//回到保存成功的浏览态
 				appModel.setUIState($.UIState.NOT_EDIT);
 				var event = {};

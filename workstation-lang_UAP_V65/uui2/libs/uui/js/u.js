@@ -4425,9 +4425,9 @@ $(function(){
      var contentdiv = $('<div class="alert-content"><p>'+op.msg+'</p></div>')
      var btndiv;
      if(op.type == 'danger' || op.type == 'warning') {
-         btndiv = $('<div class="alert-dialog-footer"><div class="col-md-4 diag_detail" ></div><div class="col-md-4" ><button type="button" data-role="okbtn" data-dismiss="alert" class="btn btn-danger btn-block">确定</button></div><div class="col-md-4"><button type="button" data-dismiss="alert" data-role="cancelbtn" class="btn btn-default btn-block">取消</button></div></div>');
+         btndiv = $('<div class="alert-dialog-footer"><div class="col-md-4 diag_detail" ></div><div class="col-md-4" ><button type="button" data-role="okbtn" data-dismiss="alert" class="btn btn-danger btn-block">OK</button></div><div class="col-md-4"><button type="button" data-dismiss="alert" data-role="cancelbtn" class="btn btn-default btn-block">Cancel</button></div></div>');
      } else {
-         btndiv = $('<div class="alert-dialog-footer"><div class="col-md-4"  ></div><div class="col-md-4 diag_detail" ></div><div class="col-md-4" ><button type="button" data-role="okbtn" data-dismiss="alert" class="btn  btn-block">确定</button></div>');
+         btndiv = $('<div class="alert-dialog-footer"><div class="col-md-4"  ></div><div class="col-md-4 diag_detail" ></div><div class="col-md-4" ><button type="button" data-role="okbtn" data-dismiss="alert" class="btn  btn-block">OK</button></div>');
      }
 
 
@@ -7002,7 +7002,7 @@ DateTimeMasker.DefaultFormatMeta = {
             if (dialog.length == 0) {
             	self.isDefaultDialog = true;
                 var d = document.createElement('DIV')
-                d.innerHTML = '<div class="modal" id="'+prefixID+'"><div class="modal-dialog"><div class="modal-content">' + '<div class="modal-header"><h4 class="modal-title">Modal title</h4></div>' + '<div class="modal-body"></div><div class="modal-footer">' + '<button   type="button" class="btn btn-primary okBtn">确定</button>' + '<button  type="button" class="btn btn-default cancelBtn" data-dismiss="modal">取消</button></div></div></div></div>'
+                d.innerHTML = '<div class="modal" id="'+prefixID+'"><div class="modal-dialog"><div class="modal-content">' + '<div class="modal-header"><h4 class="modal-title">Modal title</h4></div>' + '<div class="modal-body"></div><div class="modal-footer">' + '<button   type="button" class="btn btn-primary okBtn">OK</button>' + '<button  type="button" class="btn btn-default cancelBtn" data-dismiss="modal">Cancel</button></div></div></div></div>'
                 document.body.appendChild(d)
                 dialog = $('#'+prefixID);
             }

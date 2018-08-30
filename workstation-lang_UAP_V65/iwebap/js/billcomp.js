@@ -318,7 +318,7 @@ BillForm.fn.adaptGridUE = function(dataTable) {
 			var $menu = $('#' + dataTable.id + '_content_edit_menu');
 	
 			if(ridx == all-1){
-				var $addbtn = $('<button type="button" class="u-grid-content-edit-menu-button u-grid-content-edit-menu-button-add" id="'+ dataTable.id + '_content_edit_menu_add">添加</button>');
+				var $addbtn = $('<button type="button" class="u-grid-content-edit-menu-button u-grid-content-edit-menu-button-add" id="'+ dataTable.id + '_content_edit_menu_add">Add</button>');
 				$menu.append($addbtn);
 				$addbtn.on('click', function() {
 					if(validateBodyForm().length > 0) {
@@ -364,8 +364,8 @@ BillForm.fn.adaptGridUE = function(dataTable) {
 				}
 				
 			}else{
-				var $cnlbtn = $('<button type="button" class="u-grid-content-edit-menu-button u-grid-content-edit-menu-button-cancel"  id="'+ dataTable.id +'_content_edit_menu_cancel">取消</button>'),
-					$okbtn	= $('<button type="button" class="u-grid-content-edit-menu-button u-grid-content-edit-menu-button-save" id="'+ dataTable.id + '_content_edit_menu_save">保存</button>');
+				var $cnlbtn = $('<button type="button" class="u-grid-content-edit-menu-button u-grid-content-edit-menu-button-cancel"  id="'+ dataTable.id +'_content_edit_menu_cancel">Cancel</button>'),
+					$okbtn	= $('<button type="button" class="u-grid-content-edit-menu-button u-grid-content-edit-menu-button-save" id="'+ dataTable.id + '_content_edit_menu_save">Save</button>');
 				$menu.append($cnlbtn).append($okbtn);
 	
 				$okbtn.on('click', function() {
