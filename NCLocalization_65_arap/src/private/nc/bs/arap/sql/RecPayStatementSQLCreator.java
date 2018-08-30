@@ -242,7 +242,7 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 					"  when ap_payitem.busidate is not null then concat(substr(ap_payitem.busidate,1,10), ' 00:00:00') else null end tallydate, ");
 		} else if(queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_REC && getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.SQLSERVER) {
 			sqlBuffer.append("  case when ar_recitem.busidate is not null then concat(substring(ar_recitem.busidate,1,10),' 00:00:00') " +
-					" when ar_gatheritem.busidate is not null then concat(substr(ar_gatheritem.busidate,1,10), ' 00:00:00' else null end tallydate, ");
+					" when ar_gatheritem.busidate is not null then concat(substring(ar_gatheritem.busidate,1,10), ' 00:00:00') else null end tallydate, ");
 		} else if(queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_PAY && getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.SQLSERVER) {
 			sqlBuffer.append("  case when ap_payableitem.busidate is not null then concat(substring(ap_payableitem.busidate,1,10),' 00:00:00') " +
 					"  when ap_payitem.busidate is not null then concat(substring(ap_payitem.busidate,1,10), ' 00:00:00') else null end tallydate, ");

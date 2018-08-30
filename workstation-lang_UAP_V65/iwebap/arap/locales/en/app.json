@@ -3,7 +3,7 @@
 	{		
 		"basic_info":"Basic Information",
 		"details_info":"Detail Information",
-		"pk_orginfo":"Final Information",
+		"pk_orginfo":"Organization Information",
 		
 		"bill_no_find":"Did not find the corresponding documents!",
 		"tip":"Tips",
@@ -45,10 +45,10 @@
 		"billsaved":"Saved",
 		"billfree":"Free",
 		"billnotactive":"Not Active",
-		"billsubmit":"Submit",
+		"billsubmit":"Submitted",
 		"billactive":"Effective",
-		"billdoing":"Doing",
-		"billpassing":"Passing State",
+		"billdoing":"Processing",
+		"billpassing":"Passed",
 		"billfailed":"Failed",
 		"billnotsubmit":"Unconfirmed",
 		"billapproved":"Approved",
