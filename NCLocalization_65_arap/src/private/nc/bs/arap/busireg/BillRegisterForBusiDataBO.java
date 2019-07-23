@@ -267,33 +267,88 @@ public class BillRegisterForBusiDataBO {
 			BaseItemVO[] itemVOs = (BaseItemVO[]) vo.getChildrenVO();
 			ArrayList<AggverifyVO> aggVOList = new ArrayList<AggverifyVO>();
 
+			//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//			for (BaseItemVO itemVO : itemVOs) {
+//				String srcBilltype = itemVO.getSrc_billtype();;
+//				String srcItemid = itemVO.getSrc_itemid();
+//				if (pkBilltype.equals(IBillFieldGet.F0) && srcBilltype != null && !StringUtil.isEmpty(srcItemid) && srcBilltype.equals(ArapBillDealVOConsts.BILLTYPE_30)) {
+//					String whereCondStr = "";
+//					whereCondStr = " src_itemid ='" + srcItemid + "' and pk_billtype='F0' ";
+//
+//					NCObject[] objectByCond = MDPersistenceService.lookupPersistenceQueryService().queryBillOfNCObjectByCond(ArapBusiDataVO.class, whereCondStr, false);
+//
+//					List<ArapBusiDataVO> jfList = new ArrayList<ArapBusiDataVO>();
+//					List<ArapBusiDataVO> dfList = new ArrayList<ArapBusiDataVO>();
+//					// 区分本方 对方
+//					for (NCObject data : objectByCond) {
+//						ArapBusiDataVO busiDataVO = (ArapBusiDataVO) data.getContainmentObject();
+//						busiDataVO.setAttributeValue(ArapBusiDataVO.SETT_MONEY, busiDataVO.getOccupationmny());
+//
+//						if (busiDataVO.getDirection().intValue() == 1) {
+//							jfList.add(busiDataVO);
+//						} else {
+//							dfList.add(busiDataVO);
+//						}
+//					}
+//					this.aggMap.clear();
+//					this.aggMap = this.onVerify(com, ruleVOMap, jfList.toArray(new ArapBusiDataVO[0]), dfList.toArray(new ArapBusiDataVO[0]));
+//					aggVOList.addAll(this.getAggVerifyVO(this.aggMap));
+//				}
+//			}
+			List<String> srcItemids = new ArrayList<String>();
 			for (BaseItemVO itemVO : itemVOs) {
-				String srcBilltype = ((BaseItemVO) vo.getChildrenVO()[0]).getSrc_billtype();
+				String srcBilltype = itemVO.getSrc_billtype();
 				String srcItemid = itemVO.getSrc_itemid();
 				if (pkBilltype.equals(IBillFieldGet.F0) && srcBilltype != null && !StringUtil.isEmpty(srcItemid) && srcBilltype.equals(ArapBillDealVOConsts.BILLTYPE_30)) {
-					String whereCondStr = "";
-					whereCondStr = " src_itemid ='" + srcItemid + "' and pk_billtype='F0' ";
-
-					NCObject[] objectByCond = MDPersistenceService.lookupPersistenceQueryService().queryBillOfNCObjectByCond(ArapBusiDataVO.class, whereCondStr, false);
-
-					List<ArapBusiDataVO> jfList = new ArrayList<ArapBusiDataVO>();
-					List<ArapBusiDataVO> dfList = new ArrayList<ArapBusiDataVO>();
-					// 区分本方 对方
-					for (NCObject data : objectByCond) {
-						ArapBusiDataVO busiDataVO = (ArapBusiDataVO) data.getContainmentObject();
-						busiDataVO.setAttributeValue(ArapBusiDataVO.SETT_MONEY, busiDataVO.getOccupationmny());
-
-						if (busiDataVO.getDirection().intValue() == 1) {
-							jfList.add(busiDataVO);
-						} else {
-							dfList.add(busiDataVO);
-						}
-					}
-					this.aggMap.clear();
-					this.aggMap = this.onVerify(com, ruleVOMap, jfList.toArray(new ArapBusiDataVO[0]), dfList.toArray(new ArapBusiDataVO[0]));
-					aggVOList.addAll(this.getAggVerifyVO(this.aggMap));
+					srcItemids.add(srcItemid);
 				}
 			}
+
+			String whereCondStr = "";
+			whereCondStr = nc.vo.fi.pub.SqlUtils.getInStr("src_itemid", srcItemids.toArray(new String[0]), true) + " and pk_billtype='F0' and pk_org = '" + parentVO.getPk_org() + "'";
+			NCObject[] objectByCond = MDPersistenceService.lookupPersistenceQueryService().queryBillOfNCObjectByCond(ArapBusiDataVO.class, whereCondStr, false);
+			Map<String, List<ArapBusiDataVO>> busidataKeyMap = new HashMap<String, List<ArapBusiDataVO>>();
+
+			// 根据src_itemid进行分组
+			if (objectByCond != null && objectByCond.length > 0) {
+				for (NCObject data : objectByCond) {
+					ArapBusiDataVO busiDataVO = (ArapBusiDataVO) data.getContainmentObject();
+					busiDataVO.setAttributeValue(ArapBusiDataVO.SETT_MONEY, busiDataVO.getOccupationmny());
+					if (busidataKeyMap.get(busiDataVO.getSrc_itemid()) != null)
+						busidataKeyMap.get(busiDataVO.getSrc_itemid()).add(busiDataVO);
+					else {
+						List<ArapBusiDataVO> busidatalist = new ArrayList<ArapBusiDataVO>();
+						busidatalist.add(busiDataVO);
+						busidataKeyMap.put(busiDataVO.getSrc_itemid(), busidatalist);
+					}
+
+				}
+
+				for (BaseItemVO itemVO : itemVOs) {
+					String srcBilltype = itemVO.getSrc_billtype();
+					String srcItemid = itemVO.getSrc_itemid();
+					if (pkBilltype.equals(IBillFieldGet.F0) && srcBilltype != null && !StringUtil.isEmpty(srcItemid) && srcBilltype.equals(ArapBillDealVOConsts.BILLTYPE_30)) {
+						List<ArapBusiDataVO> busidatalist = busidataKeyMap.get(srcItemid);
+						List<ArapBusiDataVO> jfList = new ArrayList<ArapBusiDataVO>();
+						List<ArapBusiDataVO> dfList = new ArrayList<ArapBusiDataVO>();
+						// 区分本方 对方
+						if (busidatalist != null) {
+							for (ArapBusiDataVO busiDataVO : busidatalist) {
+
+								if (busiDataVO.getDirection().intValue() == 1) {
+									jfList.add(busiDataVO);
+								} else {
+									dfList.add(busiDataVO);
+								}
+							}
+							aggMap.clear();
+							aggMap = onVerify(com, ruleVOMap, jfList.toArray(new ArapBusiDataVO[0]), dfList.toArray(new ArapBusiDataVO[0]));
+							aggVOList.addAll(getAggVerifyVO(aggMap));
+						}
+					}
+				}
+			}
+			//update end
 
 			if (aggVOList != null && aggVOList.size() > 0) {
 				NCLocator.getInstance().lookup(IArapVerifyLogPrivate.class).save(aggVOList, ruleVOMap, com);
@@ -344,7 +399,9 @@ public class BillRegisterForBusiDataBO {
 
 				// 拉式生成单自动核销
 				List<String> pks = new ArrayList<String>();
-				List<ArapBillMapVO> allList = new ArrayList<ArapBillMapVO>();
+				//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//				List<ArapBillMapVO> allList = new ArrayList<ArapBillMapVO>();
+				//del chenth
 				List<ArapBillMapVO> scmList = new ArrayList<ArapBillMapVO>();
 				List<ArapBillMapVO> defF2List = new ArrayList<ArapBillMapVO>();
 				List<ArapBillMapVO> psList = new ArrayList<ArapBillMapVO>();
@@ -357,13 +414,16 @@ public class BillRegisterForBusiDataBO {
 				// 来源于销售的应收单生效后进行内部红蓝对冲
 				// 进出口按照来源单据行核销(进口,按照整单的来源+收支项目核销)
 				this.billRBVerifyBySrcBillForExtend(vos, ruleVOMap, com);
-				this.billRBVerifyBySrcItem(vos, ruleVOMap, com);
-				this.billRBVerify(vos, ruleVOMap, com);
+				//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//				this.billRBVerifyBySrcItem(vos, ruleVOMap, com);
+//				this.billRBVerify(vos, ruleVOMap, com);
 
 				// 自动核销方案条件
 				String pk_billtype = "";
 				Map<String, VerifyfaVO> tradetypes = new HashMap<String, VerifyfaVO>();
 				MapList<VerifyfaVO, String> tradeTypeBills = new MapList<VerifyfaVO, String>();
+				
+				BaseDAO dao = new BaseDAO();
 				for (AggregatedValueObject vo : vos) {
 					VerifyfaVO faVO = null;
 					// 单据来源系统
@@ -391,25 +451,66 @@ public class BillRegisterForBusiDataBO {
 							tradeTypeBills.put(tradetypes.get(key), vo.getParentVO().getPrimaryKey());
 						}
 					}
-                    if(true){
-                    	for (BaseItemVO itemVO : childrenVO) {
-	                    	ArapBillMapVO mapVO = ArapBillMapVOTool.changeVotoBillMapNew((BaseBillVO) vo.getParentVO(), itemVO);
-							allList.add(mapVO);
-                    	}
-                    }
+					//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//                    if(true){
+//                    	for (BaseItemVO itemVO : childrenVO) {
+//	                    	ArapBillMapVO mapVO = ArapBillMapVOTool.changeVotoBillMapNew((BaseBillVO) vo.getParentVO(), itemVO);
+//							allList.add(mapVO);
+//                    	}
+//                    }
 					if (ArapBillDealVOConsts.BILLTYPE_21.equals(childrenVO[0].getTop_billtype()) || ArapBillDealVOConsts.BILLTYPE_36D1.equals(childrenVO[0].getTop_billtype())
 							|| ArapBillDealVOConsts.BILLTYPE_36D7.equals(childrenVO[0].getTop_billtype())) {
 						for (BaseItemVO itemVO : childrenVO) {
-							if (itemVO.getTop_termch() == null) {
-								ArapBillMapVO mapVO = ArapBillMapVOTool.changeVotoBillMapNew((BaseBillVO) vo.getParentVO(), itemVO);
-								mapVO.setS_itemid(itemVO.getPurchaseorder());// 付款单
-								scmList.add(mapVO);
-							} else if ((ArapBillDealVOConsts.BILLTYPE_36D1.equals(childrenVO[0].getTop_billtype()) && ArapBillDealVOConsts.BILLTYPE_21.equals(childrenVO[0].getSrc_billtype()))) {
-								// 采购订单-付款申请-付款单，情况直接按照供应链的自动核销控制逻辑走
-								ArapBillMapVO mapVO = ArapBillMapVOTool.changeVotoBillMapNew((BaseBillVO) vo.getParentVO(), itemVO);
-								mapVO.setS_itemid(itemVO.getPurchaseorder());// 付款单
-								scmList.add(mapVO);
-
+							//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//							if (itemVO.getTop_termch() == null) {
+//								ArapBillMapVO mapVO = ArapBillMapVOTool.changeVotoBillMapNew((BaseBillVO) vo.getParentVO(), itemVO);
+//								mapVO.setS_itemid(itemVO.getPurchaseorder());// 付款单
+//								scmList.add(mapVO);
+//							} else if ((ArapBillDealVOConsts.BILLTYPE_36D1.equals(childrenVO[0].getTop_billtype()) && ArapBillDealVOConsts.BILLTYPE_21.equals(childrenVO[0].getSrc_billtype()))) {
+//								// 采购订单-付款申请-付款单，情况直接按照供应链的自动核销控制逻辑走
+//								ArapBillMapVO mapVO = ArapBillMapVOTool.changeVotoBillMapNew((BaseBillVO) vo.getParentVO(), itemVO);
+//								mapVO.setS_itemid(itemVO.getPurchaseorder());// 付款单
+//								scmList.add(mapVO);
+							if((ArapBillDealVOConsts.BILLTYPE_36D1.equals(childrenVO[0]
+			                        .getTop_billtype())&&ArapBillDealVOConsts.BILLTYPE_21.equals(childrenVO[0].getSrc_billtype()))){
+			            		//1、采购订单-付款申请-付款单，Top_termch：付款计划.付款协议账期主键
+			            		//2、采购订单-采购发票-应付单-付款申请-付款单，Top_termch：应付单.收付款协议主键
+			            		//3、付款申请-付款单 扩展流程：付款申请-计划编制-计划执行-付款单。Top_termch：应付单.收付款协议主键
+			            		// 如果打了多次付款补丁，两个流程都有，需要通过Top_termch上游判断流程。单只有流程2 时，应先走与应付单的核销。
+			            		String top_termch = itemVO.getTop_termch();
+			            		if(!StringUtil.isEmpty(top_termch)){
+			            			TermVO termVO = (TermVO) dao.retrieveByPK(TermVO.class, top_termch);
+			            			if(termVO!=null){
+			            				ArapBillMapVO mapVO = new ArapBillMapVO();
+			                            mapVO.setT_itemid(itemVO.getPrimaryKey());
+			                            mapVO.setS_termid(itemVO.getTop_termch());
+			            				mapVO.setS_itemid(itemVO.getPrimaryKey());
+			                            mapVO.setS_system(src_syscode);
+			                            mapVO.setS_billtype(itemVO.getTop_billtype());
+			                            mapVO.setYbje(itemVO.getMoney_bal());
+			                            psList.add(mapVO);
+			            			}else{
+			                			// 采购订单-付款申请-付款单，情况直接按照供应链的自动核销控制逻辑走
+			                    		 ArapBillMapVO mapVO =
+			                    				 ArapBillMapVOTool.changeVotoBillMapNew(
+			                    						 (BaseBillVO) vo.getParentVO(), itemVO);
+			                    		 mapVO.setS_itemid(itemVO.getPurchaseorder());// 付款单
+			                    		 //如果不将单据类型改为21，在classname_pu  和 classname_ps 匹配的时候会匹配到 classname_ps，
+			                    		 //从而取 com.setReserveFlag(VerifyDetailVO.reserve_pc)，导致预占用金额不回写。
+			                    		 mapVO.setS_billid(itemVO.getSrc_billid());
+			                    		 mapVO.setS_billtype(ArapBillDealVOConsts.BILLTYPE_21);
+			                    		 scmList.add(mapVO);
+			            			}
+			            			
+			            		}
+			              		 
+			              	 } else if (itemVO.getTop_termch() == null ) {
+			            	  ArapBillMapVO mapVO =
+			            			  ArapBillMapVOTool.changeVotoBillMapNew(
+			            					  (BaseBillVO) vo.getParentVO(), itemVO);
+			            	  mapVO.setS_itemid(itemVO.getPurchaseorder());// 付款单
+			            	  scmList.add(mapVO);
+			            	  //update chenth end
 							} else {
 
 								ArapBillMapVO mapVO = new ArapBillMapVO();
@@ -436,7 +537,11 @@ public class BillRegisterForBusiDataBO {
 						}
 					} else if (ArapBillDealVOConsts.BILLTYPE_4D48.equals(childrenVO[0].getTop_billtype()) || ArapBillDealVOConsts.BILLTYPE_4D50.equals(childrenVO[0].getTop_billtype())
 							|| ArapBillDealVOConsts.BILLTYPE_4D46.equals(childrenVO[0].getTop_billtype()) || "4D52".equals(childrenVO[0].getTop_billtype())
-							|| "4D39".equals(childrenVO[0].getTop_billtype()) || "4D83".equals(childrenVO[0].getTop_billtype())) {
+							|| "4D39".equals(childrenVO[0].getTop_billtype()) || "4D83".equals(childrenVO[0].getTop_billtype())
+							//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+							|| "4D53".equals(childrenVO[0].getTop_billtype())
+							//add end
+							) {
 						for (BaseItemVO itemVO : childrenVO) {
 							String srcBillid = itemVO.getSrc_billid();
 							if (StringUtils.isNotEmpty(srcBillid)) {
@@ -534,6 +639,40 @@ public class BillRegisterForBusiDataBO {
 						}
 
 					}
+					//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+					//如果来源是收款申请的收款单，与源头是销售合同的应收单核销
+			          if("4D62".equals(childrenVO[0].getTop_billtype())&&"F2".equals(pk_billtype)){
+			        	  for (BaseItemVO itemVO : childrenVO) {
+			        		  String sql=IArapItemFieldVO.SRC_BILLID+"='"+childrenVO[0].getSrc_billid()+"'"
+			        		  		+ " and dr=0";
+			        		  Collection<ReceivableBillItemVO> recbills = MDPersistenceService.lookupPersistenceQueryService().queryBillOfVOByCond(
+			        				  ArapBillTypeInfo.getInstance(IBillFieldGet.F0).getItemvoClass(),sql,false);
+			        		  if (recbills != null && recbills.size() != 0) {
+			        			  for (ReceivableBillItemVO item : recbills) {
+			        				  ArapBillMapVO mapVO = new ArapBillMapVO();
+			        				  mapVO.setT_itemid(itemVO.getPrimaryKey());
+			        				  mapVO.setS_itemid(item.getPrimaryKey());
+			        				  pcmListNoMatch.add(mapVO);
+			        			  }
+			        		  }
+			        	  }
+			          }else if("4D65".equals(childrenVO[0].getTop_billtype())&&"F0".equals(pk_billtype)){
+			        	  for (BaseItemVO itemVO : childrenVO) {
+			        		  String sql=IArapItemFieldVO.SRC_BILLID+"='"+childrenVO[0].getSrc_billid()+"'"
+			        		  		+ " and dr=0";
+			        		  Collection<GatheringBillItemVO> recbills = MDPersistenceService.lookupPersistenceQueryService().queryBillOfVOByCond(
+			        				  ArapBillTypeInfo.getInstance(IBillFieldGet.F2).getItemvoClass(),sql,false);
+			        		  if (recbills != null && recbills.size() != 0) {
+			        			  for (GatheringBillItemVO item : recbills) {
+			        				  ArapBillMapVO mapVO = new ArapBillMapVO();
+			        				  mapVO.setT_itemid(itemVO.getPrimaryKey());
+			        				  mapVO.setS_itemid(item.getPrimaryKey());
+			        				  pcmListNoMatch.add(mapVO);
+			        			  }
+			        		  }
+			        	  }
+			          }
+			          //add end
 
 					if (ArapBillDealVOConsts.BILLTYPE_36D1.equals(childrenVO[0].getTop_billtype())) {
 						for (BaseItemVO itemVO : childrenVO) {
@@ -582,8 +721,10 @@ public class BillRegisterForBusiDataBO {
 						String classname_ps = "";
 						// 供应链核销 ，查询返回核销关系数据
 						if (scmList.get(0).getS_billtype() == null) {
+							//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
 							// 采购订单-》应付， 采购订单-》合同-》付款 ，自动核销
-//							this.VerifyByContractNo(scmList, com, ruleVOMap);
+							this.VerifyByContractNo(scmList, com, ruleVOMap);
+							return;
 						} else if (scmList.get(0).getS_billtype().equals(ArapBillDealVOConsts.BILLTYPE_21)) {
 							classname_pu = "nc.pubimpl.pu.m25.arap.f3.InvoiceQueryForVerifyImpl";
 						} else if (scmList.get(0).getS_billtype().equals(ArapBillDealVOConsts.BILLTYPE_36D7) || scmList.get(0).getS_billtype().equals(ArapBillDealVOConsts.BILLTYPE_36D1)) {
@@ -650,8 +791,14 @@ public class BillRegisterForBusiDataBO {
 							}
 						}
 						// 采购订单-》应付， 采购订单-》合同-》付款 ，自动核销
+						//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+						this.VerifyByContractNo(newList, com, ruleVOMap);
+						//add chenth end
 					}
-					VerifyByContractNo(allList, com, ruleVOMap);
+					//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//					VerifyByContractNo(allList, com, ruleVOMap);
+					//del chenth
+					
 					// 自制收款单已经和销售订单建立预核销
 					if (defF2List.size() > 0) {
 						IArap4VerifyQryBill qryClass = null;
@@ -696,15 +843,33 @@ public class BillRegisterForBusiDataBO {
 					if (pks != null && pks.size() > 0) {
 						com.setReserveFlag(VerifyDetailVO.reserve_arap);
 						com.setExactVerify(true);
-//						for(DefaultVerifyRuleVO rule:ruleVOMap.values()){
-//							rule.setM_creditObjKeys(new String[]{SPECIAL_KEY});
-//							rule.setM_debtObjKeys(new String[]{SPECIAL_KEY});
-//						}
+						//restore chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+						for(DefaultVerifyRuleVO rule:ruleVOMap.values()){
+							rule.setM_creditObjKeys(new String[]{SPECIAL_KEY});
+							rule.setM_debtObjKeys(new String[]{SPECIAL_KEY});
+						}
 						// arap内部的单据审核时自动核销
 						Collection<ArapBillMapVO> billMapData = new BaseDAO().retrieveByClause(ArapBillMapVO.class, SqlUtils.getInStr("t_billid", pks.toArray(new String[] {}), true));
 						this.doArapVerifyWithMap(billMapData, ruleVOMap, com);
 						this.updateBillMapYbye(billMapData, true);
 					}
+					//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+					 // 来自资金的付款排程单据
+			          if (psList != null && !psList.isEmpty()) {
+			        	  for (String key : ruleVOMap.keySet()) {
+			        		  DefaultVerifyRuleVO ruleVO = ruleVOMap.get(key);
+			        		  ruleVO.setIsFkpc(new Boolean(true));
+			        	  }
+			        	  com.setReserveFlag(VerifyDetailVO.reserve_pc);
+			        	  
+			        	  for(DefaultVerifyRuleVO rule:ruleVOMap.values()){
+			        		  rule.setM_creditObjKeys(new String[]{SPECIAL_KEY});
+			        		  rule.setM_debtObjKeys(new String[]{SPECIAL_KEY});
+			        	  }
+			        	  
+			        	  this.doVerifyWithMap(psList, ruleVOMap, com, null);
+			          }
+					//add end
 					// 来自项目预付和进度款的核销
 					if (pcmListNoMatch.size() > 0 || pcmListMatch.size() > 0 || pcmListBatchNoMatch.size() > 0) {
 						com.setReserveFlag(VerifyDetailVO.reserve_pcm);
@@ -732,22 +897,24 @@ public class BillRegisterForBusiDataBO {
 							}
 						}
 					}
-					// 来自资金的付款排程单据
-					if (psList != null && !psList.isEmpty()) {
-						for (String key : ruleVOMap.keySet()) {
-							DefaultVerifyRuleVO ruleVO = ruleVOMap.get(key);
-							ruleVO.setIsFkpc(new Boolean(true));
-						}
-						com.setReserveFlag(VerifyDetailVO.reserve_pc);
-
-						for (DefaultVerifyRuleVO rule : ruleVOMap.values()) {
-							rule.setM_creditObjKeys(new String[] { SPECIAL_KEY });
-							rule.setM_debtObjKeys(new String[] { SPECIAL_KEY });
-						}
-
-						this.doVerifyWithMap(psList, ruleVOMap, com, null);
-					}
-
+					//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//					// 来自资金的付款排程单据
+//					if (psList != null && !psList.isEmpty()) {
+//						for (String key : ruleVOMap.keySet()) {
+//							DefaultVerifyRuleVO ruleVO = ruleVOMap.get(key);
+//							ruleVO.setIsFkpc(new Boolean(true));
+//						}
+//						com.setReserveFlag(VerifyDetailVO.reserve_pc);
+//
+//						for (DefaultVerifyRuleVO rule : ruleVOMap.values()) {
+//							rule.setM_creditObjKeys(new String[] { SPECIAL_KEY });
+//							rule.setM_debtObjKeys(new String[] { SPECIAL_KEY });
+//						}
+//
+//						this.doVerifyWithMap(psList, ruleVOMap, com, null);
+//					}
+					//del end
+					
 					// 根据自动核销方案核销
 					for (VerifyfaVO faVO : tradeTypeBills.keySet()) {
 						if (faVO != null) {
@@ -936,7 +1103,9 @@ public class BillRegisterForBusiDataBO {
 			AggregatedValueObject[] vos = this.dealUserObj(e.getUserObject());
 			List<String> deldata = new ArrayList<String>();
 			List<String> pks = new ArrayList<String>();
-			List<ArapBillMapVO> allList = new ArrayList<ArapBillMapVO>(); // 采购
+			//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//			List<ArapBillMapVO> allList = new ArrayList<ArapBillMapVO>(); // 采购
+			//del
 			List<ArapBillMapVO> puList = new ArrayList<ArapBillMapVO>(); // 采购
 			List<ArapBillMapVO> soList = new ArrayList<ArapBillMapVO>(); // 销售订单-收款单
 			List<ArapBillMapVO> htList = new ArrayList<ArapBillMapVO>(); // 销售合同-收单
@@ -951,11 +1120,13 @@ public class BillRegisterForBusiDataBO {
 				Integer src_syscode = (Integer) vo.getParentVO().getAttributeValue(IBillFieldGet.SRC_SYSCODE);
 				BaseItemVO[] childrenVO = (BaseItemVO[]) vo.getChildrenVO();
 
-				for (BaseItemVO itemVO : childrenVO) {
-					ArapBillMapVO mapVO = new ArapBillMapVO();
-					mapVO.setT_itemid(itemVO.getPrimaryKey());
-					allList.add(mapVO);
-				}
+				//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//				for (BaseItemVO itemVO : childrenVO) {
+//					ArapBillMapVO mapVO = new ArapBillMapVO();
+//					mapVO.setT_itemid(itemVO.getPrimaryKey());
+//					allList.add(mapVO);
+//				}
+				//del end
 				
 				if (src_syscode.intValue() == FromSystem.AR.VALUE.intValue() || src_syscode.intValue() == FromSystem.AP.VALUE.intValue()) {
 					pks.add(vo.getParentVO().getPrimaryKey());
@@ -1043,10 +1214,17 @@ public class BillRegisterForBusiDataBO {
 					// 订单-收款单不更新预占用余额，应收单更新
 					this.doUnVerifyWithMap(soList, isfkpc);
 				}
-				if (allList != null && !allList.isEmpty()) {
+				//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//				if (allList != null && !allList.isEmpty()) {
+//					// 合同-收款单更新预占用余额
+//					this.doUnVerifyWithMap(allList, isfkpc);
+//				}
+				if (htList != null && !htList.isEmpty()) {
 					// 合同-收款单更新预占用余额
-					this.doUnVerifyWithMap(allList, isfkpc);
+					this.doUnVerifyWithMap(htList, isfkpc);
 				}
+				//update end
+				
 				if (puList != null && !puList.isEmpty()) {
 					this.doUnVerifyWithMap(puList, isfkpc);
 				}
@@ -1062,7 +1240,9 @@ public class BillRegisterForBusiDataBO {
 				}
 
 				this.doDeleteRegisterByBillid(deldata.toArray(new String[] {}));
-				doCheckBillDealAll(deldata);
+				//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip  不知道为什么有这段代码，先注释掉
+//				doCheckBillDealAll(deldata);
+				//del end
 			} catch (Exception e1) {
 				throw ExceptionHandler.handleException(e1);
 			}
@@ -1237,122 +1417,125 @@ public class BillRegisterForBusiDataBO {
 
 	@SuppressWarnings("unused")
 	private void VerifyByContractNo(AggregatedValueObject[] vos, VerifyCom com, Hashtable<String, DefaultVerifyRuleVO> ruleVOMap) throws BusinessException {
-
-		List<ArapBusiDataVO> dataList = new ArrayList<ArapBusiDataVO>();
-		List<ArapBusiDataVO> jfdataList = new ArrayList<ArapBusiDataVO>();
-		List<ArapBusiDataVO> dfdataList = new ArrayList<ArapBusiDataVO>();
-		ArrayList<AggverifyVO> aggVOList = new ArrayList<AggverifyVO>();
-		for (AggregatedValueObject aggvo : vos) {
-			BaseItemVO[] childrenVO = (BaseItemVO[]) aggvo.getChildrenVO();
-			// 流程中包含 销售合同或者采购合同，才需要核销
-			for (BaseItemVO childvo : childrenVO) {
-				this.aggMap.clear();
-				String pk_item = childvo.getPrimaryKey();
-				Object contractno = childvo.getAttributeValue(IBillFieldGet.CONTRACTNO);
-				String currtype = (String) childvo.getAttributeValue(IBillFieldGet.PK_CURRTYPE);
-				String pk_billtype = (String) childvo.getAttributeValue(IBillFieldGet.PK_BILLTYPE);
-				String pk_org = (String) childvo.getAttributeValue(IBillFieldGet.PK_ORG);
-				// 合同号为null 继续
-				if (contractno == null) {
-					continue;
-				}
-
-				// 查询要核销的数据
-				String qrySql = " pk_item ='" + pk_item + "' or (pk_org ='" + pk_org + "'" + " and pausetransact ='N' " + " and pk_currtype ='" + currtype + "'" + "and pk_billtype !='" + pk_billtype
-						+ "' and contractno ='" + contractno + "' and pk_item <> '" + pk_item + "' and money_bal<> 0)";
-				NCObject[] ncObjects = MDPersistenceService.lookupPersistenceQueryService().queryBillOfNCObjectByCond(ArapBusiDataVO.class, qrySql, false);
-				if (!ArrayUtils.isEmpty(ncObjects)) {
-					for (NCObject obj : ncObjects) {
-						ArapBusiDataVO dataVO = (ArapBusiDataVO) obj.getContainmentObject();
-						dataList.add(dataVO);
-					}
-					// 借贷方分组
-					for (ArapBusiDataVO datavo : dataList) {
-						if (datavo.getPk_billtype().equals(IBillFieldGet.F2) && ArapBillDealVOConsts.BILLTYPE_30.equals(datavo.getTop_billtype())) {
-							datavo.setAttributeValue(ArapBusiDataVO.SETT_MONEY, datavo.getMoney_bal().sub(datavo.getOccupationmny()));
-						} else {
-							datavo.setAttributeValue(ArapBusiDataVO.SETT_MONEY, datavo.getOccupationmny());
-						}
-						if (datavo.getDirection().intValue() == 1) {
-							jfdataList.add(datavo);
-						} else {
-							dfdataList.add(datavo);
-						}
-					}
-					Map<String, ArrayList<AggverifyVO>> aggMap = this.onVerify(com, ruleVOMap, jfdataList.toArray(new ArapBusiDataVO[0]), dfdataList.toArray(new ArapBusiDataVO[0]));
-					// 核销结果保存
-					aggVOList = this.getAggVerifyVO(aggMap);
-					if (aggVOList != null && aggVOList.size() > 0) {
-						NCLocator.getInstance().lookup(IArapVerifyLogPrivate.class).save(aggVOList, ruleVOMap, com);
-					}
-				}
-			}
-		}
+		//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//		List<ArapBusiDataVO> dataList = new ArrayList<ArapBusiDataVO>();
+//		List<ArapBusiDataVO> jfdataList = new ArrayList<ArapBusiDataVO>();
+//		List<ArapBusiDataVO> dfdataList = new ArrayList<ArapBusiDataVO>();
+//		ArrayList<AggverifyVO> aggVOList = new ArrayList<AggverifyVO>();
+//		for (AggregatedValueObject aggvo : vos) {
+//			BaseItemVO[] childrenVO = (BaseItemVO[]) aggvo.getChildrenVO();
+//			// 流程中包含 销售合同或者采购合同，才需要核销
+//			for (BaseItemVO childvo : childrenVO) {
+//				this.aggMap.clear();
+//				String pk_item = childvo.getPrimaryKey();
+//				Object contractno = childvo.getAttributeValue(IBillFieldGet.CONTRACTNO);
+//				String currtype = (String) childvo.getAttributeValue(IBillFieldGet.PK_CURRTYPE);
+//				String pk_billtype = (String) childvo.getAttributeValue(IBillFieldGet.PK_BILLTYPE);
+//				String pk_org = (String) childvo.getAttributeValue(IBillFieldGet.PK_ORG);
+//				// 合同号为null 继续
+//				if (contractno == null) {
+//					continue;
+//				}
+//
+//				// 查询要核销的数据
+//				String qrySql = " pk_item ='" + pk_item + "' or (pk_org ='" + pk_org + "'" + " and pausetransact ='N' " + " and pk_currtype ='" + currtype + "'" + "and pk_billtype !='" + pk_billtype
+//						+ "' and contractno ='" + contractno + "' and pk_item <> '" + pk_item + "' and money_bal<> 0)";
+//				NCObject[] ncObjects = MDPersistenceService.lookupPersistenceQueryService().queryBillOfNCObjectByCond(ArapBusiDataVO.class, qrySql, false);
+//				if (!ArrayUtils.isEmpty(ncObjects)) {
+//					for (NCObject obj : ncObjects) {
+//						ArapBusiDataVO dataVO = (ArapBusiDataVO) obj.getContainmentObject();
+//						dataList.add(dataVO);
+//					}
+//					// 借贷方分组
+//					for (ArapBusiDataVO datavo : dataList) {
+//						if (datavo.getPk_billtype().equals(IBillFieldGet.F2) && ArapBillDealVOConsts.BILLTYPE_30.equals(datavo.getTop_billtype())) {
+//							datavo.setAttributeValue(ArapBusiDataVO.SETT_MONEY, datavo.getMoney_bal().sub(datavo.getOccupationmny()));
+//						} else {
+//							datavo.setAttributeValue(ArapBusiDataVO.SETT_MONEY, datavo.getOccupationmny());
+//						}
+//						if (datavo.getDirection().intValue() == 1) {
+//							jfdataList.add(datavo);
+//						} else {
+//							dfdataList.add(datavo);
+//						}
+//					}
+//					Map<String, ArrayList<AggverifyVO>> aggMap = this.onVerify(com, ruleVOMap, jfdataList.toArray(new ArapBusiDataVO[0]), dfdataList.toArray(new ArapBusiDataVO[0]));
+//					// 核销结果保存
+//					aggVOList = this.getAggVerifyVO(aggMap);
+//					if (aggVOList != null && aggVOList.size() > 0) {
+//						NCLocator.getInstance().lookup(IArapVerifyLogPrivate.class).save(aggVOList, ruleVOMap, com);
+//					}
+//				}
+//			}
+//		}
+		//del end
 	}
 
 	private void VerifyByContractNo(List<ArapBillMapVO> MapVOList, VerifyCom com, Hashtable<String, DefaultVerifyRuleVO> ruleVOMap) throws BusinessException {
-		com.setReserveFlag(VerifyDetailVO.reserve_ht);
-		for(DefaultVerifyRuleVO rule:ruleVOMap.values()){
-			rule.setM_creditObjKeys(new String[]{ArapBusiDataVO.SUPPLIER});
-			rule.setM_debtObjKeys(new String[]{ArapBusiDataVO.SUPPLIER});
-		}
-		for (ArapBillMapVO vo : MapVOList) {
-			Map<String, String> busiDataTsMap = new HashMap<String, String>();
-			List<ArapBusiDataVO> dataList = new ArrayList<ArapBusiDataVO>();
-			List<ArapBusiDataVO> jfdataList = new ArrayList<ArapBusiDataVO>();
-			List<ArapBusiDataVO> dfdataList = new ArrayList<ArapBusiDataVO>();
-			this.aggMap.clear();
-			String currtype = vo.getPk_currtype();
-			String pk_item = vo.getT_itemid();
-			String contractno = vo.getContractno();
-			String pk_org = vo.getPk_org();
-			if (contractno == null) {
-				continue;
-			}
-			String billType ="";
-			if(IBillFieldGet.F0.equals(vo.getT_billtype())){
-				billType = "('"+IBillFieldGet.F2+"','"+IBillFieldGet.F1+"')";
-			}else if(IBillFieldGet.F1.equals(vo.getT_billtype())){
-				billType = "('"+IBillFieldGet.F3+"','"+IBillFieldGet.F1+"','"+IBillFieldGet.F0+"')";
-			}else if(IBillFieldGet.F2.equals(vo.getT_billtype())){
-				billType = "('"+IBillFieldGet.F0+"')";
-			} else if(IBillFieldGet.F3.equals(vo.getT_billtype())){
-				billType = "('"+IBillFieldGet.F1+"')";
-			}  
-			// 查询要核销的数据
-			String qrySql = " (money_bal <> 0 and pk_item ='" + pk_item + "') or (pk_org ='" + pk_org + "'" + " and pausetransact ='N' " + " and pk_currtype ='" + currtype + "'" 
-			+ "and pk_billtype in " + billType + " and contractno ='"
-					+ contractno + "' and pk_item <> '" + pk_item + "' and money_bal<> 0)";
-			NCObject[] ncObjects = MDPersistenceService.lookupPersistenceQueryService().queryBillOfNCObjectByCond(ArapBusiDataVO.class, qrySql, false);
-			if (!ArrayUtils.isEmpty(ncObjects)) {
-				for (NCObject obj : ncObjects) {
-					ArapBusiDataVO dataVO = (ArapBusiDataVO) obj.getContainmentObject();
-					dataList.add(dataVO);
-					// 比较ts 使用
-					busiDataTsMap.put(dataVO.getPk_busidata(), dataVO.getTs().toString());
-					com.setBusiDataTsMap(busiDataTsMap);
-				}
-				// 借贷方分组
-				for (ArapBusiDataVO datavo : dataList) {
-					datavo.setAttributeValue(ArapBusiDataVO.SETT_MONEY, datavo.getOccupationmny());
-					
-					if(datavo.getCustomer()!=null && datavo.getSupplier()==null){
-						datavo.setSupplier(datavo.getCustomer());
-					}
-					if (datavo.getDirection().intValue() == 1) {
-						jfdataList.add(datavo);
-					} else {
-						dfdataList.add(datavo);
-					}
-				}
-				Map<String, ArrayList<AggverifyVO>> aggMap = this.onVerify(com, ruleVOMap, jfdataList.toArray(new ArapBusiDataVO[0]), dfdataList.toArray(new ArapBusiDataVO[0]));
-				ArrayList<AggverifyVO> aggVOList = this.getAggVerifyVO(aggMap);
-				// 核销结果保存
-				if (aggVOList != null && aggVOList.size() > 0) {
-					NCLocator.getInstance().lookup(IArapVerifyLogPrivate.class).save(aggVOList, ruleVOMap, com);
-				}
-			}
-		}
+		//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip 
+//		com.setReserveFlag(VerifyDetailVO.reserve_ht);
+//		for(DefaultVerifyRuleVO rule:ruleVOMap.values()){
+//			rule.setM_creditObjKeys(new String[]{ArapBusiDataVO.SUPPLIER});
+//			rule.setM_debtObjKeys(new String[]{ArapBusiDataVO.SUPPLIER});
+//		}
+//		for (ArapBillMapVO vo : MapVOList) {
+//			Map<String, String> busiDataTsMap = new HashMap<String, String>();
+//			List<ArapBusiDataVO> dataList = new ArrayList<ArapBusiDataVO>();
+//			List<ArapBusiDataVO> jfdataList = new ArrayList<ArapBusiDataVO>();
+//			List<ArapBusiDataVO> dfdataList = new ArrayList<ArapBusiDataVO>();
+//			this.aggMap.clear();
+//			String currtype = vo.getPk_currtype();
+//			String pk_item = vo.getT_itemid();
+//			String contractno = vo.getContractno();
+//			String pk_org = vo.getPk_org();
+//			if (contractno == null) {
+//				continue;
+//			}
+//			String billType ="";
+//			if(IBillFieldGet.F0.equals(vo.getT_billtype())){
+//				billType = "('"+IBillFieldGet.F2+"','"+IBillFieldGet.F1+"')";
+//			}else if(IBillFieldGet.F1.equals(vo.getT_billtype())){
+//				billType = "('"+IBillFieldGet.F3+"','"+IBillFieldGet.F1+"','"+IBillFieldGet.F0+"')";
+//			}else if(IBillFieldGet.F2.equals(vo.getT_billtype())){
+//				billType = "('"+IBillFieldGet.F0+"')";
+//			} else if(IBillFieldGet.F3.equals(vo.getT_billtype())){
+//				billType = "('"+IBillFieldGet.F1+"')";
+//			}  
+//			// 查询要核销的数据
+//			String qrySql = " (money_bal <> 0 and pk_item ='" + pk_item + "') or (pk_org ='" + pk_org + "'" + " and pausetransact ='N' " + " and pk_currtype ='" + currtype + "'" 
+//			+ "and pk_billtype in " + billType + " and contractno ='"
+//					+ contractno + "' and pk_item <> '" + pk_item + "' and money_bal<> 0)";
+//			NCObject[] ncObjects = MDPersistenceService.lookupPersistenceQueryService().queryBillOfNCObjectByCond(ArapBusiDataVO.class, qrySql, false);
+//			if (!ArrayUtils.isEmpty(ncObjects)) {
+//				for (NCObject obj : ncObjects) {
+//					ArapBusiDataVO dataVO = (ArapBusiDataVO) obj.getContainmentObject();
+//					dataList.add(dataVO);
+//					// 比较ts 使用
+//					busiDataTsMap.put(dataVO.getPk_busidata(), dataVO.getTs().toString());
+//					com.setBusiDataTsMap(busiDataTsMap);
+//				}
+//				// 借贷方分组
+//				for (ArapBusiDataVO datavo : dataList) {
+//					datavo.setAttributeValue(ArapBusiDataVO.SETT_MONEY, datavo.getOccupationmny());
+//					
+//					if(datavo.getCustomer()!=null && datavo.getSupplier()==null){
+//						datavo.setSupplier(datavo.getCustomer());
+//					}
+//					if (datavo.getDirection().intValue() == 1) {
+//						jfdataList.add(datavo);
+//					} else {
+//						dfdataList.add(datavo);
+//					}
+//				}
+//				Map<String, ArrayList<AggverifyVO>> aggMap = this.onVerify(com, ruleVOMap, jfdataList.toArray(new ArapBusiDataVO[0]), dfdataList.toArray(new ArapBusiDataVO[0]));
+//				ArrayList<AggverifyVO> aggVOList = this.getAggVerifyVO(aggMap);
+//				// 核销结果保存
+//				if (aggVOList != null && aggVOList.size() > 0) {
+//					NCLocator.getInstance().lookup(IArapVerifyLogPrivate.class).save(aggVOList, ruleVOMap, com);
+//				}
+//			}
+//		}
+		//del end
 
 	}
 
@@ -1788,15 +1971,20 @@ public class BillRegisterForBusiDataBO {
 				}
 			}
 		} else if (VerifyDetailVO.reserve_pcm.equals(com.getReserveFlag())) {
-			if (mapvos.iterator().next().getS_system() == 1) {// 应付
-				UFBoolean isNeed = SysInit.getParaBoolean(this.getPkorg(), SysinitConst.AP35);
-				if (isNeed != null && isNeed.booleanValue()) {
-					for (DefaultVerifyRuleVO rule : ruleVOMap.values()) {
-						rule.setM_creditObjKeys(new String[] { IArapItemFieldVO.PREPAY });
-						rule.setM_debtObjKeys(new String[] { IArapItemFieldVO.PREPAY });
-					}
+			//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//			if (mapvos.iterator().next().getS_system() == 1) {// 应付
+//				UFBoolean isNeed = SysInit.getParaBoolean(this.getPkorg(), SysinitConst.AP35);
+			UFBoolean isNeed = SysInit.getParaBoolean(this.getPkorg(), SysinitConst.AP35);// 应付
+			if (mapvos.iterator().next().getS_system() == 0) {// 应收
+				isNeed = SysInit.getParaBoolean(this.getPkorg(), SysinitConst.AR35);
+			}
+			if (isNeed != null && isNeed.booleanValue()) {
+				for (DefaultVerifyRuleVO rule : ruleVOMap.values()) {
+					rule.setM_creditObjKeys(new String[] { IArapItemFieldVO.PREPAY });
+					rule.setM_debtObjKeys(new String[] { IArapItemFieldVO.PREPAY });
 				}
 			}
+//			}
 		}
 
 		this.aggMap.clear();
@@ -2205,7 +2393,9 @@ public class BillRegisterForBusiDataBO {
 			ArapBusiDataVOList svolist = new ArapBusiDataVOList(slist);
 			ArapBusiDataVOList tvolist = new ArapBusiDataVOList(tlist);
 			if (tvolist.getVolist() == null || tvolist.getVolist().size() == 0 || svolist.getVolist() == null || svolist.getVolist().size() == 0) {
-				continue;
+				//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//				continue;
+				return;
 			} else {
 				if (BillRegisterForBusiDataBO.SAMVERIFYFLAG.equals(verifyFlag)) {
 					// 退货核销，红字应收单（负金额），付款单
@@ -2276,10 +2466,12 @@ public class BillRegisterForBusiDataBO {
 		}
 
 		if (com.isArapVerify()) {// 合并为批量处理
-			for(DefaultVerifyRuleVO rule:ruleVOMap.values()){
-				rule.setM_creditObjKeys(new String[]{SPECIAL_KEY});
-				rule.setM_debtObjKeys(new String[]{SPECIAL_KEY});
-			}
+			//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//			for(DefaultVerifyRuleVO rule:ruleVOMap.values()){
+//				rule.setM_creditObjKeys(new String[]{SPECIAL_KEY});
+//				rule.setM_debtObjKeys(new String[]{SPECIAL_KEY});
+//			}
+			//del end
 			aggMap = this.onVerify(com, ruleVOMap, jf_vos_list.toArray(new ArapBusiDataVO[] {}), df_vos_list.toArray(new ArapBusiDataVO[] {}));
 		}
 
@@ -2373,15 +2565,20 @@ public class BillRegisterForBusiDataBO {
 				}
 			}
 		} else if (VerifyDetailVO.reserve_pcm.equals(com.getReserveFlag())) {
-			if (mapvos.iterator().next().getS_system() == 1) {// 应付
-				UFBoolean isNeed = SysInit.getParaBoolean(this.getPkorg(), SysinitConst.AP35);
-				if (isNeed != null && isNeed.booleanValue()) {
-					for (DefaultVerifyRuleVO rule : ruleVOMap.values()) {
-						rule.setM_creditObjKeys(new String[] { IArapItemFieldVO.PREPAY });
-						rule.setM_debtObjKeys(new String[] { IArapItemFieldVO.PREPAY });
-					}
+			//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//			if (mapvos.iterator().next().getS_system() == 1) {// 应付
+//				UFBoolean isNeed = SysInit.getParaBoolean(this.getPkorg(), SysinitConst.AP35);
+			UFBoolean isNeed = SysInit.getParaBoolean(this.getPkorg(), SysinitConst.AP35);// 应付
+			if (mapvos.iterator().next().getS_system() == 0) {// 应收
+				isNeed = SysInit.getParaBoolean(this.getPkorg(), SysinitConst.AR35);
+			}
+			if (isNeed != null && isNeed.booleanValue()) {
+				for (DefaultVerifyRuleVO rule : ruleVOMap.values()) {
+					rule.setM_creditObjKeys(new String[] { IArapItemFieldVO.PREPAY });
+					rule.setM_debtObjKeys(new String[] { IArapItemFieldVO.PREPAY });
 				}
 			}
+//			}
 		}
 
 		if (termPkList != null && termPkList.size() > 0) {
@@ -2515,34 +2712,37 @@ public class BillRegisterForBusiDataBO {
 
 			if (!com.isArapVerify() && com.getReserveFlag().intValue() != VerifyDetailVO.reserve_pcm) {
 				aggMap = this.onVerify(com, ruleVOMap, jf_vos, df_vos);
-				ArrayList<AggverifyVO> aggVOList = getAggVerifyVO(aggMap);
-				dealOrgScomment(aggVOList);
-				// 核销结果保存
-				if (aggVOList != null && aggVOList.size() > 0) {
-					NCLocator.getInstance().lookup(IArapVerifyLogPrivate.class).save(aggVOList, ruleVOMap, com);
-				}
+				//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip  不知道为什么会有这段代码，手续费折扣核销时没有这段代码，标准产品也没有
+//				ArrayList<AggverifyVO> aggVOList = getAggVerifyVO(aggMap);
+//				dealOrgScomment(aggVOList);
+//				// 核销结果保存
+//				if (aggVOList != null && aggVOList.size() > 0) {
+//					NCLocator.getInstance().lookup(IArapVerifyLogPrivate.class).save(aggVOList, ruleVOMap, com);
+//				}
+//				
+//				// 比较ts 使用
+//				ArrayList<String> apks=new ArrayList<String>();
+//				for(ArrayList<AggverifyVO>  a:aggMap.values()){
+//					if(a!=null){
+//						for(AggverifyVO b:a){
+//							if(b!=null){
+//								VerifyDetailVO[] childrenVO = (VerifyDetailVO[]) b.getChildrenVO();
+//								for(VerifyDetailVO c:childrenVO){
+//									apks.add(c.getPk_item());
+//								}
+//							}
+//						}
+//					}
+//				}
+//				Collection<ArapBusiDataVO> busisssList =
+//						new BaseDAO().retrieveByClause(ArapBusiDataVO.class, SqlUtils.getInStr("pk_item", 
+//								apks.toArray(new String[] {})));
+//				for (ArapBusiDataVO svo : busisssList) {
+//					com.getBusiDataTsMap().put(svo.getPk_busidata(), svo.getTs().toString());
+//				}
+//				aggMap.clear();
+				//del end
 				
-				// 比较ts 使用
-				ArrayList<String> apks=new ArrayList<String>();
-				for(ArrayList<AggverifyVO>  a:aggMap.values()){
-					if(a!=null){
-						for(AggverifyVO b:a){
-							if(b!=null){
-								VerifyDetailVO[] childrenVO = (VerifyDetailVO[]) b.getChildrenVO();
-								for(VerifyDetailVO c:childrenVO){
-									apks.add(c.getPk_item());
-								}
-							}
-						}
-					}
-				}
-				Collection<ArapBusiDataVO> busisssList =
-						new BaseDAO().retrieveByClause(ArapBusiDataVO.class, SqlUtils.getInStr("pk_item", 
-								apks.toArray(new String[] {})));
-				for (ArapBusiDataVO svo : busisssList) {
-					com.getBusiDataTsMap().put(svo.getPk_busidata(), svo.getTs().toString());
-				}
-				aggMap.clear();
 				// for(ArapBusiDataVO v:jf_vos){
 				// v.setAttributeValue("SETT_MONEY", null);
 				// }
@@ -2658,12 +2858,14 @@ public class BillRegisterForBusiDataBO {
 
 	@SuppressWarnings("rawtypes")
 	private ArrayList<AggverifyVO> getAggVerifyVO(Map<String, ArrayList<AggverifyVO>> aggMap) throws BusinessException {
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip 这个定义之前放在for循环中，不确定什么原因，手续费代码和标准代码都没有放在for中
+		List<VerifyDetailVO> detailVOList = new ArrayList<VerifyDetailVO>();
+		//update end
 		ArrayList resultList = new ArrayList();
 		if (aggMap == null) {
 			return resultList;
 		}
 		for (String key : aggMap.keySet()) {
-			List<VerifyDetailVO> detailVOList = new ArrayList<VerifyDetailVO>();
 			ArrayList<AggverifyVO> arrayList = aggMap.get(key);
 			if (arrayList != null) {
 				for (AggverifyVO aggVO : arrayList) {
