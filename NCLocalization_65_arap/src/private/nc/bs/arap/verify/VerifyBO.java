@@ -1075,7 +1075,9 @@ public class VerifyBO {
 					ExceptionHandler.handleException(e);
 				}
 				// 组织部分反核销聚合vo，是否同批次号+处理标志相同的 分组？，
-				List<AggverifyVO> partUnVerifyAggVOList = getPartUnVerifyAggVO(insertVOList, busiNoMap);
+				//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//				List<AggverifyVO> partUnVerifyAggVOList = getPartUnVerifyAggVO(insertVOList, busiNoMap);
+				List<AggverifyVO> partUnVerifyAggVOList = getPartUnVerifyAggVO(insertVOList, partUnVerifyList);
 				// 核销前事件
 				IBean bean = MDBaseQueryFacade.getInstance().getBeanByFullClassName(partUnVerifyAggVOList.get(0).getClass().getName());
 				String id = bean.getID();
@@ -1141,10 +1143,14 @@ public class VerifyBO {
 	}
 
 	// 取得部分反核销的聚合vo
-	private List<AggverifyVO> getPartUnVerifyAggVO(List<VerifyDetailVO> insertVOList, Map<String, List<String>> busiNoMap) {
+	//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//	private List<AggverifyVO> getPartUnVerifyAggVO(List<VerifyDetailVO> insertVOList, Map<String, List<String>> busiNoMap) {
+	private List<AggverifyVO> getPartUnVerifyAggVO(List<VerifyDetailVO> insertVOList, List<String> partUnVerifyList) {
 		List<AggverifyVO> aggVOList = new ArrayList<AggverifyVO>();
-
-		for (String busino : busiNoMap.keySet()) {
+		
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//		for (String busino : busiNoMap.keySet()) {
+		for (String busino : partUnVerifyList) {
 			List<VerifyDetailVO> detailVOList = new ArrayList<VerifyDetailVO>();
 			UFDouble sum_money_de = UFDouble.ZERO_DBL;
 			UFDouble sum_money_cr = UFDouble.ZERO_DBL;
@@ -1312,7 +1318,10 @@ public class VerifyBO {
 		List<String> pkList = new ArrayList<String>();
 		Map<String, String> busiDataTsMap = new HashMap<String, String>();
 		Map<String, ArapBusiDataVO> busiDataMap = new HashMap<String, ArapBusiDataVO>();
-		String insql = getInSqlStr(businos);
+		
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//		String insql = getInSqlStr(businos);
+		String insql = SqlUtils.getInStr(VerifyMainVO.BUSINO, businos, true);
 		// 如果在明细界面将记录全部反核销，则会生成一批红字明细核销记录，只查询原核销明细记录 （redflag =1）
 		if (allUnVerify) {
 			List<String> pk_List = new ArrayList<String>();

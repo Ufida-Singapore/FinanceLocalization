@@ -363,6 +363,7 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 			break;
 		case DBConsts.DB2:
 		case DBConsts.ORACLE:
+		case DBConsts.POSTGRESQL:
 			sqlBuffer.append("cube(");
 			for (int i = 0; i < computed.size(); i++) {
 				sqlBuffer.append(computed.get(i)).append(", ");
@@ -507,17 +508,28 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 		// 获取账龄方案临时表
 		String tmpTable = ReportSqlUtils.getTimeCtrlTmpTable(queryVO.getAccAgePlan(), dateline);
 		String tmpTableAlias = ReportSqlUtils.getTimeCtrlTmpTableAlias();
-
-		StringBuffer sqlBuffer = new StringBuffer(" insert into ");
-		sqlBuffer.append(getTmpTblName());
-
+		
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//		StringBuffer sqlBuffer = new StringBuffer(" insert into ");
+//		sqlBuffer.append(getTmpTblName());
+		StringBuffer insertBuffer = new StringBuffer(" insert into ");
+		insertBuffer.append(getTmpTblName());
+		
+		StringBuffer sqlBuffer = new StringBuffer();
+		
 		sqlBuffer.append(" select ");
 		sqlBuffer.append(fixedFields.replace(IArapReportConstants.REPLACE_TABLE, TallyVO.getDefaultTableName()));
 		sqlBuffer.append(", ").append(queryObjBaseTally).append(", ");
 		sqlBuffer.append(beForeignCurrency ? "arap_tally." : "null ").append(PK_CURR).append(", ");
 
 		sqlBuffer.append(detailFields).append(", ");
-		sqlBuffer.append(isShowExpireDate ? "arap_tally_agr.expiredate, " : "null expiredate, ");
+		
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+		sqlBuffer.append("arap_tally.pk_item, ");
+		//判断是否需要显示到期日
+//		sqlBuffer.append(isShowExpireDate ? "arap_tally_agr.expiredate, " : "null expiredate, ");
+		sqlBuffer.append(isShowExpireDate ? "substring(arap_tally_agr.expiredate,0,10) expiredate, " : "null expiredate, ");
+		
 		sqlBuffer.append(tmpTableAlias + ".propertyid accageid, " + tmpTableAlias + ".descr accage, ");
 		sqlBuffer.append("0 rn, 0 dr, ");
 
@@ -584,9 +596,11 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 		sqlBuffer.append(ReportSqlUtils.getQueryObjSql(queryVO.getQryObjs(), false)); // 查询对象
 		sqlBuffer.append(getCommonCondSql(false));
 		
-//		if(sqlBuffer.indexOf(ReportTableEnum.ARAP_TALLYAGR.getCode())>=0){
-//			sqlBuffer.append(ReportSqlUtils.getOrgSql(queryVO.getPk_orgs(), ReportTableEnum.ARAP_TALLYAGR));
-//		}
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+		if(sqlBuffer.indexOf(ReportTableEnum.ARAP_TALLYAGR.getCode())>=0){
+			sqlBuffer.append(ReportSqlUtils.getOrgSql(queryVO.getPk_orgs(), ReportTableEnum.ARAP_TALLYAGR));
+		}
+		
 		sqlBuffer.append(" group by ");
 		sqlBuffer.append(fixedFields.replace(IArapReportConstants.REPLACE_TABLE, TallyVO.getDefaultTableName()));
 		sqlBuffer.append(", ").append(groupByBaseTally);
@@ -594,12 +608,18 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 			sqlBuffer.append(", arap_tally.").append(PK_CURR);
 		}
 		sqlBuffer.append(", ").append(detailFields);
-		sqlBuffer.append(isShowExpireDate ? ", arap_tally_agr.expiredate" : "");
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+		sqlBuffer.append(",arap_tally.pk_item ");
+		//判断是否需要显示临时表
+//		sqlBuffer.append(isShowExpireDate ? ", arap_tally_agr.expiredate" : "");
+		sqlBuffer.append(isShowExpireDate ? ", substring(arap_tally_agr.expiredate,0,10)" : "");
 
 		sqlBuffer.append(", ").append(tmpTableAlias).append(".propertyid ");
 		sqlBuffer.append(", ").append(tmpTableAlias).append(".descr ");
 
-		return sqlBuffer.toString();
+//		return sqlBuffer.toString();
+		getBillAmountSql(insertBuffer, sqlBuffer);
+		return insertBuffer.toString();
 	}
 
 	/**
@@ -613,15 +633,24 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 		// 获取账龄方案临时表
 		String tmpTable = ReportSqlUtils.getDateAnalyzeTmpTable(queryVO.getDatas());
 		String tmpTableAlias = ReportSqlUtils.getTimeCtrlTmpTableAlias();
+		
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//		StringBuffer sqlBuffer = new StringBuffer(" insert into ");
+//		sqlBuffer.append(getTmpTblName());
+		StringBuffer insertBuffer = new StringBuffer(" insert into ");
+		insertBuffer.append(getTmpTblName());
 
-		StringBuffer sqlBuffer = new StringBuffer(" insert into ");
-		sqlBuffer.append(getTmpTblName());
+		StringBuffer sqlBuffer = new StringBuffer();
 
 		sqlBuffer.append(" select ");
 		sqlBuffer.append(fixedFields.replace(IArapReportConstants.REPLACE_TABLE, TallyVO.getDefaultTableName())).append(", ");
 		sqlBuffer.append(queryObjBaseTally).append(", ");
 		sqlBuffer.append(beForeignCurrency ? "arap_tally." : "null ").append(PK_CURR).append(", ");
 		sqlBuffer.append(detailFields).append(", ");
+		
+		//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+		sqlBuffer.append(" arap_tally.pk_item, ");
+		
 		sqlBuffer.append(isShowExpireDate ? "arap_tally_agr.expiredate, " : "null expiredate, ");
 		sqlBuffer.append(tmpTableAlias + ".propertyid accageid, " + tmpTableAlias+ ".descr accage, ");
 		sqlBuffer.append("0 rn, 0 dr, ");
@@ -688,6 +717,12 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 		sqlBuffer.append(ReportSqlUtils.getBillClassSql(queryVO.getAnaDirect(), ReportTableEnum.ARAP_TALLY)); // 分析方向
 		sqlBuffer.append(ReportSqlUtils.getQueryObjSql(queryVO.getQryObjs(), false)); // 查询对象
 		sqlBuffer.append(getCommonCondSql(false));
+		
+		//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+		// 效率优化
+		if(sqlBuffer.indexOf(ReportTableEnum.ARAP_TALLYAGR.getCode())>=0){
+			sqlBuffer.append(ReportSqlUtils.getOrgSql(queryVO.getPk_orgs(), ReportTableEnum.ARAP_TALLYAGR));
+		}
 
 		sqlBuffer.append(" group by ");
 		sqlBuffer.append(fixedFields.replace(IArapReportConstants.REPLACE_TABLE, TallyVO.getDefaultTableName()));
@@ -696,11 +731,42 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 			sqlBuffer.append(", arap_tally.").append(PK_CURR);
 		}
 		sqlBuffer.append(", ").append(detailFields);
+		
+		//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+		sqlBuffer.append(",arap_tally.pk_item ");
+		
 		sqlBuffer.append(isShowExpireDate ? ", arap_tally_agr.expiredate" : "");
 		sqlBuffer.append(", ").append(tmpTableAlias).append(".propertyid ");
 		sqlBuffer.append(", ").append(tmpTableAlias).append(".descr ");
 
-		return sqlBuffer.toString();
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//		return sqlBuffer.toString();
+		getBillAmountSql(insertBuffer, sqlBuffer);
+		return insertBuffer.toString();
+	}
+	
+	//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+	private void getBillAmountSql(StringBuffer insertBuffer, StringBuffer sqlBuffer) {
+		// begin
+		// 账龄明细只计算有余额的分录行，单据金额为同一到期日的有余额的行的汇总和。add by zhaoyanf
+		insertBuffer.append(" select pk_group,pk_org,");
+
+		StringBuffer selQryObj = new StringBuffer();
+		for (int i = 0; i < queryVO.getQryObjs().size(); i++) {
+			selQryObj.append("qryobj").append(i).append("pk,");
+		}
+		insertBuffer.append(selQryObj);
+		insertBuffer.append(PK_CURR).append(", ");
+		insertBuffer.append(detailFields.replace("arap_tally.", "")).append(", ");
+		insertBuffer.append(" expiredate, accageid,accage,rn, dr, ");
+		insertBuffer.append(" sum(bill_qua) as bill_qua, sum(bill_ori) as bill_ori,sum(bill_loc) as bill_loc,sum(gr_bill_loc) as gr_bill_loc,sum(gl_bill_loc) as gl_bill_loc,");
+		insertBuffer.append(" sum(accage_qua) accage_qua,sum(accage_ori) as accage_ori,sum(accage_loc) as accage_loc,sum(gr_accage_loc) as gr_accage_loc,sum(gl_accage_loc) as gl_accage_loc ");
+		insertBuffer.append(" from ( ").append(sqlBuffer).append(") tmp where accage_qua<>0 or accage_ori<>0 or accage_loc<>0 or gr_accage_loc<>0 or gl_accage_loc<>0 group by pk_group,pk_org,");
+		insertBuffer.append(selQryObj);
+		insertBuffer.append(PK_CURR).append(", ");
+		insertBuffer.append(detailFields.replace("arap_tally.", "")).append(", ");
+		insertBuffer.append(" expiredate, accageid,accage,rn, dr ");
+		// end
 	}
 
 	/**

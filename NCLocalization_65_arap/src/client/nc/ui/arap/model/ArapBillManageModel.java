@@ -274,4 +274,12 @@ public class ArapBillManageModel extends BillManageModel {
 			aggMap.get(parentPK).setChildrenVO(multiMap.get(parentPK).toArray(new BaseItemVO[]{}));
 		}
 	}
+	
+	//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+	public void directSingleUpdate2(Object obj) {
+		// 列表批量审批时，先过滤了一部分数据，当最后只有一条数据能成功时，无法刷新界面上的这条数据。
+		int i = findBusinessData(obj);
+		fireEvent(new AppEvent(AppEventConst.DATA_UPDATED, this, new RowOperationInfo(i, obj)));
+	}
+	//add end
 }

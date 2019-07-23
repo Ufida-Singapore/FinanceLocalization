@@ -3027,6 +3027,5 @@ public class BillRegisterForBusiDataBO {
 
 		}
 		return false;
-
 	}
 }

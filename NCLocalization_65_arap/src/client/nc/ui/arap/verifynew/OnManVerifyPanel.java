@@ -339,7 +339,9 @@ public class OnManVerifyPanel extends VerifyAbstractPanel implements ITabbedPane
 	}
 
 	public Integer initDisplayMode() {
-		if (displayMode == null) {
+		//del chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//		if (displayMode == null) {
+		//del end
 			try {
 				String HxMode = null;
 				if (this.systemCode.intValue() == 0)
@@ -357,7 +359,7 @@ public class OnManVerifyPanel extends VerifyAbstractPanel implements ITabbedPane
 				ExceptionHandler.consume(e);
 				displayMode = Integer.valueOf(1);
 			}
-		}
+//		}
 		return displayMode;
 	}
 
@@ -963,8 +965,23 @@ public class OnManVerifyPanel extends VerifyAbstractPanel implements ITabbedPane
 					}
 					zbjs = bzHuansuanYB2ZB(bcjs, d_zjbzhl, bzpk);
 					model.setValueAt(zbjs, row, ArapBusiDataVO.MID_SETT);
+					int count = 1;
+					UFDouble summnybal = UFDouble.ZERO_DBL;
 					for (ArapBusiDataVO vo : sel_vos) {
-						vo.setAttributeValue(ArapBusiDataVO.MID_SETT, bzHuansuanYB2ZB(vo.getOccupationmny(), d_zjbzhl, bzpk));
+						//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//						vo.setAttributeValue(ArapBusiDataVO.MID_SETT, bzHuansuanYB2ZB(vo.getOccupationmny(), d_zjbzhl, bzpk));
+						//中币结算，每条数据各自计算
+						if(count==sel_vos.length){
+							//最后一行数据计算尾差
+							vo.setAttributeValue(ArapBusiDataVO.MID_SETT, zbjs.sub(summnybal));
+						}
+						else{
+							summnybal = summnybal.add(bzHuansuanYB2ZB(vo.getMoney_bal(), d_zjbzhl, bzpk));
+							vo.setAttributeValue(ArapBusiDataVO.MID_SETT, bzHuansuanYB2ZB(vo.getMoney_bal(), d_zjbzhl, bzpk));
+						}
+						count++;
+						//update end
+						
 						vo.setAttributeValue(ArapBusiDataVO.THIS_SETT, vo.getOccupationmny());
 						vo.setAttributeValue(ArapBusiDataVO.DISCTION, UFDouble.ZERO_DBL);
 						vo.setAttributeValue(ArapBusiDataVO.XZBZ, UFBoolean.TRUE);
@@ -1082,6 +1099,7 @@ public class OnManVerifyPanel extends VerifyAbstractPanel implements ITabbedPane
 						vo.setAttributeValue(ArapBusiDataVO.DISCTION, disction);
 					}
 				} else {
+					int tmpcount = 1;
 					for (ArapBusiDataVO vo : sel_vos) {
 						// 多协议分摊折扣
 						if ((disction.add(this_sett)).abs().compareTo(vo.getOccupationmny().abs()) < 0) {
@@ -1089,8 +1107,19 @@ public class OnManVerifyPanel extends VerifyAbstractPanel implements ITabbedPane
 							vo.setAttributeValue(ArapBusiDataVO.THIS_SETT, this_sett);
 							break;
 						} else {
+							//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
+//							// 当前协议折扣金额
+//							UFDouble bc_distction = vo.getOccupationmny().multiply(objs[0]).div(objs[1]);
+							// 精度处理
+							int digit = Currency.getCurrDigit(vo.getPk_currtype());
 							// 当前协议折扣金额
-							UFDouble bc_distction = vo.getOccupationmny().multiply(objs[0]).div(objs[1]);
+							UFDouble bc_distction = vo.getOccupationmny().multiply(objs[0]).div(objs[1]).setScale(digit, UFDouble.ROUND_HALF_UP);
+							// 折后尾差加最后一行
+							if (tmpcount == count)
+								bc_distction = disction;
+							tmpcount++;
+							//update end
+							
 							// 当前协议核销金额
 							UFDouble bc_settMoney = vo.getOccupationmny().sub(bc_distction);
 							vo.setAttributeValue(ArapBusiDataVO.THIS_SETT, bc_settMoney);
