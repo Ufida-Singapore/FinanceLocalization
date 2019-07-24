@@ -224,4 +224,10 @@
 		</property>
 	</bean>
 	
+	<!-- add by weiningc 预览凭证按钮 start -->
+    <bean id="prevVoucherAction" class="nc.ui.arap.actions.PreviewVoucherAction">
+    	<property name="model" ref="ManageAppModel" />
+    	<property name="editor" ref="billFormEditor" />
+	</bean>
+	<!-- add by weiningc 收付款单支持多次参照增行(适配至65) end -->
 	</beans>
