@@ -26,5 +26,9 @@ public class ListView extends BillListView {
 		this.templatevo = templatevo;
 	}
 	
+	public void setListMultiProp(){
+		super.setListMultiProp();
+	}
+	
 	
 }

@@ -508,7 +508,7 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 		// 获取账龄方案临时表
 		String tmpTable = ReportSqlUtils.getTimeCtrlTmpTable(queryVO.getAccAgePlan(), dateline);
 		String tmpTableAlias = ReportSqlUtils.getTimeCtrlTmpTableAlias();
-		
+
 		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
 //		StringBuffer sqlBuffer = new StringBuffer(" insert into ");
 //		sqlBuffer.append(getTmpTblName());
@@ -516,20 +516,19 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 		insertBuffer.append(getTmpTblName());
 		
 		StringBuffer sqlBuffer = new StringBuffer();
-		
+
 		sqlBuffer.append(" select ");
 		sqlBuffer.append(fixedFields.replace(IArapReportConstants.REPLACE_TABLE, TallyVO.getDefaultTableName()));
 		sqlBuffer.append(", ").append(queryObjBaseTally).append(", ");
 		sqlBuffer.append(beForeignCurrency ? "arap_tally." : "null ").append(PK_CURR).append(", ");
 
 		sqlBuffer.append(detailFields).append(", ");
-		
 		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
 		sqlBuffer.append("arap_tally.pk_item, ");
 		//判断是否需要显示到期日
-//		sqlBuffer.append(isShowExpireDate ? "arap_tally_agr.expiredate, " : "null expiredate, ");
+//				sqlBuffer.append(isShowExpireDate ? "arap_tally_agr.expiredate, " : "null expiredate, ");
 		sqlBuffer.append(isShowExpireDate ? "substring(arap_tally_agr.expiredate,0,10) expiredate, " : "null expiredate, ");
-		
+				
 		sqlBuffer.append(tmpTableAlias + ".propertyid accageid, " + tmpTableAlias + ".descr accage, ");
 		sqlBuffer.append("0 rn, 0 dr, ");
 
@@ -588,9 +587,30 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 			// 分析方式：点余额
 			sqlBuffer.append(" and (").append(TallyVO.getDefaultTableName()).append(".").append(
 					TallyVO.BILLDATE).append(" <= '" + dateline + "') ");
-			sqlBuffer.append(" and (").append(TallyVO.getDefaultTableName()).append(".").append(
+			//update chenth 20180404 汇兑损益的通过talldate判断，其他通过billdate
+//			sqlBuffer.append(" and (").append(TallyVO.getDefaultTableName()).append(".").append(
+//					TallyVO.TALLYDATE).append(" <= '" + dateline + "') ");
+			sqlBuffer.append(" and (arap_tally.dealflag !=21  or ").append(TallyVO.getDefaultTableName()).append(".").append(
 					TallyVO.TALLYDATE).append(" <= '" + dateline + "') ");
+			//update end 
 		}
+		
+		//add chenth 20180309 排除未审核的收款单/付款单
+		sqlBuffer.append(" and ( ").append(TallyVO.PK_BILLTYPE).append(" not in ('F2', 'F3') or ")
+		.append( TallyVO.BILLSTATUS).append(" != -1 ) ");
+		//add chenth 20180327 账龄分析次月收款后，再查上个月的SOA 和上一个月查时保持一致
+		sqlBuffer.append(" and (");
+		sqlBuffer.append("   arap_tally.corbillclass not in('yf','ys','sk','fk') or arap_tally.corbillclass is null ");
+		sqlBuffer.append("   or (arap_tally.corbillclass = 'sk' and pk_corbill in (select pk_gatherbill from ar_gatherbill where ar_gatherbill.billdate <= '" + dateline + "' )) ");
+		//update chenth 20180407 应收核销应付，或者应付核销应收的，不按单据日期，按核销日期
+		sqlBuffer.append("   or (arap_tally.corbillclass = 'yf' and arap_tally.tallydate <= '" + dateline + "' ) ");
+//		sqlBuffer.append("   or (arap_tally.corbillclass = 'yf' and pk_corbill in (select pk_payablebill from ap_payablebill where ap_payablebill.billdate <= '" + dateline + "' )) ");
+		//add chenth 20180405 考虑应付对账单
+		sqlBuffer.append("   or (arap_tally.corbillclass = 'fk' and pk_corbill in (select pk_paybill from ap_paybill where ap_paybill.billdate <= '" + dateline + "' )) ");
+		sqlBuffer.append("   or (arap_tally.corbillclass = 'ys' and arap_tally.tallydate <= '" + dateline + "' ) ");
+//		sqlBuffer.append("   or (arap_tally.corbillclass = 'ys' and pk_corbill in (select pk_recbill from ar_recbill where ar_recbill.billdate <= '" + dateline + "' )) ");
+		sqlBuffer.append(" )");
+		//add end
 
 		sqlBuffer.append(ReportSqlUtils.getBillClassSql(queryVO.getAnaDirect(), ReportTableEnum.ARAP_TALLY)); // 分析方向
 		sqlBuffer.append(ReportSqlUtils.getQueryObjSql(queryVO.getQryObjs(), false)); // 查询对象
@@ -608,15 +628,18 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 			sqlBuffer.append(", arap_tally.").append(PK_CURR);
 		}
 		sqlBuffer.append(", ").append(detailFields);
+		
 		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
 		sqlBuffer.append(",arap_tally.pk_item ");
 		//判断是否需要显示临时表
-//		sqlBuffer.append(isShowExpireDate ? ", arap_tally_agr.expiredate" : "");
+//				sqlBuffer.append(isShowExpireDate ? ", arap_tally_agr.expiredate" : "");
 		sqlBuffer.append(isShowExpireDate ? ", substring(arap_tally_agr.expiredate,0,10)" : "");
+
 
 		sqlBuffer.append(", ").append(tmpTableAlias).append(".propertyid ");
 		sqlBuffer.append(", ").append(tmpTableAlias).append(".descr ");
 
+		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
 //		return sqlBuffer.toString();
 		getBillAmountSql(insertBuffer, sqlBuffer);
 		return insertBuffer.toString();
@@ -633,7 +656,7 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 		// 获取账龄方案临时表
 		String tmpTable = ReportSqlUtils.getDateAnalyzeTmpTable(queryVO.getDatas());
 		String tmpTableAlias = ReportSqlUtils.getTimeCtrlTmpTableAlias();
-		
+
 		//update chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
 //		StringBuffer sqlBuffer = new StringBuffer(" insert into ");
 //		sqlBuffer.append(getTmpTblName());
@@ -730,11 +753,11 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 		if (beForeignCurrency) {
 			sqlBuffer.append(", arap_tally.").append(PK_CURR);
 		}
-		sqlBuffer.append(", ").append(detailFields);
 		
 		//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
 		sqlBuffer.append(",arap_tally.pk_item ");
-		
+				
+		sqlBuffer.append(", ").append(detailFields);
 		sqlBuffer.append(isShowExpireDate ? ", arap_tally_agr.expiredate" : "");
 		sqlBuffer.append(", ").append(tmpTableAlias).append(".propertyid ");
 		sqlBuffer.append(", ").append(tmpTableAlias).append(".descr ");
@@ -745,6 +768,7 @@ public class RecPayAccAgeAnaSQLCreator extends ArapBaseSqlCreator {
 		return insertBuffer.toString();
 	}
 	
+
 	//add chenth 20190722 适配通版补丁: NCM_65_ARAP_通版综合20190704.zip
 	private void getBillAmountSql(StringBuffer insertBuffer, StringBuffer sqlBuffer) {
 		// begin

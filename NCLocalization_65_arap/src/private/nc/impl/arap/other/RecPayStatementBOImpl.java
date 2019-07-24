@@ -54,6 +54,7 @@ import nc.vo.pub.lang.UFDateTime;
 import nc.vo.pub.lang.UFDouble;
 import nc.vo.pub.rs.MemoryResultSet;
 import nc.vo.pub.rs.MemoryResultSetMetaData;
+import nc.vo.trade.voutils.SafeCompute;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -184,9 +185,21 @@ public class RecPayStatementBOImpl extends FipubSqlExecuter implements IRecPaySt
 				
 				qryCondVOClone.setQryObjs(listQryObj);
 				qryCondVOClone.setAnaMode(IArapReportConstants.ACC_ANA_MODE_AGE);//分析模式：按账龄 IArapReportConstants.ACC_ANA_MODE_AGE
-				qryCondVOClone.setAnaDate(IArapReportConstants.ACC_ANA_DATE_EXPIREDATE);//写死，分析日期按到期日期
+				//del chenth 20180307 BHS分析日期不要写死 ，支持按单据日期
+//				qryCondVOClone.setAnaDate(IArapReportConstants.ACC_ANA_DATE_EXPIREDATE);//写死，分析日期按到期日期
+				
 				//qryCondVOClone.setAnaPattern(IArapReportConstants.ACC_ANA_PATTERN_POINT);//点余额，不能直接写死
 				qryCondVOClone.setAccAgePlan(qryCondVOClone.getUserObject().get(IArapReportConstants.AGING_REF)+"");//账龄方案
+				
+				//add chenth 20180503 账龄分析时要传分析方向参数进去
+				String qryScope = qryCondVOClone.getQryScope();
+				if(qryScope.indexOf("rec") > -1){
+					qryCondVOClone.setAnaDirect(IPubReportConstants.QUERY_DIRECT_REC);
+				}else{
+					qryCondVOClone.setAnaDirect(IPubReportConstants.QUERY_DIRECT_PAY);
+				}
+				//add end 
+				
 				MemoryResultSet resultSetTemp = analyzer.getAccountAgeAnaResult(qryCondVOClone, context);
 				ArrayList<List<Object>> retList1 = resultSetTemp.getResultArrayList();
 				String key = null;
@@ -234,27 +247,32 @@ public class RecPayStatementBOImpl extends FipubSqlExecuter implements IRecPaySt
 						if(oneLineTemp != null && oneLineTemp.size() > 0){
 							List ListObj = (List)oneLineTemp.get(0);
 							String str = String.valueOf(ListObj.get(12));
-							if(k==0){
+							//update chenth 20180307 BHS 账龄数据和【客户应收账龄分析】对不上，错了一个月，把k从0开始变为从1开始。
+							if(k==1){
 								headVO.setPeriod1(new UFDouble(str,2));
-							}else if(k==1){
-								headVO.setPeriod2(new UFDouble(str,2));
 							}else if(k==2){
-								headVO.setPeriod3(new UFDouble(str,2));
+								headVO.setPeriod2(new UFDouble(str,2));
 							}else if(k==3){
-								headVO.setPeriod4(new UFDouble(str,2));
+								headVO.setPeriod3(new UFDouble(str,2));
 							}else if(k==4){
-								headVO.setPeriod5(new UFDouble(str,2));
+								headVO.setPeriod4(new UFDouble(str,2));
 							}else if(k==5){
-								headVO.setPeriod6(new UFDouble(str,2));
+								headVO.setPeriod5(new UFDouble(str,2));
 							}else if(k==6){
-								headVO.setPeriod7(new UFDouble(str,2));
+								headVO.setPeriod6(new UFDouble(str,2));
 							}else if(k==7){
+								headVO.setPeriod7(new UFDouble(str,2));
+							}else if(k==8){
 								headVO.setPeriod8(new UFDouble(str,2));
 							}
+							//update chenth end
 						}
 					}
 				}
 				//add end
+				
+				boolean isReal = false;
+				List<RecStatementItemVO> lstChildren = new ArrayList<RecStatementItemVO>();
 				
 				RecStatementItemVO[] childrenVO = (RecStatementItemVO[])VO.getChildrenVO();
 				for(int j = 0 ; j < childrenVO.length; j++){
@@ -262,7 +280,12 @@ public class RecPayStatementBOImpl extends FipubSqlExecuter implements IRecPaySt
 					childrenVO[j].setPk_recstatementitem("b" + i + j);
 					//add for 新加坡BDA 20161111
 					//swb add
-					if(showBillsMap.get(childrenVO[j].getBillno())!=null){
+					if(showBillsMap.get(childrenVO[j].getBillno())!=null
+							//add chenth 20180309 收款单不显示发票号
+							&& !(childrenVO[j].getPk_billtype().equals("F2")
+							||childrenVO[j].getPk_billtype().equals("F3"))
+							//add end
+					){
 						Map<String,String> valMap = showBillsMap.get(childrenVO[j].getBillno());
 						childrenVO[j].setInvoiceno(valMap.get("invoiceno").replaceAll(" ",""));
 						childrenVO[j].setBillno2(valMap.get("billno").replaceAll(" ",""));
@@ -270,12 +293,78 @@ public class RecPayStatementBOImpl extends FipubSqlExecuter implements IRecPaySt
 						childrenVO[j].setBillno2("");
 					}
 					//add end
+					
+					//add chenth 20180311  for BHS 对结果集处理：
+					//1、增加Remarks行；2、Credit Note金额 放在[Credit] 列；3、收款单金额放在[Debit]列
+					if(childrenVO[j].getPk_billtype().equals("F2")
+							||childrenVO[j].getPk_billtype().equals("F3")){
+						if(false == isReal){
+							//增加一行空行
+							RecStatementItemVO remarkVO = new RecStatementItemVO(); 
+							lstChildren.add(remarkVO);
+							remarkVO.setPk_recstatement("h" + i);
+							remarkVO.setPk_recstatementitem("b" + i + j);
+							remarkVO = new RecStatementItemVO(); // Remark行
+							remarkVO.setPk_recstatement("h" + i);
+							remarkVO.setPk_recstatementitem("b" + i + (j+1));
+							remarkVO.setTallydate("REMARKS"); // 
+							lstChildren.add(remarkVO);
+							isReal = true;
+						}
+						if(childrenVO[j].getPk_billtype().equals("F2")){
+							//收款单金额放在[Debit]列
+							childrenVO[j].setPk_recstatementitem("b" + i + (j+2));
+							childrenVO[j].setDebt_qua(childrenVO[j].getCredit_qua());
+							childrenVO[j].setDebt_ori(childrenVO[j].getCredit_ori());
+							childrenVO[j].setDebt_loc(childrenVO[j].getCredit_loc());
+							childrenVO[j].setGr_debt_loc(childrenVO[j].getGr_credit_loc());
+							childrenVO[j].setGl_debt_loc(childrenVO[j].getGl_credit_loc());
+							childrenVO[j].setCredit_qua(null);
+							childrenVO[j].setCredit_ori(null);
+							childrenVO[j].setCredit_loc(null);
+							childrenVO[j].setGr_credit_loc(null);
+							childrenVO[j].setGl_credit_loc(null);
+						}
+					}else{
+						//应收单的Credit Note金额 放在[Credit] 列
+						if(childrenVO[j].getPk_billtype().equals("F0")
+								&& childrenVO[j].getDebt_ori() != null
+								&& childrenVO[j].getDebt_ori().compareTo(UFDouble.ZERO_DBL)<0){
+							childrenVO[j].setCredit_qua(childrenVO[j].getDebt_qua());
+							childrenVO[j].setCredit_ori(childrenVO[j].getDebt_ori().abs());
+							childrenVO[j].setCredit_loc(childrenVO[j].getDebt_loc().abs());
+							childrenVO[j].setGr_credit_loc(childrenVO[j].getGr_debt_loc().abs());
+							childrenVO[j].setGl_credit_loc(childrenVO[j].getGl_debt_loc().abs());
+							
+							childrenVO[j].setDebt_qua(null);
+							childrenVO[j].setDebt_ori(null);
+							childrenVO[j].setDebt_loc(null);
+							childrenVO[j].setGr_debt_loc(null);
+							childrenVO[j].setGl_debt_loc(null);
+						}
+						//应付单的Credit Note金额 放在[Debt] 列
+						else if(childrenVO[j].getPk_billtype().equals("F1")
+								&& childrenVO[j].getCredit_ori() != null
+								&& childrenVO[j].getCredit_ori().compareTo(UFDouble.ZERO_DBL)<0){
+							childrenVO[j].setDebt_qua(childrenVO[j].getCredit_qua());
+							childrenVO[j].setDebt_ori(childrenVO[j].getCredit_ori().abs());
+							childrenVO[j].setDebt_loc(childrenVO[j].getCredit_loc().abs());
+							childrenVO[j].setGr_debt_loc(childrenVO[j].getGr_credit_loc().abs());
+							childrenVO[j].setGl_debt_loc(childrenVO[j].getGl_credit_loc().abs());
+							
+							childrenVO[j].setCredit_qua(null);
+							childrenVO[j].setCredit_ori(null);
+							childrenVO[j].setCredit_loc(null);
+							childrenVO[j].setGr_credit_loc(null);
+							childrenVO[j].setGl_credit_loc(null);
+						}
+						
+					}
+					lstChildren.add(childrenVO[j]);
 				}
 				
-				// Modified on 2018-01-29
-				// 根据核销类型移除
-				
-				
+				VO.setChildrenVO(lstChildren.toArray(new CircularlyAccessibleValueObject[0]));
+				//add end
 			}
 			return arrangeResult;
 		} catch (SQLException e) {
@@ -454,61 +543,102 @@ public class RecPayStatementBOImpl extends FipubSqlExecuter implements IRecPaySt
 			bodyVOs = new ArrayList<RecStatementItemVO>();
 			// see nc.bs.arap.sql.RecPayStatementSQLCreator
 			// 期初：markperiod = 1、本期：markperiod = 2
-			if (!(ArapReportResource.getPeriodBeginLbl().equals(arrBodyVO[0].getBrief()) || arrBodyVO[0]
-					.getMarkperiod() == 1)) {
-				// 不存在期初，显示构造一条期初记录
-				bodyVO = new RecStatementItemVO();
-				bodyVO.setPk_group(arrBodyVO[0].getPk_group());
-				bodyVO.setPk_org(arrBodyVO[0].getPk_org());
-				bodyVO.setPk_customer(arrBodyVO[0].getPk_customer());
-				bodyVO.setPk_deptid(arrBodyVO[0].getPk_deptid());
-				bodyVO.setPk_psndoc(arrBodyVO[0].getPk_psndoc());
-				bodyVO.setPk_supplier(arrBodyVO[0].getPk_supplier());
-				bodyVO.setPk_currtype(arrBodyVO[0].getPk_currtype());
-				bodyVO.setBrief(ArapReportResource.getPeriodBeginLbl());
-				bodyVO.setBal_qua(UFDouble.ZERO_DBL);
-				bodyVO.setBal_ori(UFDouble.ZERO_DBL);
-				bodyVO.setBal_loc(UFDouble.ZERO_DBL);
-				bodyVO.setGr_bal_loc(UFDouble.ZERO_DBL);
-				bodyVO.setGl_bal_loc(UFDouble.ZERO_DBL);
-
-				bodyVOs.add(bodyVO);
-			} else {
-				// 已经存在期初记录
-				k++;
-				bodyVO = arrBodyVO[0];
-
-				// 设置期末余额，并清除本期数据
-				bodyVO.setBal_qua((bodyVO.getDebt_qua().sub(bodyVO.getCredit_qua())).multiply(direct));
-				bodyVO.setDebt_qua(UFDouble.ZERO_DBL);
-				bodyVO.setCredit_qua(UFDouble.ZERO_DBL);
-
-				bodyVO.setBal_ori(bodyVO.getDebt_ori().sub(bodyVO.getCredit_ori()).multiply(direct));
-				bodyVO.setDebt_ori(UFDouble.ZERO_DBL);
-				bodyVO.setCredit_ori(UFDouble.ZERO_DBL);
-
-				bodyVO.setBal_loc(bodyVO.getDebt_loc().sub(bodyVO.getCredit_loc()).multiply(direct));
-				bodyVO.setDebt_loc(UFDouble.ZERO_DBL);
-				bodyVO.setCredit_loc(UFDouble.ZERO_DBL);
-
-				bodyVO.setGr_bal_loc(bodyVO.getGr_debt_loc().sub(bodyVO.getGr_credit_loc()).multiply(direct));
-				bodyVO.setGr_debt_loc(UFDouble.ZERO_DBL);
-				bodyVO.setGr_credit_loc(UFDouble.ZERO_DBL);
-
-				bodyVO.setGl_bal_loc(bodyVO.getGl_debt_loc().sub(bodyVO.getGl_credit_loc()).multiply(direct));
-				bodyVO.setGl_debt_loc(UFDouble.ZERO_DBL);
-				bodyVO.setGl_credit_loc(UFDouble.ZERO_DBL);
-
-				bodyVOs.add(bodyVO);
-			}
+			//del chenth 20180225 BHS 应收对账单不需要期初，需要显示所有未付款的应收单和本期的收款
+//			if (!(ArapReportResource.getPeriodBeginLbl().equals(arrBodyVO[0].getBrief()) || arrBodyVO[0]
+//					.getMarkperiod() == 1)) {
+//				// 不存在期初，显示构造一条期初记录
+//				bodyVO = new RecStatementItemVO();
+//				bodyVO.setPk_group(arrBodyVO[0].getPk_group());
+//				bodyVO.setPk_org(arrBodyVO[0].getPk_org());
+//				bodyVO.setPk_customer(arrBodyVO[0].getPk_customer());
+//				bodyVO.setPk_deptid(arrBodyVO[0].getPk_deptid());
+//				bodyVO.setPk_psndoc(arrBodyVO[0].getPk_psndoc());
+//				bodyVO.setPk_supplier(arrBodyVO[0].getPk_supplier());
+//				bodyVO.setPk_currtype(arrBodyVO[0].getPk_currtype());
+//				bodyVO.setBrief(ArapReportResource.getPeriodBeginLbl());
+//				bodyVO.setBal_qua(UFDouble.ZERO_DBL);
+//				bodyVO.setBal_ori(UFDouble.ZERO_DBL);
+//				bodyVO.setBal_loc(UFDouble.ZERO_DBL);
+//				bodyVO.setGr_bal_loc(UFDouble.ZERO_DBL);
+//				bodyVO.setGl_bal_loc(UFDouble.ZERO_DBL);
+//
+//				bodyVOs.add(bodyVO);
+//			} else {
+//				// 已经存在期初记录
+//				k++;
+//				bodyVO = arrBodyVO[0];
+//
+//				// 设置期末余额，并清除本期数据
+//				bodyVO.setBal_qua((bodyVO.getDebt_qua().sub(bodyVO.getCredit_qua())).multiply(direct));
+//				bodyVO.setDebt_qua(UFDouble.ZERO_DBL);
+//				bodyVO.setCredit_qua(UFDouble.ZERO_DBL);
+//
+//				bodyVO.setBal_ori(bodyVO.getDebt_ori().sub(bodyVO.getCredit_ori()).multiply(direct));
+//				bodyVO.setDebt_ori(UFDouble.ZERO_DBL);
+//				bodyVO.setCredit_ori(UFDouble.ZERO_DBL);
+//
+//				bodyVO.setBal_loc(bodyVO.getDebt_loc().sub(bodyVO.getCredit_loc()).multiply(direct));
+//				bodyVO.setDebt_loc(UFDouble.ZERO_DBL);
+//				bodyVO.setCredit_loc(UFDouble.ZERO_DBL);
+//
+//				bodyVO.setGr_bal_loc(bodyVO.getGr_debt_loc().sub(bodyVO.getGr_credit_loc()).multiply(direct));
+//				bodyVO.setGr_debt_loc(UFDouble.ZERO_DBL);
+//				bodyVO.setGr_credit_loc(UFDouble.ZERO_DBL);
+//
+//				bodyVO.setGl_bal_loc(bodyVO.getGl_debt_loc().sub(bodyVO.getGl_credit_loc()).multiply(direct));
+//				bodyVO.setGl_debt_loc(UFDouble.ZERO_DBL);
+//				bodyVO.setGl_credit_loc(UFDouble.ZERO_DBL);
+//
+//				bodyVOs.add(bodyVO);
+//			}
+			//del end
 
 			for (; k < arrBodyVO.length; k++) {
+				//update chenth 20180225 BHS 应收对账单不需要期初，需要显示所有未付款的应收单和本期的收款,余额显示为当前应收单的未付款的余额
 				// 计算每行期末余额
-				arrBodyVO[k].setBal_qua(bodyVO.getBal_qua().add(arrBodyVO[k].getDebt_qua().sub(arrBodyVO[k].getCredit_qua()).multiply(direct)));
-				arrBodyVO[k].setBal_ori(bodyVO.getBal_ori().add(arrBodyVO[k].getDebt_ori().sub(arrBodyVO[k].getCredit_ori()).multiply(direct)));
-				arrBodyVO[k].setBal_loc(bodyVO.getBal_loc().add(arrBodyVO[k].getDebt_loc().sub(arrBodyVO[k].getCredit_loc()).multiply(direct)));
-				arrBodyVO[k].setGr_bal_loc(bodyVO.getGr_bal_loc().add(arrBodyVO[k].getGr_debt_loc().sub(arrBodyVO[k].getGr_credit_loc()).multiply(direct)));
-				arrBodyVO[k].setGl_bal_loc(bodyVO.getGl_bal_loc().add(arrBodyVO[k].getGl_debt_loc().sub(arrBodyVO[k].getGl_credit_loc()).multiply(direct)));
+//				arrBodyVO[k].setBal_qua(bodyVO.getBal_qua().add(arrBodyVO[k].getDebt_qua().sub(arrBodyVO[k].getCredit_qua()).multiply(direct)));
+//				arrBodyVO[k].setBal_ori(bodyVO.getBal_ori().add(arrBodyVO[k].getDebt_ori().sub(arrBodyVO[k].getCredit_ori()).multiply(direct)));
+//				arrBodyVO[k].setBal_loc(bodyVO.getBal_loc().add(arrBodyVO[k].getDebt_loc().sub(arrBodyVO[k].getCredit_loc()).multiply(direct)));
+//				arrBodyVO[k].setGr_bal_loc(bodyVO.getGr_bal_loc().add(arrBodyVO[k].getGr_debt_loc().sub(arrBodyVO[k].getGr_credit_loc()).multiply(direct)));
+//				arrBodyVO[k].setGl_bal_loc(bodyVO.getGl_bal_loc().add(arrBodyVO[k].getGl_debt_loc().sub(arrBodyVO[k].getGl_credit_loc()).multiply(direct)));
+				
+				//收款单不设置余额，应收单的余额为当前应收单的未付款的余额
+				if(arrBodyVO[k].getPk_billtype().equals("F2")
+						||arrBodyVO[k].getPk_billtype().equals("F3")){
+					arrBodyVO[k].setBal_qua(null);
+					arrBodyVO[k].setBal_ori(null);
+					arrBodyVO[k].setBal_loc(null);
+					arrBodyVO[k].setGr_bal_loc(null);
+					arrBodyVO[k].setGl_bal_loc(null);
+				}else{
+					arrBodyVO[k].setBal_qua(arrBodyVO[k].getDebt_qua().sub(arrBodyVO[k].getCredit_qua()).multiply(direct));
+					arrBodyVO[k].setBal_ori(arrBodyVO[k].getDebt_ori().sub(arrBodyVO[k].getCredit_ori()).multiply(direct));
+					arrBodyVO[k].setBal_loc(arrBodyVO[k].getDebt_loc().sub(arrBodyVO[k].getCredit_loc()).multiply(direct));
+					arrBodyVO[k].setGr_bal_loc(arrBodyVO[k].getGr_debt_loc().sub(arrBodyVO[k].getGr_credit_loc()).multiply(direct));
+					arrBodyVO[k].setGl_bal_loc(arrBodyVO[k].getGl_debt_loc().sub(arrBodyVO[k].getGl_credit_loc()).multiply(direct));
+				}
+				//update end 
+				//add chenth 20180309 为零的数据显示为空
+				if(arrBodyVO[k].getCredit_qua().equals(UFDouble.ZERO_DBL)){
+					arrBodyVO[k].setCredit_qua(null);
+				}
+				if(arrBodyVO[k].getCredit_ori().equals(UFDouble.ZERO_DBL)){
+					arrBodyVO[k].setCredit_ori(null);
+				}
+				if(arrBodyVO[k].getCredit_loc().equals(UFDouble.ZERO_DBL)){
+					arrBodyVO[k].setCredit_loc(null);
+				}
+				if(arrBodyVO[k].getDebt_qua().equals(UFDouble.ZERO_DBL)){
+					arrBodyVO[k].setDebt_qua(null);
+				}
+				if(arrBodyVO[k].getDebt_ori().equals(UFDouble.ZERO_DBL)){
+					arrBodyVO[k].setDebt_ori(null);
+				}
+				if(arrBodyVO[k].getDebt_loc().equals(UFDouble.ZERO_DBL)){
+					arrBodyVO[k].setDebt_loc(null);
+				}
+				//add end
+				
 				bodyVO = arrBodyVO[k]; // 记录上一行记录
 				
 				//update for 新加坡BDA 20161111
@@ -524,16 +654,28 @@ public class RecPayStatementBOImpl extends FipubSqlExecuter implements IRecPaySt
 				//update for 新加坡BDA 20161111
 				// 计算合计 add by xudw
 				if(bodyVO.getIscounterfee() == null || bodyVO.getIscounterfee().equals(UFBoolean.FALSE)){//不是手续费收付款
-					totalVO.setDebt_qua(totalVO.getDebt_qua().add(bodyVO.getDebt_qua()));
-					totalVO.setDebt_ori(totalVO.getDebt_ori().add(bodyVO.getDebt_ori()));
-					totalVO.setDebt_loc(totalVO.getDebt_loc().add(bodyVO.getDebt_loc()));
-					totalVO.setGr_debt_loc(totalVO.getGr_debt_loc().add(bodyVO.getGr_debt_loc()));
-					totalVO.setGl_debt_loc(totalVO.getGl_debt_loc().add(bodyVO.getGl_debt_loc()));
-					totalVO.setCredit_qua(totalVO.getCredit_qua().add(bodyVO.getCredit_qua()));
-					totalVO.setCredit_ori(totalVO.getCredit_ori().add(bodyVO.getCredit_ori()));
-					totalVO.setCredit_loc(totalVO.getCredit_loc().add(bodyVO.getCredit_loc()));
-					totalVO.setGr_credit_loc(totalVO.getGr_credit_loc().add(bodyVO.getGr_credit_loc()));
-					totalVO.setGl_credit_loc(totalVO.getGl_credit_loc().add(bodyVO.getGl_credit_loc()));
+					totalVO.setDebt_qua(SafeCompute.add(totalVO.getDebt_qua(), bodyVO.getDebt_qua()));
+					totalVO.setDebt_ori(SafeCompute.add(totalVO.getDebt_ori(), bodyVO.getDebt_ori()));
+					totalVO.setDebt_loc(SafeCompute.add(totalVO.getDebt_loc(), bodyVO.getDebt_loc()));
+					totalVO.setGr_debt_loc(SafeCompute.add(totalVO.getGr_debt_loc(), bodyVO.getGr_debt_loc()));
+					totalVO.setGl_debt_loc(SafeCompute.add(totalVO.getGl_debt_loc(), bodyVO.getGl_debt_loc()));
+					
+					//update chenth 20180225 BHS 应收对账单不需要期初，需要显示所有未付款的应收单和本期的收款,余额显示为当前应收单的未付款的余额
+					if(bodyVO.getPk_billtype().equals("F2")
+							|| bodyVO.getPk_billtype().equals("F3")){
+						totalVO.setCredit_qua(SafeCompute.add(totalVO.getCredit_qua(), bodyVO.getCredit_qua()));
+						totalVO.setCredit_ori(SafeCompute.add(totalVO.getCredit_ori(), bodyVO.getCredit_ori()));
+						totalVO.setCredit_loc(SafeCompute.add(totalVO.getCredit_loc(), bodyVO.getCredit_loc()));
+						totalVO.setGr_credit_loc(SafeCompute.add(totalVO.getGr_credit_loc(), bodyVO.getGr_credit_loc()));
+						totalVO.setGl_credit_loc(SafeCompute.add(totalVO.getGl_credit_loc(), bodyVO.getGl_credit_loc()));
+					}else{//余额为应收的余额汇总
+						totalVO.setBal_qua(SafeCompute.add(totalVO.getBal_qua(),bodyVO.getBal_qua()));
+						totalVO.setBal_ori(SafeCompute.add(totalVO.getBal_ori(),bodyVO.getBal_ori()));
+						totalVO.setBal_loc(SafeCompute.add(totalVO.getBal_loc(),bodyVO.getBal_loc()));
+						totalVO.setGr_bal_loc(SafeCompute.add(totalVO.getGr_bal_loc(),bodyVO.getGr_bal_loc()));
+						totalVO.setGl_bal_loc(SafeCompute.add(totalVO.getGl_bal_loc(),bodyVO.getGl_bal_loc()));
+					}
+					//update end
 				}
 			}
 
@@ -553,18 +695,20 @@ public class RecPayStatementBOImpl extends FipubSqlExecuter implements IRecPaySt
 			// headVO.setQryobj("查询对象");
 			headVO.setPk_currtype(((List<?>) oneObj.get(0)).get(metaData.getNameIndex(RecStatementItemVO.PK_CURRTYPE)).toString());
 
+			//update chenth 20180225 BHS 应收对账单不需要期初和合计行，需要显示所有未付款的应收单和本期的收款,余额显示为当前应收单的未付款的余额
 			// 设置表头余额
-			headVO.setBal_qua(bodyVO.getBal_qua());
-			headVO.setBal_ori(bodyVO.getBal_ori());
-			headVO.setBal_loc(bodyVO.getBal_loc());
-			headVO.setGr_bal_loc(bodyVO.getGr_bal_loc());
-			headVO.setGl_bal_loc(bodyVO.getGl_bal_loc());
-			totalVO.setBal_qua(bodyVO.getBal_qua());
-			totalVO.setBal_ori(bodyVO.getBal_ori());
-			totalVO.setBal_loc(bodyVO.getBal_loc());
-			totalVO.setGr_bal_loc(bodyVO.getGr_bal_loc());
-			totalVO.setGl_bal_loc(bodyVO.getGl_bal_loc());
-			bodyVOs.add(totalVO);
+			headVO.setBal_qua(totalVO.getBal_qua());
+			headVO.setBal_ori(totalVO.getBal_ori());
+			headVO.setBal_loc(totalVO.getBal_loc());
+			headVO.setGr_bal_loc(totalVO.getGr_bal_loc());
+			headVO.setGl_bal_loc(totalVO.getGl_bal_loc());
+//			totalVO.setBal_qua(SafeCompute.add(totalVO.getBal_qua(),bodyVO.getBal_qua()));
+//			totalVO.setBal_ori(SafeCompute.add(totalVO.getBal_ori(),bodyVO.getBal_ori()));
+//			totalVO.setBal_loc(SafeCompute.add(totalVO.getBal_loc(),bodyVO.getBal_loc()));
+//			totalVO.setGr_bal_loc(SafeCompute.add(totalVO.getGr_bal_loc(),bodyVO.getGr_bal_loc()));
+//			totalVO.setGl_bal_loc(SafeCompute.add(totalVO.getGl_bal_loc(),bodyVO.getGl_bal_loc()));
+//			bodyVOs.add(totalVO);
+			//update end
 
 			aggVO.setParentVO(headVO);
 			aggVO.setChildrenVO(bodyVOs.toArray(new CircularlyAccessibleValueObject[0]));

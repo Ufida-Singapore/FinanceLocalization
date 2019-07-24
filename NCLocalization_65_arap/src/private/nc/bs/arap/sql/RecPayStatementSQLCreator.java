@@ -73,10 +73,10 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 		// 查询当前查询对象的应收单据、收款单据、折扣记录、并帐记录、坏账发生、坏账收回、汇兑损益
 		sqlList.add(getDetailSql1());
 		//update for 新加坡DBA 20161111 chenth
-		if(UFBoolean.FALSE == this.queryVO.getUserObject().get(IArapReportConstants.IS_CANAFTERCODE)){
-		 //查询当前查询对象的单据核销记录(与非当前查询对象的单据的核销记录：同币种核销、异币种核销、红蓝对冲)
-			sqlList.add(getDetailSql2());
-		}
+//		if(UFBoolean.FALSE == this.queryVO.getUserObject().get(IArapReportConstants.IS_CANAFTERCODE)){
+//		 //查询当前查询对象的单据核销记录(与非当前查询对象的单据的核销记录：同币种核销、异币种核销、红蓝对冲)
+//			sqlList.add(getDetailSql2());
+//		}
 		return sqlList.toArray(new String[0]);
 	}
 
@@ -84,14 +84,17 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 		StringBuffer sqlBuffer = new StringBuffer();
 		sqlBuffer.append(" select tt.* from ");
 		sqlBuffer.append("(");
-		sqlBuffer.append("(").append(getPeriodBegin()).append(")"); // 期初：markperiod = 1
-		sqlBuffer.append(" union all ");
-		sqlBuffer.append("(").append(getPeriodTally()).append(")"); // 本期：markperiod = 2
+		//update chenth 20180225  BHS 应收对账单不需要期初，需要显示所有未付款的应收单和本期的收款
+//		sqlBuffer.append("(").append(getPeriodBegin()).append(")"); // 期初：markperiod = 1
+//		sqlBuffer.append(" union all ");
+//		sqlBuffer.append("(").append(getPeriodTally()).append(")"); // 本期：markperiod = 2
+		sqlBuffer.append(getPeriodTally()); // 本期：markperiod = 2
 		sqlBuffer.append(") tt ");
 
 		sqlBuffer.append(" order by ");
-		sqlBuffer.append("markperiod,pk_org, pk_customer, pk_supplier, pk_deptid, tallydate, pk_billtype, pk_tradetypeid, billno, pk_dealnum, matcustcode");
-
+//		sqlBuffer.append("markperiod,pk_org, pk_customer, pk_supplier, pk_deptid, tallydate, pk_billtype, pk_tradetypeid, billno, pk_dealnum, matcustcode");
+		sqlBuffer.append("pk_billtype, markperiod,pk_org, pk_customer, pk_supplier, pk_deptid, tallydate,invoiceno, pk_tradetypeid, billno, pk_dealnum, matcustcode");
+		//update end 
 		return sqlBuffer.toString();
 	}
 	
@@ -222,53 +225,55 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 		//swb add
 		sqlBuffer.append("case when arap_tally.pk_dealnum = '~' then arap_tally.billno else null end as billno2, ");
 		
+		//update ethan 
 		if(getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.ORACLE) {
 			sqlBuffer.append("substr(arap_termitem.expiredate,1,10) || ' 00:00:00' as busidate, ");
 		} else {
 			sqlBuffer.append("substring(arap_termitem.expiredate,1,10) || ' 00:00:00' as busidate, ");
 		}
 		
+		
 		sqlBuffer.append("case when fi_recpaytype.issettle = 'Y' then 'N' when fi_recpaytype.issettle = 'N' then 'Y' end as iscounterfee, ");
 		//add end
 		
 		//update chenth 20170717 适配633新的补丁
-		//sqlBuffer.append("arap_tally.tallydate tallydate, ");
-		// Modified by Ethan on 20180404 收款单和付款的单据日期可以显示 start
-		if (queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_REC && getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.ORACLE) {
-			sqlBuffer.append("  case when ar_recitem.busidate is not null then concat(substr(ar_recitem.busidate,1,10),' 00:00:00') " +
-					" when ar_gatheritem.busidate is not null then concat(substr(ar_gatheritem.busidate,1,10), ' 00:00:00') else null end tallydate, ");
-		} else if (queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_PAY && getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.ORACLE) {
-			sqlBuffer.append("  case when ap_payableitem.busidate is not null then concat(substr(ap_payableitem.busidate,1,10),' 00:00:00') " +
-					"  when ap_payitem.busidate is not null then concat(substr(ap_payitem.busidate,1,10), ' 00:00:00') else null end tallydate, ");
-		} else if(queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_REC && getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.SQLSERVER) {
-			sqlBuffer.append("  case when ar_recitem.busidate is not null then concat(substring(ar_recitem.busidate,1,10),' 00:00:00') " +
-					" when ar_gatheritem.busidate is not null then concat(substring(ar_gatheritem.busidate,1,10), ' 00:00:00') else null end tallydate, ");
-		} else if(queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_PAY && getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.SQLSERVER) {
-			sqlBuffer.append("  case when ap_payableitem.busidate is not null then concat(substring(ap_payableitem.busidate,1,10),' 00:00:00') " +
-					"  when ap_payitem.busidate is not null then concat(substring(ap_payitem.busidate,1,10), ' 00:00:00') else null end tallydate, ");
-		} else {
-			sqlBuffer.append("arap_tally.tallydate tallydate, ");
-		}
+		sqlBuffer.append(" concat(substring(arap_tally.tallydate,0,11),' 00:00:00') tallydate, ");
+//		if (queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_REC) {
+//			sqlBuffer.append("  case when ar_recitem.busidate is not null then concat(substring(ar_recitem.busidate,0,11),' 00:00:00') else concat(substring(arap_tally.tallydate,0,11),' 00:00:00') end tallydate, ");
+//		} else if (queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_PAY) {
+//			sqlBuffer.append("  case when ap_payableitem.busidate is not null then concat(substring(ap_payableitem.busidate,0,11),' 00:00:00') else concat(substring(arap_tally.tallydate,0,11),' 00:00:00') end tallydate, ");
+//		}
 		//update end
-		// Modified by Ethan on 20180404 收款单和付款的单据日期可以显示 end
 		
 		sqlBuffer.append(sltAnaDate).append(" ").append(anadate).append(", "); // 分析日期
 		sqlBuffer.append("case when arap_tally.pk_dealnum = '~' then arap_tally.invoiceno else null end as invoiceno, ");
 		sqlBuffer.append("arap_tally.dealflag, arap_tally.pk_dealnum, arap_tally_all.project, ");
 		
+		//update chenth 20180224  BHS 应收对账单不需要期初，需要显示所有未付款的应收单和本期的收款
 		//update chenth 20170717 适配633新的补丁
-		if(UFBoolean.TRUE.equals(new UFBoolean(obj.toString()))){//勾上了仅显示未核销,把已经核销的原始单据过滤掉
-			if (IArapReportConstants.SYS_FLAG_REC == queryVO.getSyscode()) {
-				sqlBuffer.append("arap_tally.quantity_de-isnull(verifydetail.quantity_de,0) debt_qua, arap_tally.money_de-isnull(verifydetail.money_de,0) debt_ori, arap_tally.local_money_de-isnull(verifydetail.local_money_de,0) debt_loc, arap_tally.grouplocal_money_de-isnull(verifydetail.group_money_de,0) gr_debt_loc, arap_tally.globallocal_money_de-isnull(verifydetail.global_money_de,0) gl_debt_loc, ");
-				sqlBuffer.append("arap_tally.quantity_cr-isnull(verifydetail.quantity_cr,0) credit_qua, arap_tally.money_cr-isnull(verifydetail.money_cr,0) credit_ori, arap_tally.local_money_cr-isnull(verifydetail.local_money_cr,0) credit_loc, arap_tally.grouplocal_money_cr-isnull(verifydetail.group_money_cr,0) gr_credit_loc, arap_tally.globallocal_money_cr-isnull(verifydetail.global_money_cr,0) gl_credit_loc ");
-			} else if (IArapReportConstants.SYS_FLAG_PAY == queryVO.getSyscode()) {
-				sqlBuffer.append("arap_tally.quantity_de-isnull(verifydetail.quantity_cr,0) debt_qua, arap_tally.money_de-isnull(verifydetail.money_cr,0) debt_ori, arap_tally.local_money_de-isnull(verifydetail.local_money_cr,0) debt_loc, arap_tally.grouplocal_money_de-isnull(verifydetail.group_money_cr,0) gr_debt_loc, arap_tally.globallocal_money_de-isnull(verifydetail.global_money_cr,0) gl_debt_loc, ");
-				sqlBuffer.append("arap_tally.quantity_cr-isnull(verifydetail.quantity_de,0) credit_qua, arap_tally.money_cr-isnull(verifydetail.money_de,0) credit_ori, arap_tally.local_money_cr-isnull(verifydetail.local_money_de,0) credit_loc, arap_tally.grouplocal_money_cr-isnull(verifydetail.group_money_de,0) gr_credit_loc, arap_tally.globallocal_money_cr-isnull(verifydetail.global_money_de,0) gl_credit_loc ");
-			}
-		}else{
-			sqlBuffer.append("arap_tally.quantity_de debt_qua, arap_tally.money_de debt_ori, arap_tally.local_money_de debt_loc, arap_tally.grouplocal_money_de gr_debt_loc, arap_tally.globallocal_money_de gl_debt_loc, ");
-			sqlBuffer.append("arap_tally.quantity_cr credit_qua, arap_tally.money_cr credit_ori, arap_tally.local_money_cr credit_loc, arap_tally.grouplocal_money_cr gr_credit_loc, arap_tally.globallocal_money_cr gl_credit_loc ");
-		}
+//		if(UFBoolean.TRUE.equals(new UFBoolean(obj.toString()))){//勾上了仅显示未核销,把已经核销的原始单据过滤掉
+//			if (IArapReportConstants.SYS_FLAG_REC == queryVO.getSyscode()) {
+//				sqlBuffer.append("arap_tally.quantity_de-isnull(verifydetail.quantity_de,0) debt_qua, arap_tally.money_de-isnull(verifydetail.money_de,0) debt_ori, arap_tally.local_money_de-isnull(verifydetail.local_money_de,0) debt_loc, arap_tally.grouplocal_money_de-isnull(verifydetail.group_money_de,0) gr_debt_loc, arap_tally.globallocal_money_de-isnull(verifydetail.global_money_de,0) gl_debt_loc, ");
+//				sqlBuffer.append("arap_tally.quantity_cr-isnull(verifydetail.quantity_cr,0) credit_qua, arap_tally.money_cr-isnull(verifydetail.money_cr,0) credit_ori, arap_tally.local_money_cr-isnull(verifydetail.local_money_cr,0) credit_loc, arap_tally.grouplocal_money_cr-isnull(verifydetail.group_money_cr,0) gr_credit_loc, arap_tally.globallocal_money_cr-isnull(verifydetail.global_money_cr,0) gl_credit_loc ");
+//			} else if (IArapReportConstants.SYS_FLAG_PAY == queryVO.getSyscode()) {
+//				sqlBuffer.append("arap_tally.quantity_de-isnull(verifydetail.quantity_cr,0) debt_qua, arap_tally.money_de-isnull(verifydetail.money_cr,0) debt_ori, arap_tally.local_money_de-isnull(verifydetail.local_money_cr,0) debt_loc, arap_tally.grouplocal_money_de-isnull(verifydetail.group_money_cr,0) gr_debt_loc, arap_tally.globallocal_money_de-isnull(verifydetail.global_money_cr,0) gl_debt_loc, ");
+//				sqlBuffer.append("arap_tally.quantity_cr-isnull(verifydetail.quantity_de,0) credit_qua, arap_tally.money_cr-isnull(verifydetail.money_de,0) credit_ori, arap_tally.local_money_cr-isnull(verifydetail.local_money_de,0) credit_loc, arap_tally.grouplocal_money_cr-isnull(verifydetail.group_money_de,0) gr_credit_loc, arap_tally.globallocal_money_cr-isnull(verifydetail.global_money_de,0) gl_credit_loc ");
+//			}
+//		}else{
+//			sqlBuffer.append("arap_tally.quantity_de debt_qua, arap_tally.money_de debt_ori, arap_tally.local_money_de debt_loc, arap_tally.grouplocal_money_de gr_debt_loc, arap_tally.globallocal_money_de gl_debt_loc, ");
+//			sqlBuffer.append("arap_tally.quantity_cr credit_qua, arap_tally.money_cr credit_ori, arap_tally.local_money_cr credit_loc, arap_tally.grouplocal_money_cr gr_credit_loc, arap_tally.globallocal_money_cr gl_credit_loc ");
+//		}
+		
+		sqlBuffer.append(" arap_tally.quantity_de+isnull(verify.quantity_de,0) debt_qua, ");
+		sqlBuffer.append(" arap_tally.money_de+isnull(verify.money_de,0) debt_ori, ");
+		sqlBuffer.append(" arap_tally.local_money_de+isnull(verify.local_money_de,0) debt_loc, ");
+		sqlBuffer.append(" arap_tally.grouplocal_money_de+isnull(verify.grouplocal_money_de,0) gr_debt_loc, ");
+		sqlBuffer.append(" arap_tally.globallocal_money_de+isnull(verify.globallocal_money_de,0) gl_debt_loc, ");
+		sqlBuffer.append(" arap_tally.quantity_cr+isnull(verify.quantity_cr,0) credit_qua, ");
+		sqlBuffer.append(" arap_tally.money_cr+isnull(verify.money_cr,0) credit_ori, ");
+		sqlBuffer.append(" arap_tally.local_money_cr+isnull(verify.local_money_cr,0) credit_loc, ");
+		sqlBuffer.append(" arap_tally.grouplocal_money_cr+isnull(verify.grouplocal_money_cr,0) gr_credit_loc, ");
+		sqlBuffer.append(" arap_tally.globallocal_money_cr+isnull(verify.globallocal_money_cr,0) gl_credit_loc ");
 		//update end
 		
 		sqlBuffer.append(" from ").append(TallyVO.getDefaultTableName());
@@ -285,16 +290,47 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 			}
 		}
 		
+		//del chenth 20180312 for BHS 显示未核销的
 		//add chenth 20170717  适配新的633补丁
 		//连接核销表
-		if(UFBoolean.TRUE.equals(new UFBoolean(obj.toString()))){//勾上了仅显示未核销,把已经核销的原始单据过滤掉
-			sqlBuffer.append(" left join  ");
-			sqlBuffer.append(" (select pk_item,sum(arap_verifydetail.money_de) money_de,sum(local_money_de) local_money_de,sum(quantity_de) quantity_de,  ");
-			sqlBuffer.append(" sum(money_cr) money_cr,sum(local_money_cr) local_money_cr,sum(quantity_cr) quantity_cr, ");
-			sqlBuffer.append(" sum(group_money_de) group_money_de, sum(global_money_de) global_money_de,sum(group_money_cr) group_money_cr, sum(global_money_cr) global_money_cr  ");
-			sqlBuffer.append(" from arap_verifydetail where isnull(arap_verifydetail.dr,0)=0 group by arap_verifydetail.pk_item  ");
-			sqlBuffer.append(" ) verifydetail on arap_tally.pk_item = verifydetail.pk_item  ");
+//		if(UFBoolean.TRUE.equals(new UFBoolean(obj.toString()))){//勾上了仅显示未核销,把已经核销的原始单据过滤掉
+//			sqlBuffer.append(" left join  ");
+//			sqlBuffer.append(" (select pk_item,sum(arap_verifydetail.money_de) money_de,sum(local_money_de) local_money_de,sum(quantity_de) quantity_de,  ");
+//			sqlBuffer.append(" sum(money_cr) money_cr,sum(local_money_cr) local_money_cr,sum(quantity_cr) quantity_cr, ");
+//			sqlBuffer.append(" sum(group_money_de) group_money_de, sum(global_money_de) global_money_de,sum(group_money_cr) group_money_cr, sum(global_money_cr) global_money_cr  ");
+//			sqlBuffer.append(" from arap_verifydetail where isnull(arap_verifydetail.dr,0)=0 group by arap_verifydetail.pk_item  ");
+//			sqlBuffer.append(" ) verifydetail on arap_tally.pk_item = verifydetail.pk_item  ");
+//		}
+		//del end
+		
+		//add chenth 20180224  BHS 应收对账单不需要期初，需要显示所有未付款的应收单和本期的收款,处理已核销的应收单
+		// 分析开始日期
+		String beginDate = "0000-00-00 00:00:00";
+		if (queryVO.getBeginDate() != null) {
+			beginDate = queryVO.getBeginDate().toString();
 		}
+		// 分析结束日期
+		String endDate = "9999-12-31" + sTime;
+		if (queryVO.getEndDate() != null) {
+			endDate = queryVO.getEndDate().toString();
+		}
+		sqlBuffer.append(" left join ( ");
+		sqlBuffer.append("  select arap_tally.pk_item, sum(arap_tally.quantity_de) as quantity_de, sum(arap_tally.money_de)  as money_de, sum(arap_tally.local_money_de) as local_money_de ");
+		sqlBuffer.append("  , sum(arap_tally.grouplocal_money_de) as grouplocal_money_de, sum(arap_tally.globallocal_money_de) as globallocal_money_de ,sum(arap_tally.quantity_cr) as quantity_cr, sum(arap_tally.money_cr) as money_cr ");
+		sqlBuffer.append("  , sum(arap_tally.local_money_cr) as local_money_cr, sum(arap_tally.grouplocal_money_cr) as grouplocal_money_cr, sum(arap_tally.globallocal_money_cr) as globallocal_money_cr ");
+		sqlBuffer.append("  from arap_tally ");
+		//add chenth 20180328 每个时间点去查某个月的SOA应该结果一样
+		sqlBuffer.append("  left join ar_gatherbill on arap_tally.pk_corbill=ar_gatherbill.pk_gatherbill  ");
+//		sqlBuffer.append("  left join ap_payablebill on arap_tally.pk_corbill = ap_payablebill.pk_payablebill  ");
+		//add chenth 20180405 支持应付对账单
+		sqlBuffer.append("  left join ap_paybill on arap_tally.pk_corbill = ap_paybill.pk_paybill ");
+//		sqlBuffer.append("  left join ar_recbill on arap_tally.pk_corbill = ar_recbill.pk_recbill ");
+		//add end
+		sqlBuffer.append("  where arap_tally.dealflag in (11,12,13) ");
+		//update chenth 20180407 应收核销应付，或者应付核销应收的，不按单据日期，按核销日期
+		sqlBuffer.append("  and( ( arap_tally.billclass in ('ys','zs') and isnull(ar_gatherbill.billdate,arap_tally.tallydate) <= '").append(endDate).append("') ");
+		sqlBuffer.append("     or( arap_tally.billclass in ('yf','zf') and isnull(ap_paybill.billdate,arap_tally.tallydate) <= '").append(endDate).append("') ) ");
+		sqlBuffer.append(" group by arap_tally.pk_item) verify on arap_tally.pk_item = verify.pk_item ");
 		//add end
 				
 		//add for 新加坡BDA 20161111
@@ -340,18 +376,21 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 //		if(UFBoolean.TRUE == this.queryVO.getUserObject().get(IArapReportConstants.IS_CANAFTERCODE)){
 //			sqlBuffer.append(" and arap_tally.billno not in(select ly.billno from arap_tally ly where ly.dealflag='11')"); 
 //		}
+
+		//del chenth 20180312 for BHS 显示未核销的
 		//update chenth 20170717 适配633新的补丁
 		//不加这段逻辑，就是已经核销的单据会显示，只是核销记录在getDetailSql2中过滤了，
 		//加上这段逻辑，部分核销的单据也会过滤掉,导致最终余额不对
 		//是否可以尝试连核销表,查询单据对应的核销金额，然后金额相减，须验证
-		if(UFBoolean.TRUE.equals(new UFBoolean(obj.toString()))){//勾上了仅显示未核销,把已经核销的原始单据过滤掉
-			sqlBuffer.append(" and "); 
-			sqlBuffer.append(" ( arap_tally.pk_item not in (select ly.pk_item from arap_tally ly where ly.dealflag in ('11','12','13'))");
-			sqlBuffer.append(" or (select (arap_tally.money_de-sum(arap_verifydetail.money_de)) qty from arap_verifydetail where arap_verifydetail.pk_item = arap_tally.pk_item) > 0 ");
-			sqlBuffer.append(" ) ");
-		}
+//		if(UFBoolean.TRUE.equals(new UFBoolean(obj.toString()))){//勾上了仅显示未核销,把已经核销的原始单据过滤掉
+//			sqlBuffer.append(" and "); 
+//			sqlBuffer.append(" ( arap_tally.pk_item not in (select ly.pk_item from arap_tally ly where ly.dealflag in ('11','12','13'))");
+//			sqlBuffer.append(" or (select (arap_tally.money_de-sum(arap_verifydetail.money_de)) qty from arap_verifydetail where arap_verifydetail.pk_item = arap_tally.pk_item) > 0 ");
+//			sqlBuffer.append(" ) ");
+//		}
 		//update end
 		//add end
+		//del end
 		
 		// 分析开始日期
 		// if (!StringUtils.isEmpty(queryVO.getBeginDate())) {
@@ -504,6 +543,9 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 		//add for 新加坡BDA 20161111
 		//swb add
 		sqlBuffer.append("case when arap_tally.pk_dealnum = '~' then arap_tally.billno else null end as billno2, ");
+		
+		//update ethan
+//		sqlBuffer.append("substring(arap_termitem.expiredate,0,11) || ' 00:00:00' as busidate, ");
 		if(getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.SQLSERVER) {
 			sqlBuffer.append("substring(arap_termitem.expiredate,1,10) || ' 00:00:00' as busidate, "); //日期格式 中间不能有两个空格
 		} else {
@@ -514,23 +556,14 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 		//add end
 		//add chenth 20170717 适配633新的补丁
 		//edit by xudw 傻逼客户
-		//edit by ethan Prevent extra tally date
-		//sqlBuffer.append("arap_tally.tallydate tallydate, ");
-		if (queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_REC && getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.SQLSERVER) {
-			sqlBuffer.append("  case when ar_recitem.busidate is not null then CONCAT(substring(ar_recitem.busidate,1,10),' 00:00:00') else null end tallydate, ");
-		} else if (queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_PAY && getDBtype() == nc.jdbc.framework.crossdb.CrossDBConnection.SQLSERVER) {
-			sqlBuffer.append("  case when ap_payableitem.busidate is not null then CONCAT(substring(ap_payableitem.busidate,1,10),' 00:00:00') else null end tallydate, ");
-		} else if(queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_REC) {
-			sqlBuffer.append("  case when ar_recitem.busidate is not null then CONCAT(substr(ar_recitem.busidate,1,10),' 00:00:00') else null end tallydate, ");
-		} else if(queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_PAY) {
-			sqlBuffer.append("  case when ap_payableitem.busidate is not null then CONCAT(substr(ap_payableitem.busidate,1,10),' 00:00:00') else null end tallydate, ");
-		} else {
-			sqlBuffer.append("arap_tally.tallydate tallydate, ");
-		}
+//		if (queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_REC) {
+//			sqlBuffer.append("  case when ar_recitem.busidate is not null then CONCAT(substring(ar_recitem.busidate,0,11),' 00:00:00') else null end tallydate, ");
+//		} else if (queryVO.getSyscode() == IArapReportConstants.SYS_FLAG_PAY) {
+//			sqlBuffer.append("  case when ap_payableitem.busidate is not null then CONCAT(substring(ap_payableitem.busidate,0,11),' 00:00:00') else null end tallydate, ");
+//		}
 		//add end 
 		
-		
-		//sqlBuffer.append("arap_tally.tallydate tallydate, ");
+		sqlBuffer.append("arap_tally.tallydate tallydate, ");
 		sqlBuffer.append(ReportSqlUtils.getAnaDateField(queryVO.getAnaDate())).append(" ").append(anadate).append(", "); // 分析日期
 		sqlBuffer.append("case when arap_tally.pk_dealnum = '~' then arap_tally.invoiceno else null end as invoiceno, ");
 		sqlBuffer.append("arap_tally.dealflag, arap_tally.pk_dealnum, arap_tally_all.project, ");
@@ -585,7 +618,6 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 		sqlBuffer.append(getCompositeWhereSql());
 
 		sqlBuffer.append(SqlUtils.getInInt(" and arap_tally.dealflag ", VERIFY_FLAGS, false)); // 过滤核销记录
-	
 
 		if (!BillEnumCollection.ObjType.CUSSUP.VALUE.toString().equals(queryVO.getAssoObj())){
 			String[] billClass = null;
@@ -607,11 +639,6 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 		sqlBuffer.append(ReportSqlUtils.getOrgSql(queryVO.getPk_orgs(), ReportTableEnum.ARAP_TALLY)); // 业务单元
 		sqlBuffer.append(ReportSqlUtils.getGroupSql(queryVO.getPk_group(), ReportTableEnum.ARAP_TALLY)); // 业务单元
 		sqlBuffer.append(" and " + sltAnaDate + " <= '" + endDate + "'"); // 分析结束日期
-		
-		// Modified on 2018-01-30
-		// 隐藏同币种核销和红蓝对冲
-		sqlBuffer.append(" and arap_tally.dealflag != 11 ");
-		sqlBuffer.append(" and arap_tally.dealflag != 13 ");
 		
 		//按点余额方式查询  业务日期<截止日期
 		if(IArapReportConstants.ACC_ANA_PATTERN_POINT.equals(queryVO.getAnaPattern())){
@@ -854,14 +881,23 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 		if (queryVO.getBeginDate() != null) {
 			beginDate = queryVO.getBeginDate().toString();
 		}
-		sqlBuffer.append(" and t2.").append(anadate).append(" >= '").append(beginDate).append("' ");
+		//update chenth 20180225  BHS 应收对账单不需要期初，需要显示所有未付款的应收单和本期的收款
+//		sqlBuffer.append(" and t2.").append(anadate).append(" >= '").append(beginDate).append("' ");
 
 		// 分析结束日期
 		String endDate = "9999-12-31" + sTime;
 		if (queryVO.getEndDate() != null) {
 			endDate = queryVO.getEndDate().toString();
 		}
+//		sqlBuffer.append(" and t2.").append(anadate).append(" <= '").append(endDate).append("' ");
 		sqlBuffer.append(" and t2.").append(anadate).append(" <= '").append(endDate).append("' ");
+		sqlBuffer.append(" and ( ");
+		sqlBuffer.append("   (t2.pk_billtype = 'F0' and (t2.debt_ori > t2.credit_ori or (t2.debt_ori < 0 and t2.debt_ori < t2.credit_ori)))");
+		//add chenth 20180405 考虑应付对账单
+		sqlBuffer.append("    or (t2.pk_billtype = 'F1' and (t2.debt_ori < t2.credit_ori or (t2.credit_ori < 0 and t2.debt_ori > t2.credit_ori))) ");
+		sqlBuffer.append(" )");
+		//add end 
+		//update end
 		
 		//add for 新加坡BDA 20161111
 		//swb add
@@ -874,17 +910,20 @@ public class RecPayStatementSQLCreator extends ArapBaseSqlCreator {
 		//add for 新加坡BDA 20161111
 		//swb add
 		sqlBuffer.append(" union all ");
-		sqlBuffer.append(" select t2.pk_group, t2.pk_org, t2.pk_customer, t2.pk_supplier, t2.pk_deptid, t2.pk_psndoc, t2.pk_currtype, t2.matcustcode, t2.brief, t2.pk_billtype, t2.pk_tradetypeid, t2.pk_bill, t2.billno,'1' billno2, t2.busidate,t2.iscounterfee, t2.tallydate,'' as invoiceno, t2.dealflag, t2.pk_dealnum, t2.project, ");
+		sqlBuffer.append(" select t2.pk_group, t2.pk_org, t2.pk_customer, t2.pk_supplier, t2.pk_deptid, t2.pk_psndoc, t2.pk_currtype, t2.matcustcode, t2.brief, t2.pk_billtype, t2.pk_tradetypeid, t2.pk_bill, t2.billno,'1' billno2, t2.tallydate as busidate,t2.iscounterfee, t2.tallydate,'' as invoiceno, t2.dealflag, t2.pk_dealnum, t2.project, ");
 		sqlBuffer.append("sum(t2.debt_qua) debt_qua, sum(t2.debt_ori) debt_ori, sum(t2.debt_loc) debt_loc, sum(t2.gr_debt_loc) gr_debt_loc, sum(t2.gl_debt_loc) gl_debt_loc, ");
 		sqlBuffer.append("sum(t2.credit_qua) credit_qua, sum(t2.credit_ori) credit_ori, sum(t2.credit_loc) credit_loc, sum(t2.gr_credit_loc) gr_credit_loc, sum(t2.gl_credit_loc) gl_credit_loc, ");
 		sqlBuffer.append("2 markperiod ");
 		sqlBuffer.append(" from ").append(getTmpTblName()).append(" t2 ");
 		sqlBuffer.append(" where ").append(ReportSqlUtils.getFixedWhere());
+		
+		//update chenth 20180225  BHS 应收对账单不需要期初，需要显示所有未付款的应收单和本期的收款,只显示本期的收款单
 		sqlBuffer.append(" and t2.").append(anadate).append(" >= '").append(beginDate).append("' ");
 		sqlBuffer.append(" and t2.").append(anadate).append(" <= '").append(endDate).append("' ");
-		sqlBuffer.append(" and t2.pk_billtype in ('F2','F3') ");
-		sqlBuffer.append(" group by t2.pk_group, t2.pk_org, t2.pk_customer, t2.pk_supplier, t2.pk_deptid, t2.pk_psndoc, t2.pk_currtype, t2.matcustcode, t2.brief, t2.pk_billtype, t2.pk_tradetypeid, t2.pk_bill, t2.billno, t2.busidate,t2.iscounterfee, t2.tallydate, t2.dealflag, t2.pk_dealnum, t2.project ");
 		//add end
+		
+		sqlBuffer.append(" and t2.pk_billtype in ('F2','F3') ");
+		sqlBuffer.append(" group by t2.pk_group, t2.pk_org, t2.pk_customer, t2.pk_supplier, t2.pk_deptid, t2.pk_psndoc, t2.pk_currtype, t2.matcustcode, t2.brief, t2.pk_billtype, t2.pk_tradetypeid, t2.pk_bill, t2.billno,t2.iscounterfee, t2.tallydate, t2.dealflag, t2.pk_dealnum, t2.project ");
 
 		return sqlBuffer.toString();
 	}

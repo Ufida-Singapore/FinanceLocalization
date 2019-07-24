@@ -85,7 +85,12 @@ public class RecPayStatementModelDataManager implements IAppModelDataManagerEx {
 		try {
 			for (AggRecStatementVO aggRecStatementVO : resultVOList2) {
 				for (CircularlyAccessibleValueObject itemVO : aggRecStatementVO.getChildrenVO()) {
-					if(((RecStatementItemVO)itemVO).getTallydate()!=null&&!ArapReportResource.getDateSubTotalLbl().equals(((RecStatementItemVO)itemVO).getTallydate())){
+					if(((RecStatementItemVO)itemVO).getTallydate()!=null
+							&&!ArapReportResource.getDateSubTotalLbl().equals(((RecStatementItemVO)itemVO).getTallydate())
+							//add chenth 20180311 Remark行
+							&&! "REMARKS".equals(((RecStatementItemVO)itemVO).getTallydate())
+							//add end
+							){
 						((RecStatementItemVO)itemVO).setTallydate(NCFormater.formatDate(((RecStatementItemVO)itemVO).getTallydate()).getValue().toString());
 					}
 				}
@@ -279,6 +284,10 @@ public class RecPayStatementModelDataManager implements IAppModelDataManagerEx {
 						}
 					}
 					listView.getBillListPanel().setListData(bd);
+					//add chenth 20180327 不能多选，并且不能批量打印
+					listView.setMultiSelectionEnable(true);
+					listView.setMultiSelectionMode(BillListView.MOUSE_CLICK_SELECTION);
+					((nc.ui.arap.recpaystatement.view.ListView)listView).setListMultiProp();
 				}catch(BusinessException e){
 					MessageDialog.showErrorDlg(listView, NCLangRes.getInstance().getStrByID("zhtx", "RecPayStatementModelDataManager-0005")/*查询账龄方案出错*/, e.getMessage());
 				}
@@ -290,8 +299,8 @@ public class RecPayStatementModelDataManager implements IAppModelDataManagerEx {
 		for (String key : hiddenColList) {
 			billListPanel.hideBodyTableCol(key);
 		}
-
-		billListPanel.getHeadTable().setSortEnabled(false);
+		//del chenth 20180327 表头支持排序
+//		billListPanel.getHeadTable().setSortEnabled(false);
 		billListPanel.getBodyTable().setSortEnabled(false);
 	}
 
