@@ -98,4 +98,31 @@
         </property>
     </bean>
     
+    <!-- add chenth 20181007 合并显示后删除、审批弃审都会出问题 -->
+    <bean class="nc.ui.pubapp.plugin.action.ActionInterceptorInfo">
+        <property name="target" ref="deleteActionReal"/>
+        <property name="interceptor">
+            <bean class="nc.ui.arap.actions.interceptor.DeleteActionInterceptor">
+                <property name="gathering" ref="gatheringShowChgAction"/>
+            </bean> 
+        </property>
+    </bean>
+    <bean class="nc.ui.pubapp.plugin.action.ActionInterceptorInfo">
+        <property name="target" ref="ApproveActionReal"/>
+        <property name="interceptor">
+            <bean class="nc.ui.arap.actions.interceptor.ApprovalActionInterceptor">
+                <property name="gathering" ref="gatheringShowChgAction"/>
+            </bean> 
+        </property>
+    </bean>
+    <bean class="nc.ui.pubapp.plugin.action.ActionInterceptorInfo">
+        <property name="target" ref="UnApproveAction"/>
+        <property name="interceptor">
+            <bean class="nc.ui.arap.actions.interceptor.ApprovalActionInterceptor">
+                <property name="gathering" ref="gatheringShowChgAction"/>
+            </bean> 
+        </property>
+    </bean>
+    <!-- add chenth 20181007 合并显示后删除、审批弃审都会出问题 end-->
+    
 </beans>

@@ -4,26 +4,28 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 
-import nc.ui.arap.actions.PayableShowChgAction;
+import nc.ui.arap.actions.GatheringShowChgAction;
 import nc.ui.uif2.actions.ActionInterceptor;
 
 /***
- * 付款单管理修改按钮拦截
+ * 收款单管理审批弃审按钮拦截
  * @author Administrator
  *
  */
-public class PayEditActionInterceptor  implements ActionInterceptor {
+public class ApprovalActionInterceptor implements ActionInterceptor {
 	
-	private PayableShowChgAction payable;
+	private GatheringShowChgAction gathering;
 
 	@Override
 	public boolean beforeDoAction(Action action, ActionEvent e) {
 		//动作执行前
 		boolean flag = false;
-		if(payable.isBcombinflag
-				&& action instanceof nc.ui.arap.actions.PayBillEditAction){
+		if(gathering.isBcombinflag
+				&& (action instanceof nc.ui.arap.actions.CreditCheckDecoratorAction
+					|| action instanceof nc.ui.arap.actions.BillListUnApproveAction
+					|| action instanceof nc.ui.arap.actions.BillUnApproveAction)){
 			try {
-				payable.doAction(e);
+				gathering.doAction(e);
 				flag = true;
 			} catch (Exception e1) {
 				e1.printStackTrace();
@@ -48,12 +50,12 @@ public class PayEditActionInterceptor  implements ActionInterceptor {
 		return false;
 	}
 
-	public PayableShowChgAction getPayable() {
-		return payable;
+	public GatheringShowChgAction getGathering() {
+		return gathering;
 	}
 
-	public void setPayable(PayableShowChgAction payable) {
-		this.payable = payable;
+	public void setGathering(GatheringShowChgAction gathering) {
+		this.gathering = gathering;
 	}
 
 }

@@ -20,7 +20,8 @@ public class EditActionInterceptor implements ActionInterceptor {
 	public boolean beforeDoAction(Action action, ActionEvent e) {
 		//动作执行前
 		boolean flag = false;
-		if(gathering.isBcombinflag){
+		if(gathering.isBcombinflag
+				&& action instanceof nc.ui.arap.actions.BillEditAction){
 			try {
 				gathering.doAction(e);
 				flag = true;

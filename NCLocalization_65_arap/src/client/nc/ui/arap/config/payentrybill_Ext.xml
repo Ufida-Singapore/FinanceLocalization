@@ -97,5 +97,16 @@
             </bean> 
         </property>
     </bean>
-
+    
+    <!-- add chenth 20181007 合并显示后删除、审批弃审都会出问题 -->
+    <bean class="nc.ui.pubapp.plugin.action.ActionInterceptorInfo">
+        <property name="target" ref="deleteAction"/>
+        <property name="interceptor">
+            <bean class="nc.ui.arap.actions.interceptor.PayEntryDeleteActionInterceptor">
+                <property name="payable" ref="payEntryShowChgAction"/>
+            </bean> 
+        </property>
+    </bean>
+	<!-- add chenth 20181007 合并显示后删除、审批弃审都会出问题 end-->
+	
 </beans>

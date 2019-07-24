@@ -133,30 +133,30 @@ public nc.funcnode.ui.action.MenuAction getOutputMenuAction(){
   nc.funcnode.ui.action.MenuAction bean = new nc.funcnode.ui.action.MenuAction();
   context.put("outputMenuAction",bean);
   bean.setCode("printMenuAction");
-  bean.setName(getI18nFB_1c55580());
+  bean.setName(getI18nFB_1f6fd4b());
   bean.setActions(getManagedList0());
 setBeanFacotryIfBeanFacatoryAware(bean);
 invokeInitializingBean(bean);
 return bean;
 }
 
-private java.lang.String getI18nFB_1c55580(){
- if(context.get("nc.ui.uif2.I18nFB#1c55580")!=null)
- return (java.lang.String)context.get("nc.ui.uif2.I18nFB#1c55580");
+private java.lang.String getI18nFB_1f6fd4b(){
+ if(context.get("nc.ui.uif2.I18nFB#1f6fd4b")!=null)
+ return (java.lang.String)context.get("nc.ui.uif2.I18nFB#1f6fd4b");
   nc.ui.uif2.I18nFB bean = new nc.ui.uif2.I18nFB();
-    context.put("&nc.ui.uif2.I18nFB#1c55580",bean);  bean.setResDir("common");
+    context.put("&nc.ui.uif2.I18nFB#1f6fd4b",bean);  bean.setResDir("common");
   bean.setResId("UC001-0000007");
   bean.setDefaultValue("¥Ú”°");
 setBeanFacotryIfBeanFacatoryAware(bean);
 invokeInitializingBean(bean);
  try {
      Object product = bean.getObject();
-    context.put("nc.ui.uif2.I18nFB#1c55580",product);
+    context.put("nc.ui.uif2.I18nFB#1f6fd4b",product);
      return (java.lang.String)product;
 }
 catch(Exception e) { throw new RuntimeException(e);}}
 
-private List getManagedList0(){  List list = new ArrayList();  list.add(getPrintPreview());  list.add(getPrint());  list.add(getBatchPrint());  list.add(getOutput());  return list;}
+private List getManagedList0(){  List list = new ArrayList();  list.add(getPrintPreview());  list.add(getPrint());  list.add(getOutput());  return list;}
 
 public nc.ui.pubapp.uif2app.model.AppEventHandlerMediator getAppEventHandlerMediator(){
  if(context.get("appEventHandlerMediator")!=null)
@@ -190,7 +190,7 @@ public nc.ui.uif2.TangramContainer getContainer(){
  return (nc.ui.uif2.TangramContainer)context.get("container");
   nc.ui.uif2.TangramContainer bean = new nc.ui.uif2.TangramContainer();
   context.put("container",bean);
-  bean.setTangramLayoutRoot(getCNode_1a377d7());
+  bean.setTangramLayoutRoot(getCNode_1031cd0());
   bean.setModel(getBillManageModel());
   bean.setActions(getManagedList2());
   bean.initUI();
@@ -199,11 +199,11 @@ invokeInitializingBean(bean);
 return bean;
 }
 
-private nc.ui.uif2.tangramlayout.node.CNode getCNode_1a377d7(){
- if(context.get("nc.ui.uif2.tangramlayout.node.CNode#1a377d7")!=null)
- return (nc.ui.uif2.tangramlayout.node.CNode)context.get("nc.ui.uif2.tangramlayout.node.CNode#1a377d7");
+private nc.ui.uif2.tangramlayout.node.CNode getCNode_1031cd0(){
+ if(context.get("nc.ui.uif2.tangramlayout.node.CNode#1031cd0")!=null)
+ return (nc.ui.uif2.tangramlayout.node.CNode)context.get("nc.ui.uif2.tangramlayout.node.CNode#1031cd0");
   nc.ui.uif2.tangramlayout.node.CNode bean = new nc.ui.uif2.tangramlayout.node.CNode();
-  context.put("nc.ui.uif2.tangramlayout.node.CNode#1a377d7",bean);
+  context.put("nc.ui.uif2.tangramlayout.node.CNode#1031cd0",bean);
   bean.setName("");
   bean.setComponent((java.lang.Object)findBeanInUIF2BeanFactory("listView"));
 setBeanFacotryIfBeanFacatoryAware(bean);

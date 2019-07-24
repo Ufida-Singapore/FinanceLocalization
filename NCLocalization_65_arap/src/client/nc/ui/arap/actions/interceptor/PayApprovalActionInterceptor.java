@@ -8,11 +8,11 @@ import nc.ui.arap.actions.PayableShowChgAction;
 import nc.ui.uif2.actions.ActionInterceptor;
 
 /***
- * 付款单管理修改按钮拦截
+ * 付款单审批弃审按钮拦截
  * @author Administrator
  *
  */
-public class PayEditActionInterceptor  implements ActionInterceptor {
+public class PayApprovalActionInterceptor  implements ActionInterceptor {
 	
 	private PayableShowChgAction payable;
 
@@ -21,7 +21,10 @@ public class PayEditActionInterceptor  implements ActionInterceptor {
 		//动作执行前
 		boolean flag = false;
 		if(payable.isBcombinflag
-				&& action instanceof nc.ui.arap.actions.PayBillEditAction){
+				&& (action instanceof nc.ui.arap.actions.BillApproveAction
+						|| action instanceof nc.ui.arap.actions.BillUnApproveAction
+						|| action instanceof nc.ui.arap.actions.BillListApproveAction
+						|| action instanceof nc.ui.arap.actions.BillListUnApproveAction)){
 			try {
 				payable.doAction(e);
 				flag = true;

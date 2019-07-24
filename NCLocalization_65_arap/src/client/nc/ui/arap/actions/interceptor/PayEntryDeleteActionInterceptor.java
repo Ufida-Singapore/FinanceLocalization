@@ -4,24 +4,24 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.Action;
 
-import nc.ui.arap.actions.PayableShowChgAction;
+import nc.ui.arap.actions.PayEntryShowChgAction;
 import nc.ui.uif2.actions.ActionInterceptor;
 
 /***
- * 付款单管理修改按钮拦截
+ * 付款单删除按钮拦截
  * @author Administrator
  *
  */
-public class PayEditActionInterceptor  implements ActionInterceptor {
+public class PayEntryDeleteActionInterceptor  implements ActionInterceptor {
 	
-	private PayableShowChgAction payable;
+	private PayEntryShowChgAction payable;
 
 	@Override
 	public boolean beforeDoAction(Action action, ActionEvent e) {
 		//动作执行前
 		boolean flag = false;
 		if(payable.isBcombinflag
-				&& action instanceof nc.ui.arap.actions.PayBillEditAction){
+				&& action instanceof nc.ui.arap.actions.BillDeleteAction){
 			try {
 				payable.doAction(e);
 				flag = true;
@@ -48,11 +48,11 @@ public class PayEditActionInterceptor  implements ActionInterceptor {
 		return false;
 	}
 
-	public PayableShowChgAction getPayable() {
+	public PayEntryShowChgAction getPayable() {
 		return payable;
 	}
 
-	public void setPayable(PayableShowChgAction payable) {
+	public void setPayable(PayEntryShowChgAction payable) {
 		this.payable = payable;
 	}
 

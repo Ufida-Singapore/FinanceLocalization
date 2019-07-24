@@ -64,7 +64,6 @@
 			<list>
 				<ref bean="printPreview" />
 				<ref bean="print" />
-				<ref bean="batchPrint" />
 				<ref bean="output" />
 			</list>
 		</property>

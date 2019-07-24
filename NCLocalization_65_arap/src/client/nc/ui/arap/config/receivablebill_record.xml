@@ -174,11 +174,11 @@
 				<ref bean="receiptMenuAction" />
 				<ref bean="currNullAction" />
 				<ref bean="relatedQueryActionGroup" />
+				<ref bean="currNullAction" />
 				<!-- add by weiningc 收付单据保存后支持凭证预览(适配至65) start -->
-				<ref bean="currNullAction" />
 				<ref bean="prevVoucherAction"/>
-				<!-- add by weiningc 收付单据保存后支持凭证预览(适配至65) end -->
 				<ref bean="currNullAction" />
+				<!-- add by weiningc 收付单据保存后支持凭证预览(适配至65) end -->
 				<ref bean="importexportActionGroup" />
 				<ref bean="printOperateActionGroup" />
 			</list>
