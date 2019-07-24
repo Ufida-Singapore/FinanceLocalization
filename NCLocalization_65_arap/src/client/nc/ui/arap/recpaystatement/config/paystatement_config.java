@@ -133,30 +133,30 @@ public nc.funcnode.ui.action.MenuAction getOutputMenuAction(){
   nc.funcnode.ui.action.MenuAction bean = new nc.funcnode.ui.action.MenuAction();
   context.put("outputMenuAction",bean);
   bean.setCode("printMenuAction");
-  bean.setName(getI18nFB_17758ef());
+  bean.setName(getI18nFB_1872388());
   bean.setActions(getManagedList0());
 setBeanFacotryIfBeanFacatoryAware(bean);
 invokeInitializingBean(bean);
 return bean;
 }
 
-private java.lang.String getI18nFB_17758ef(){
- if(context.get("nc.ui.uif2.I18nFB#17758ef")!=null)
- return (java.lang.String)context.get("nc.ui.uif2.I18nFB#17758ef");
+private java.lang.String getI18nFB_1872388(){
+ if(context.get("nc.ui.uif2.I18nFB#1872388")!=null)
+ return (java.lang.String)context.get("nc.ui.uif2.I18nFB#1872388");
   nc.ui.uif2.I18nFB bean = new nc.ui.uif2.I18nFB();
-    context.put("&nc.ui.uif2.I18nFB#17758ef",bean);  bean.setResDir("common");
+    context.put("&nc.ui.uif2.I18nFB#1872388",bean);  bean.setResDir("common");
   bean.setResId("UC001-0000007");
   bean.setDefaultValue("¥Ú”°");
 setBeanFacotryIfBeanFacatoryAware(bean);
 invokeInitializingBean(bean);
  try {
      Object product = bean.getObject();
-    context.put("nc.ui.uif2.I18nFB#17758ef",product);
+    context.put("nc.ui.uif2.I18nFB#1872388",product);
      return (java.lang.String)product;
 }
 catch(Exception e) { throw new RuntimeException(e);}}
 
-private List getManagedList0(){  List list = new ArrayList();  list.add(getPrintPreview());  list.add(getPrint());  list.add(getBatchPrint());  list.add(getOutput());  return list;}
+private List getManagedList0(){  List list = new ArrayList();  list.add(getPrintPreview());  list.add(getPrint());  list.add(getOutput());  return list;}
 
 public nc.ui.pubapp.uif2app.model.AppEventHandlerMediator getAppEventHandlerMediator(){
  if(context.get("appEventHandlerMediator")!=null)
@@ -190,7 +190,7 @@ public nc.ui.uif2.TangramContainer getContainer(){
  return (nc.ui.uif2.TangramContainer)context.get("container");
   nc.ui.uif2.TangramContainer bean = new nc.ui.uif2.TangramContainer();
   context.put("container",bean);
-  bean.setTangramLayoutRoot(getCNode_155dbf6());
+  bean.setTangramLayoutRoot(getCNode_12dc7f0());
   bean.setModel(getBillManageModel());
   bean.setActions(getManagedList2());
   bean.initUI();
@@ -199,11 +199,11 @@ invokeInitializingBean(bean);
 return bean;
 }
 
-private nc.ui.uif2.tangramlayout.node.CNode getCNode_155dbf6(){
- if(context.get("nc.ui.uif2.tangramlayout.node.CNode#155dbf6")!=null)
- return (nc.ui.uif2.tangramlayout.node.CNode)context.get("nc.ui.uif2.tangramlayout.node.CNode#155dbf6");
+private nc.ui.uif2.tangramlayout.node.CNode getCNode_12dc7f0(){
+ if(context.get("nc.ui.uif2.tangramlayout.node.CNode#12dc7f0")!=null)
+ return (nc.ui.uif2.tangramlayout.node.CNode)context.get("nc.ui.uif2.tangramlayout.node.CNode#12dc7f0");
   nc.ui.uif2.tangramlayout.node.CNode bean = new nc.ui.uif2.tangramlayout.node.CNode();
-  context.put("nc.ui.uif2.tangramlayout.node.CNode#155dbf6",bean);
+  context.put("nc.ui.uif2.tangramlayout.node.CNode#12dc7f0",bean);
   bean.setName("");
   bean.setComponent(getListView());
 setBeanFacotryIfBeanFacatoryAware(bean);
@@ -236,17 +236,17 @@ public nc.ui.arap.recpaystatement.action.ArapPayStatementQueryAction getQueryAct
   bean.setListView(getListView());
   bean.setDataManager(getModelDataManager());
   bean.setNodeKey("");
-  bean.setTpaProgressUtil(getTPAProgressUtil_991fe3());
+  bean.setTpaProgressUtil(getTPAProgressUtil_a19dc4());
 setBeanFacotryIfBeanFacatoryAware(bean);
 invokeInitializingBean(bean);
 return bean;
 }
 
-private nc.ui.uif2.components.progress.TPAProgressUtil getTPAProgressUtil_991fe3(){
- if(context.get("nc.ui.uif2.components.progress.TPAProgressUtil#991fe3")!=null)
- return (nc.ui.uif2.components.progress.TPAProgressUtil)context.get("nc.ui.uif2.components.progress.TPAProgressUtil#991fe3");
+private nc.ui.uif2.components.progress.TPAProgressUtil getTPAProgressUtil_a19dc4(){
+ if(context.get("nc.ui.uif2.components.progress.TPAProgressUtil#a19dc4")!=null)
+ return (nc.ui.uif2.components.progress.TPAProgressUtil)context.get("nc.ui.uif2.components.progress.TPAProgressUtil#a19dc4");
   nc.ui.uif2.components.progress.TPAProgressUtil bean = new nc.ui.uif2.components.progress.TPAProgressUtil();
-  context.put("nc.ui.uif2.components.progress.TPAProgressUtil#991fe3",bean);
+  context.put("nc.ui.uif2.components.progress.TPAProgressUtil#a19dc4",bean);
   bean.setContext(getContext());
 setBeanFacotryIfBeanFacatoryAware(bean);
 invokeInitializingBean(bean);

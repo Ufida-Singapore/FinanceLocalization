@@ -33,7 +33,8 @@ public class PreviewVoucherAction extends NCAction {
 	
 	@Override
 	public void doAction(ActionEvent arg0) throws Exception {
-		Object[] vos = getModel().getSelectedOperaDatas();
+//		Object[] vos = getModel().getSelectedOperaDatas();
+		Object vos = this.editor.getModel().getSelectedData();
 		
 		//卡片页面   合并或者明细合并后   weiningc  20171019  start
 		if(vos == null) {

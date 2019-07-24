@@ -57,14 +57,20 @@ public class PreviewVoucherAction extends NCAction {
 	
 	@Override
 	public void doAction(ActionEvent arg0) throws Exception {
-		Object[] vos = (Object[]) getModel().getSelectedOperaDatas();
+//		Object[] vos = getModel().getSelectedOperaDatas();
+		Object vos = this.editor.getModel().getSelectedData();
 
-		if (vos == null || vos.length == 0) {
+		if (vos == null) {
+			Object vos_card = ((BillForm) editor).getValue() == null ? ((BillForm) editor).getModel().getSelectedData()
+					: ((BillForm) editor).getValue();
+			vos = new Object[] {vos_card};
+		}
+		if (vos == null) {
 			throw new BusinessException(nc.vo.ml.NCLangRes4VoTransl.getNCLangRes().getStrByID("expensepub_0", "0expense-000005")/*
-																																 * @
-																																 * res
-																																 * "请选中单据后再进行预览的操作!"
-																																 */);
+			 * @
+			 * res
+			 * "请选中单据后再进行预览的操作!"
+			 */);
 		}
 
 		AggregatedValueObject[] selectedvos = Arrays.asList(vos).toArray(new AggregatedValueObject[0]);
